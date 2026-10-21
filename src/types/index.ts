@@ -69,14 +69,14 @@ export type TrackMatteType =
   | 'luma-inverted';
 
 export type LabelColor =
-  | 'violet'
-  | 'teal'
-  | 'amber'
-  | 'rose'
-  | 'sky'
-  | 'emerald'
-  | 'fuchsia'
-  | 'slate';
+  | 'ice'
+  | 'denim'
+  | 'steel'
+  | 'mint'
+  | 'lavender'
+  | 'blush'
+  | 'sand'
+  | 'coral';
 
 export interface TransformGroup {
   anchorPoint: Property<Vec2>;

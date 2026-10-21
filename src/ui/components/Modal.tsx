@@ -32,17 +32,17 @@ export const Modal: React.FC<ModalProps> = ({
       }}
     >
       <div
-        className={`w-full ${widthClass} bg-[#232327] border border-[#383842] rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150`}
+        className={`w-full ${widthClass} bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg shadow-[0_12px_32px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in zoom-in-95 duration-150`}
       >
-        <div className="flex items-center justify-between px-4 py-3 bg-[#1d1d21] border-b border-[#2e2e33]">
+        <div className="flex items-center justify-between px-4 py-3 gloss-glasses border-b border-[var(--border)]">
           <div>
-            <h2 className="text-[13px] font-semibold text-white">{title}</h2>
-            {subtitle && <p className="text-[11px] text-[#9b9ba6] mt-0.5">{subtitle}</p>}
+            <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">{title}</h2>
+            {subtitle && <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">{subtitle}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded text-[#9b9ba6] hover:text-white hover:bg-[#2e2e33] transition-colors"
+            className="p-1 rounded text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors duration-150"
           >
             <X className="w-4 h-4" />
           </button>

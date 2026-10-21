@@ -339,7 +339,7 @@ export const TopBar: React.FC = () => {
   ];
 
   return (
-    <header className="h-[36px] bg-[#232327] border-b border-[#2e2e33] px-2.5 flex items-center justify-between select-none shrink-0 z-40">
+    <header className="h-[36px] gloss-glasses border-b border-[var(--border)] px-2.5 flex items-center justify-between select-none shrink-0 z-40 transition-colors duration-150">
       <input
         ref={projectFileInputRef}
         type="file"
@@ -358,11 +358,13 @@ export const TopBar: React.FC = () => {
 
       {/* Left: Brand + Application Menus */}
       <div ref={menuBarRef} className="flex items-center gap-1">
-        <div className="flex items-center gap-2 pr-2 mr-1 border-r border-[#2e2e33]">
-          <div className="w-6 h-6 rounded bg-gradient-to-br from-[#6c5ce7] to-[#00d1b2] flex items-center justify-center shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-white" />
+        <div className="flex items-center gap-2 pr-2.5 mr-1 border-r border-[var(--border)]">
+          <div className="w-5 h-5 rounded bg-gradient-to-br from-[var(--accent)] to-[var(--accent-deep)] flex items-center justify-center shadow-sm font-black text-[#0b0d11] text-[11px] leading-none select-none">
+            M
           </div>
-          <span className="font-bold tracking-tight text-[13px] text-white">MOTIONFORGE</span>
+          <span className="font-bold tracking-wider text-[11px] text-[var(--text-primary)] select-none">
+            MOTIONFORGE
+          </span>
         </div>
 
         {Object.entries(menus).map(([menuName, items]) => (
@@ -373,20 +375,20 @@ export const TopBar: React.FC = () => {
               onMouseEnter={() => {
                 if (openMenu) setOpenMenu(menuName);
               }}
-              className={`h-[22px] px-2 rounded text-[12px] leading-none transition-colors duration-150 ${
+              className={`h-[22px] px-2 rounded text-[11px] font-medium leading-none transition-colors duration-150 ${
                 openMenu === menuName
-                  ? 'bg-[#34343e] text-white'
-                  : 'text-[#d4d4dc] hover:bg-[#2e2e36] hover:text-white'
+                  ? 'bg-[var(--bg-hover)] text-[var(--text-primary)]'
+                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
               }`}
             >
               {menuName}
             </button>
 
             {openMenu === menuName && (
-              <div className="absolute left-0 top-[26px] z-50 min-w-[240px] max-h-[75vh] overflow-y-auto py-1 bg-[#26262b] border border-[#3a3a44] rounded-md shadow-2xl">
+              <div className="absolute left-0 top-[26px] z-50 min-w-[240px] max-h-[75vh] overflow-y-auto py-1 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-md shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
                 {items.map((item) => (
                   <React.Fragment key={item.label}>
-                    {item.dividerAbove && <div className="my-1 mx-2 border-t border-[#34343c]" />}
+                    {item.dividerAbove && <div className="my-1 mx-2 border-t border-[var(--border)]" />}
                     <button
                       type="button"
                       disabled={item.disabled}
@@ -394,18 +396,18 @@ export const TopBar: React.FC = () => {
                         setOpenMenu(null);
                         item.onClick();
                       }}
-                      className={`w-full h-[24px] flex items-center gap-2 pl-2 pr-3 text-left text-[12px] whitespace-nowrap transition-colors duration-150 ${
+                      className={`w-full h-[24px] flex items-center gap-2 pl-2 pr-3 text-left text-[11px] whitespace-nowrap transition-colors duration-150 ${
                         item.disabled
-                          ? 'opacity-40 cursor-not-allowed text-[#787885]'
-                          : 'text-[#e4e4e8] hover:bg-[#6c5ce7] hover:text-white'
+                          ? 'opacity-35 cursor-not-allowed text-[var(--text-muted)]'
+                          : 'text-[var(--text-primary)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent)]'
                       }`}
                     >
                       <span className="w-3.5 shrink-0 flex items-center justify-center">
-                        {item.checked && <Check className="w-3 h-3" />}
+                        {item.checked && <Check className="w-3 h-3 text-[var(--accent)]" />}
                       </span>
                       <span className="flex-1">{item.label}</span>
                       {item.shortcut && (
-                        <span className="ml-6 font-mono text-[10px] opacity-60">
+                        <span className="ml-6 font-mono text-[10px] text-[var(--text-muted)]">
                           {item.shortcut}
                         </span>
                       )}
@@ -419,17 +421,17 @@ export const TopBar: React.FC = () => {
       </div>
 
       {/* Center: Tool Bar */}
-      <div className="flex items-center gap-0.5 bg-[#1a1a1d] p-[2px] rounded-md border border-[#2e2e33]">
+      <div className="flex items-center gap-0.5 bg-[var(--bg-base)] p-[2px] rounded-md border border-[var(--border)]">
         {tools.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setActiveTool(t.id)}
             title={`${t.label} (${t.shortcut})`}
-            className={`h-[24px] w-[28px] rounded flex items-center justify-center transition-colors duration-150 ${
+            className={`h-[24px] w-[28px] rounded flex items-center justify-center relative transition-all duration-150 ${
               activeTool === t.id
-                ? 'bg-[#6c5ce7] text-white shadow-sm'
-                : 'text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]'
+                ? 'text-[var(--accent)] bg-[var(--bg-hover)] after:content-[""] after:absolute after:bottom-0 after:left-1 after:right-1 after:h-[2px] after:bg-[var(--accent)] after:shadow-[0_0_8px_var(--accent-glow)] after:rounded-full'
+                : 'text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
             }`}
           >
             {t.icon}
@@ -440,7 +442,7 @@ export const TopBar: React.FC = () => {
           <select
             value={activeShapeType}
             onChange={(e) => setActiveShapeType(e.target.value as ShapeGeometryType)}
-            className="h-[24px] ml-1 px-1.5 bg-[#232327] border border-[#383842] rounded text-[11px] text-white outline-none"
+            className="h-[22px] ml-1 px-1.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded text-[11px] text-[var(--text-primary)] outline-none cursor-pointer focus:border-[var(--accent)]"
             title="Active Shape Geometry (press Q to cycle)"
           >
             <option value="rectangle">Rectangle</option>
@@ -450,7 +452,7 @@ export const TopBar: React.FC = () => {
           </select>
         )}
 
-        <div className="h-4 w-px bg-[#2e2e33] mx-1" />
+        <div className="h-3.5 w-px bg-[var(--border)] mx-1" />
 
         <button
           type="button"
@@ -461,7 +463,7 @@ export const TopBar: React.FC = () => {
               ? `Undo: ${undoStack[undoStack.length - 1].label} (Ctrl+Z)`
               : 'Undo (Ctrl+Z)'
           }
-          className="h-[24px] w-[28px] flex items-center justify-center rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32] disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
+          className="h-[24px] w-[28px] flex items-center justify-center rounded text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-25 disabled:hover:bg-transparent transition-colors duration-150"
         >
           <Undo2 className="w-3.5 h-3.5" />
         </button>
@@ -474,7 +476,7 @@ export const TopBar: React.FC = () => {
               ? `Redo: ${redoStack[redoStack.length - 1].label} (Ctrl+Shift+Z)`
               : 'Redo (Ctrl+Shift+Z)'
           }
-          className="h-[24px] w-[28px] flex items-center justify-center rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32] disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
+          className="h-[24px] w-[28px] flex items-center justify-center rounded text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-25 disabled:hover:bg-transparent transition-colors duration-150"
         >
           <Redo2 className="w-3.5 h-3.5" />
         </button>
@@ -486,25 +488,25 @@ export const TopBar: React.FC = () => {
           type="button"
           onClick={() => projectFileInputRef.current?.click()}
           title="Open Project (Ctrl+O)"
-          className="h-[24px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
+          className="h-[24px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
         >
-          <FolderOpen className="w-3.5 h-3.5 text-[#9b9ba6]" />
+          <FolderOpen className="w-3.5 h-3.5 text-[var(--steel)]" />
           <span className="hidden xl:inline">Open</span>
         </button>
         <button
           type="button"
           onClick={saveProject}
           title="Save Project (Ctrl+S)"
-          className="h-[24px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
+          className="h-[24px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
         >
-          <Save className="w-3.5 h-3.5 text-[#00d1b2]" />
+          <Save className="w-3.5 h-3.5 text-[var(--steel-light)]" />
           <span className="hidden xl:inline">Save</span>
         </button>
         <button
           type="button"
           onClick={() => setActiveModal('shortcuts')}
           title="Keyboard Shortcuts (?)"
-          className="h-[24px] w-[24px] rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white flex items-center justify-center"
+          className="h-[24px] w-[24px] rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] flex items-center justify-center transition-colors duration-150"
         >
           <HelpCircle className="w-3.5 h-3.5" />
         </button>
@@ -512,7 +514,7 @@ export const TopBar: React.FC = () => {
           type="button"
           onClick={() => setActiveModal('export')}
           title="Export Video / GIF / PNG Sequence (Ctrl+M)"
-          className="h-[24px] px-3 rounded bg-[#6c5ce7] hover:bg-[#5b4bc4] text-white font-medium text-[11px] flex items-center gap-1.5 shadow-sm transition-colors"
+          className="h-[24px] px-3 rounded bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[#0b0d11] font-semibold text-[11px] flex items-center gap-1.5 shadow-[0_0_12px_var(--accent-glow)] transition-all duration-150"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export</span>

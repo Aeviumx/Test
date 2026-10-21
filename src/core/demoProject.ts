@@ -19,14 +19,14 @@ export function createDemoProject(): Project {
   });
 
   mainComp.markers = [
-    { id: createId('mrk'), time: 0.4, label: 'Logo Assemble', color: '#6c5ce7' },
-    { id: createId('mrk'), time: 1.5, label: 'Title Reveal', color: '#00d1b2' },
-    { id: createId('mrk'), time: 3.2, label: 'Pulse & Sweep', color: '#f59e0b' },
+    { id: createId('mrk'), time: 0.4, label: 'Logo Assemble', color: '#8cc4ec' },
+    { id: createId('mrk'), time: 1.5, label: 'Title Reveal', color: '#f0d4d8' },
+    { id: createId('mrk'), time: 3.2, label: 'Pulse & Sweep', color: '#8796ab' },
   ];
 
   // 1. Adjustment Layer (Top of stack) — Vignette & Chromatic Aberration
   const adjLayer = createDefaultLayer(mainComp, 'adjustment', 'FX Grade & Lens Vignette');
-  adjLayer.labelColor = 'fuchsia';
+  adjLayer.labelColor = 'sand';
   const vignetteFx = createEffectInstance('vignette');
   vignetteFx.params.amount.value = 58;
   vignetteFx.params.midpoint.value = 52;
@@ -49,7 +49,7 @@ export function createDemoProject(): Project {
     width: 1400,
     height: 200,
   });
-  titleLayer.labelColor = 'violet';
+  titleLayer.labelColor = 'ice';
   titleLayer.inPoint = 0.6;
   titleLayer.transform.position.value = [960, 690];
   titleLayer.transform.position.animated = true;
@@ -62,9 +62,9 @@ export function createDemoProject(): Project {
     titleLayer.textContents.fontFamily = 'Orbitron';
     titleLayer.textContents.fontWeight = '800';
     titleLayer.textContents.fontSize.value = 92;
-    titleLayer.textContents.fillColor.value = '#ffffff';
+    titleLayer.textContents.fillColor.value = '#e9edf3';
     titleLayer.textContents.strokeEnabled = true;
-    titleLayer.textContents.strokeColor.value = '#00d1b2';
+    titleLayer.textContents.strokeColor.value = '#8cc4ec';
     titleLayer.textContents.strokeWidth.value = 1.5;
     titleLayer.textContents.tracking.value = 18;
     titleLayer.textContents.tracking.animated = true;
@@ -92,7 +92,7 @@ export function createDemoProject(): Project {
   titleGlow.params.threshold.value = 40;
   titleGlow.params.radius.value = 28;
   titleGlow.params.intensity.value = 1.25;
-  titleGlow.params.color.value = '#6c5ce7';
+  titleGlow.params.color.value = '#8cc4ec';
   const titleShadow = createEffectInstance('drop-shadow');
   titleShadow.params.distance.value = 12;
   titleShadow.params.softness.value = 18;
@@ -106,7 +106,7 @@ export function createDemoProject(): Project {
     width: 1200,
     height: 100,
   });
-  subLayer.labelColor = 'teal';
+  subLayer.labelColor = 'steel';
   subLayer.inPoint = 1.2;
   subLayer.transform.position.value = [960, 785];
   subLayer.transform.opacity.animated = true;
@@ -118,7 +118,7 @@ export function createDemoProject(): Project {
     subLayer.textContents.fontFamily = 'JetBrains Mono';
     subLayer.textContents.fontWeight = '600';
     subLayer.textContents.fontSize.value = 20;
-    subLayer.textContents.fillColor.value = '#00d1b2';
+    subLayer.textContents.fillColor.value = '#8cc4ec';
     subLayer.textContents.tracking.value = 6;
   }
 
@@ -128,7 +128,7 @@ export function createDemoProject(): Project {
     width: 1400,
     height: 260,
   });
-  sweepLayer.labelColor = 'amber';
+  sweepLayer.labelColor = 'denim';
   sweepLayer.blendMode = 'add';
   sweepLayer.transform.position.value = [960, 685];
   sweepLayer.transform.rotation.value = -16;
@@ -140,7 +140,7 @@ export function createDemoProject(): Project {
     createKeyframe(4.1, 0, 'bezier'),
   ];
   if (sweepLayer.shapeContents) {
-    sweepLayer.shapeContents.fillColor.value = '#00d1b2';
+    sweepLayer.shapeContents.fillColor.value = '#8cc4ec';
     sweepLayer.shapeContents.strokeEnabled = false;
   }
   const sweepMask = createDefaultMask(1400, 260, 'ellipse', 1);
@@ -156,7 +156,7 @@ export function createDemoProject(): Project {
 
   // 5. Logo Master Null Controller (Parent of Logo Layers, with Spatial Bezier Motion Path)
   const logoNull = createDefaultLayer(mainComp, 'null', 'Logo Master Rig [NULL]');
-  logoNull.labelColor = 'rose';
+  logoNull.labelColor = 'coral';
   logoNull.transform.position.value = [960, 390];
   logoNull.transform.position.animated = true;
   const kf0 = createKeyframe<Vec2>(0, [480, 240], 'bezier');
@@ -181,7 +181,7 @@ export function createDemoProject(): Project {
     width: 250,
     height: 250,
   });
-  prismLayer.labelColor = 'violet';
+  prismLayer.labelColor = 'lavender';
   prismLayer.parentId = logoNull.id;
   prismLayer.transform.position.value = [50, 50]; // Relative to 100x100 Null anchor
   prismLayer.transform.rotation.animated = true;
@@ -192,21 +192,21 @@ export function createDemoProject(): Project {
   ];
   if (prismLayer.shapeContents) {
     prismLayer.shapeContents.points.value = 6;
-    prismLayer.shapeContents.fillColor.value = '#6c5ce7';
-    prismLayer.shapeContents.strokeColor.value = '#00d1b2';
+    prismLayer.shapeContents.fillColor.value = '#4f86b5';
+    prismLayer.shapeContents.strokeColor.value = '#8cc4ec';
     prismLayer.shapeContents.strokeWidth.value = 6;
   }
   const prismRamp = createEffectInstance('gradient-ramp');
   prismRamp.params.startPoint.value = [0, 0];
-  prismRamp.params.startColor.value = '#6c5ce7';
+  prismRamp.params.startColor.value = '#8cc4ec';
   prismRamp.params.endPoint.value = [250, 250];
-  prismRamp.params.endColor.value = '#00d1b2';
+  prismRamp.params.endColor.value = '#4f86b5';
   prismRamp.params.blend.value = 20;
 
   const prismGlow = createEffectInstance('glow');
   prismGlow.params.radius.value = 42;
   prismGlow.params.intensity.value = 1.6;
-  prismGlow.params.color.value = '#6c5ce7';
+  prismGlow.params.color.value = '#8cc4ec';
   prismLayer.effects = [prismRamp, prismGlow];
   prismLayer.expandedGroups = ['transform', 'contents', 'effects'];
 
@@ -216,7 +216,7 @@ export function createDemoProject(): Project {
     width: 150,
     height: 150,
   });
-  starLayer.labelColor = 'teal';
+  starLayer.labelColor = 'ice';
   starLayer.parentId = logoNull.id;
   starLayer.blendMode = 'screen';
   starLayer.transform.position.value = [50, 50];
@@ -227,8 +227,8 @@ export function createDemoProject(): Project {
   if (starLayer.shapeContents) {
     starLayer.shapeContents.points.value = 4;
     starLayer.shapeContents.innerRadius.value = 34;
-    starLayer.shapeContents.fillColor.value = '#ffffff';
-    starLayer.shapeContents.strokeColor.value = '#00d1b2';
+    starLayer.shapeContents.fillColor.value = '#e9edf3';
+    starLayer.shapeContents.strokeColor.value = '#8cc4ec';
     starLayer.shapeContents.strokeWidth.value = 3;
   }
 
@@ -238,14 +238,14 @@ export function createDemoProject(): Project {
     width: 370,
     height: 370,
   });
-  ringLayer.labelColor = 'sky';
+  ringLayer.labelColor = 'ice';
   ringLayer.parentId = logoNull.id;
   ringLayer.transform.position.value = [50, 50];
   ringLayer.transform.rotation.expression = 'time * 38';
   ringLayer.transform.rotation.expressionEnabled = true;
   if (ringLayer.shapeContents) {
     ringLayer.shapeContents.fillEnabled = false;
-    ringLayer.shapeContents.strokeColor.value = '#00d1b2';
+    ringLayer.shapeContents.strokeColor.value = '#8796ab';
     ringLayer.shapeContents.strokeWidth.value = 5;
     ringLayer.shapeContents.trimStart.animated = true;
     ringLayer.shapeContents.trimStart.keyframes = [
@@ -273,26 +273,26 @@ export function createDemoProject(): Project {
     width: 44,
     height: 44,
   });
-  orbLayer.labelColor = 'emerald';
+  orbLayer.labelColor = 'mint';
   orbLayer.blendMode = 'add';
   orbLayer.transform.position.value = [1260, 320];
   orbLayer.transform.position.expression = 'wiggle(1.8, 55)';
   orbLayer.transform.position.expressionEnabled = true;
   if (orbLayer.shapeContents) {
-    orbLayer.shapeContents.fillColor.value = '#00d1b2';
+    orbLayer.shapeContents.fillColor.value = '#8cc4ec';
     orbLayer.shapeContents.strokeEnabled = false;
   }
   const orbGlow = createEffectInstance('glow');
   orbGlow.params.radius.value = 35;
   orbGlow.params.intensity.value = 2.2;
-  orbGlow.params.color.value = '#00d1b2';
+  orbGlow.params.color.value = '#8cc4ec';
   orbLayer.effects = [orbGlow];
 
   // 10. Procedural Nebula Backdrop Solid (Fractal Noise + Tint)
   const bgLayer = createDefaultLayer(mainComp, 'solid', 'Deep Nebula Backdrop', {
-    solidColor: '#121024',
+    solidColor: '#0b0d11',
   });
-  bgLayer.labelColor = 'slate';
+  bgLayer.labelColor = 'denim';
   const fractalFx = createEffectInstance('fractal-noise');
   fractalFx.params.scale.value = 220;
   fractalFx.params.contrast.value = 135;
@@ -306,7 +306,7 @@ export function createDemoProject(): Project {
 
   const tintFx = createEffectInstance('tint');
   tintFx.params.blackColor.value = '#090910';
-  tintFx.params.whiteColor.value = '#30236b';
+  tintFx.params.whiteColor.value = '#191d25';
   tintFx.params.amount.value = 85;
   bgLayer.effects = [fractalFx, tintFx];
 
@@ -330,7 +330,7 @@ export function createDemoProject(): Project {
     height: 1920,
     fps: 30,
     duration: 5,
-    backgroundColor: '#0e0e16',
+    backgroundColor: '#0b0d11',
   });
 
   const reelsShape = createDefaultLayer(secondaryComp, 'shape', 'Neon Pulse Frame', {
@@ -340,7 +340,7 @@ export function createDemoProject(): Project {
   });
   if (reelsShape.shapeContents) {
     reelsShape.shapeContents.fillEnabled = false;
-    reelsShape.shapeContents.strokeColor.value = '#6c5ce7';
+    reelsShape.shapeContents.strokeColor.value = '#8cc4ec';
     reelsShape.shapeContents.strokeWidth.value = 8;
     reelsShape.shapeContents.cornerRadius.value = 48;
   }
@@ -352,7 +352,7 @@ export function createDemoProject(): Project {
   if (reelsText.textContents) {
     reelsText.textContents.fontFamily = 'Montserrat';
     reelsText.textContents.fontSize.value = 84;
-    reelsText.textContents.fillColor.value = '#00d1b2';
+    reelsText.textContents.fillColor.value = '#8cc4ec';
   }
   secondaryComp.layers = [reelsText, reelsShape];
 

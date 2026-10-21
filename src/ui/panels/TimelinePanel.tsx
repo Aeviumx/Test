@@ -440,18 +440,19 @@ export const TimelinePanel: React.FC = () => {
 
   // Render Keyframe Icon Shape: Diamond (linear), Hourglass (bezier), Square (hold)
   const renderKeyframeShape = (interp: KeyframeInterpolation, selected: boolean) => {
-    const fill = selected ? '#f59e0b' : '#6c5ce7';
-    const stroke = selected ? '#ffffff' : '#d4d4dc';
+    const fill = selected ? '#8cc4ec' : '#8796ab';
+    const stroke = selected ? '#ffffff' : '#343c4a';
+    const filter = selected ? 'drop-shadow(0 0 4px rgba(140, 196, 236, 0.6))' : undefined;
     if (interp === 'hold') {
       return (
-        <svg width="11" height="11" viewBox="0 0 12 12">
+        <svg width="11" height="11" viewBox="0 0 12 12" style={{ filter }}>
           <rect x="2" y="2" width="8" height="8" fill={fill} stroke={stroke} strokeWidth="1.3" />
         </svg>
       );
     }
     if (interp === 'bezier') {
       return (
-        <svg width="12" height="12" viewBox="0 0 12 12">
+        <svg width="12" height="12" viewBox="0 0 12 12" style={{ filter }}>
           <polygon
             points="2,1.5 10,1.5 7,6 10,10.5 2,10.5 5,6"
             fill={fill}
@@ -462,7 +463,7 @@ export const TimelinePanel: React.FC = () => {
       );
     }
     return (
-      <svg width="12" height="12" viewBox="0 0 12 12">
+      <svg width="12" height="12" viewBox="0 0 12 12" style={{ filter }}>
         <polygon points="6,1 11,6 6,11 1,6" fill={fill} stroke={stroke} strokeWidth="1.2" />
       </svg>
     );
@@ -472,9 +473,9 @@ export const TimelinePanel: React.FC = () => {
   const totalCompFrames = Math.max(1, Math.round(comp.duration * comp.fps));
 
   return (
-    <div className="h-full flex flex-col bg-[#1d1d21] border-t border-[#2e2e33] select-none overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--bg-panel)] border-t border-[var(--border)] select-none overflow-hidden">
       {/* Top Transport & Timeline Controls Bar */}
-      <div className="h-[32px] px-2.5 bg-[#1e1e22] border-b border-[#2e2e33] flex items-center justify-between gap-3 shrink-0">
+      <div className="h-[32px] px-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center justify-between gap-3 shrink-0">
         {/* Left: Timecode & Frame Counter + Transport Buttons */}
         <div className="flex items-center gap-2">
           {editingTimecode ? (
@@ -496,7 +497,7 @@ export const TimelinePanel: React.FC = () => {
                 }
                 if (e.key === 'Escape') setEditingTimecode(false);
               }}
-              className="w-28 h-[22px] px-2 bg-[#141418] border border-[#6c5ce7] rounded font-mono text-[11px] text-[#00d1b2] outline-none"
+              className="w-28 h-[22px] px-2 bg-[var(--bg-base)] border border-[var(--accent)] rounded font-mono text-[11px] text-[var(--accent)] outline-none"
             />
           ) : (
             <button
@@ -506,19 +507,19 @@ export const TimelinePanel: React.FC = () => {
                 setEditingTimecode(true);
               }}
               title="Click to enter exact SMPTE timecode (HH:MM:SS:FF)"
-              className="h-[22px] px-2 bg-[#161619] hover:bg-[#2a2a32] border border-[#2e2e33] rounded flex items-center gap-1.5 font-mono cursor-pointer transition-colors"
+              className="h-[22px] px-2 bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] border border-[var(--border)] rounded flex items-center gap-1.5 font-mono cursor-pointer transition-colors duration-150"
             >
-              <span className="text-[11px] font-semibold text-[#6c5ce7]">
+              <span className="text-[11px] font-semibold text-[var(--text-primary)]">
                 {formatTimecode(currentTime, comp.fps)}
               </span>
-              <span className="text-[10px] text-[#787885]">
+              <span className="text-[10px] text-[var(--accent)]">
                 {String(timeToFrame(currentTime, comp.fps)).padStart(4, '0')}f
               </span>
             </button>
           )}
 
           {/* Transport Controls */}
-          <div className="flex items-center gap-0.5 bg-[#1a1a1d] p-0.5 rounded border border-[#2e2e33]">
+          <div className="flex items-center gap-0.5 bg-[var(--bg-base)] p-0.5 rounded border border-[var(--border)]">
             <button
               type="button"
               onClick={() => {
@@ -526,7 +527,7 @@ export const TimelinePanel: React.FC = () => {
                 setCurrentTime(comp.workAreaStart);
               }}
               title="First Frame of Work Area (Home)"
-              className="p-1 rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]"
+              className="p-1 rounded text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors duration-150"
             >
               <SkipBack className="w-3.5 h-3.5" />
             </button>
@@ -537,7 +538,7 @@ export const TimelinePanel: React.FC = () => {
                 setCurrentTime(snapToFrame(currentTime - 1 / comp.fps, comp.fps));
               }}
               title="Previous Frame (PageUp)"
-              className="p-1 rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]"
+              className="p-1 rounded text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors duration-150"
             >
               <StepBack className="w-3.5 h-3.5" />
             </button>
@@ -545,10 +546,10 @@ export const TimelinePanel: React.FC = () => {
               type="button"
               onClick={togglePlayPause}
               title="Play / Pause Preview (Space)"
-              className={`px-2 py-1 rounded flex items-center justify-center transition-colors ${
+              className={`px-2 py-1 rounded flex items-center justify-center transition-all duration-150 ${
                 isPlaying
-                  ? 'bg-[#00d1b2] text-[#141418]'
-                  : 'bg-[#6c5ce7] text-white hover:bg-[#5b4bc4]'
+                  ? 'bg-[var(--accent)] text-[#0b0d11] shadow-[0_0_8px_var(--accent-glow)]'
+                  : 'bg-[var(--accent)] text-[#0b0d11] hover:bg-[var(--accent-hover)] shadow-[0_0_8px_var(--accent-glow)]'
               }`}
             >
               {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -560,7 +561,7 @@ export const TimelinePanel: React.FC = () => {
                 setCurrentTime(snapToFrame(currentTime + 1 / comp.fps, comp.fps));
               }}
               title="Next Frame (PageDown)"
-              className="p-1 rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]"
+              className="p-1 rounded text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors duration-150"
             >
               <StepForward className="w-3.5 h-3.5" />
             </button>
@@ -571,7 +572,7 @@ export const TimelinePanel: React.FC = () => {
                 setCurrentTime(comp.workAreaEnd);
               }}
               title="Last Frame of Work Area (End)"
-              className="p-1 rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]"
+              className="p-1 rounded text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors duration-150"
             >
               <SkipForward className="w-3.5 h-3.5" />
             </button>
@@ -582,8 +583,8 @@ export const TimelinePanel: React.FC = () => {
                 setLoopMode(order[(order.indexOf(loopMode) + 1) % order.length]);
               }}
               title={`Loop Mode: ${loopMode.toUpperCase()}`}
-              className={`px-1.5 py-0.5 rounded flex items-center gap-1 text-[10px] font-mono ${
-                loopMode !== 'once' ? 'text-[#00d1b2]' : 'text-[#787885]'
+              className={`px-1.5 py-0.5 rounded flex items-center gap-1 text-[10px] font-mono transition-colors duration-150 ${
+                loopMode !== 'once' ? 'text-[var(--accent)]' : 'text-[var(--steel)]'
               }`}
             >
               <Repeat className="w-3 h-3" />
@@ -592,14 +593,14 @@ export const TimelinePanel: React.FC = () => {
           </div>
 
           {/* Real-time FPS & RAM Cache Status */}
-          <div className="hidden md:flex items-center gap-2 px-2 py-0.5 rounded bg-[#161619] border border-[#2e2e33] font-mono text-[10px]">
+          <div className="hidden md:flex items-center gap-2 px-2 py-0.5 rounded bg-[var(--bg-base)] border border-[var(--border)] font-mono text-[10px]">
             <span
               className={`w-2 h-2 rounded-full ${
-                isPlaying ? 'bg-[#10b981] animate-pulse' : 'bg-[#6c5ce7]'
+                isPlaying ? 'bg-[var(--success)] animate-pulse' : 'bg-[var(--steel)]'
               }`}
             />
-            <span className="text-[#d4d4dc]">{isPlaying ? `${measuredFps} FPS` : `${comp.fps} FPS`}</span>
-            <span className="text-[#10b981]">
+            <span className="text-[var(--text-secondary)]">{isPlaying ? `${measuredFps} FPS` : `${comp.fps} FPS`}</span>
+            <span className="text-[var(--success)]">
               • RAM {Math.min(100, Math.round((cachedFrames.size / totalCompFrames) * 100))}%
             </span>
           </div>
@@ -611,10 +612,10 @@ export const TimelinePanel: React.FC = () => {
             type="button"
             onClick={() => updateActiveComposition({ hideShyLayers: !comp.hideShyLayers })}
             title="Hide All Shy Layers in Timeline"
-            className={`h-[22px] px-2 rounded flex items-center gap-1 text-[11px] border transition-colors ${
+            className={`h-[22px] px-2 rounded flex items-center gap-1 text-[11px] border transition-colors duration-150 ${
               comp.hideShyLayers
-                ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
-                : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--bg-hover)] border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'bg-[var(--bg-base)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Ghost className="w-3.5 h-3.5" />
@@ -625,9 +626,9 @@ export const TimelinePanel: React.FC = () => {
             type="button"
             onClick={() => addCompMarker(currentTime, `Marker ${comp.markers.length + 1}`)}
             title="Add Composition Marker at Playhead"
-            className="h-[22px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white flex items-center gap-1 text-[11px] transition-colors"
+            className="h-[22px] px-2 rounded bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--steel-light)] hover:text-[var(--text-primary)] flex items-center gap-1 text-[11px] transition-colors duration-150"
           >
-            <BookmarkPlus className="w-3.5 h-3.5 text-[#00d1b2]" />
+            <BookmarkPlus className="w-3.5 h-3.5 text-[var(--blush)]" />
             <span className="hidden lg:inline">Marker</span>
           </button>
 
@@ -635,10 +636,10 @@ export const TimelinePanel: React.FC = () => {
             type="button"
             onClick={() => setGraphEditorOpen(!graphEditorOpen)}
             title="Toggle Value / Speed Graph Editor"
-            className={`h-[22px] px-2.5 rounded flex items-center gap-1.5 text-[11px] font-medium border transition-colors ${
+            className={`h-[22px] px-2.5 rounded flex items-center gap-1.5 text-[11px] font-medium border transition-colors duration-150 ${
               graphEditorOpen
-                ? 'bg-[#00d1b2] border-[#00d1b2] text-[#141418]'
-                : 'bg-[#1a1a1d] border-[#2e2e33] text-[#d4d4dc] hover:border-[#6c5ce7]'
+                ? 'bg-[var(--accent)] border-[var(--accent)] text-[#0b0d11] font-semibold shadow-[0_0_8px_var(--accent-glow)]'
+                : 'bg-[var(--bg-base)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
@@ -651,7 +652,7 @@ export const TimelinePanel: React.FC = () => {
           <button
             type="button"
             onClick={() => setTimelineZoom(timelineZoom * 0.8)}
-            className="p-1 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white"
+            className="p-1 rounded bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] transition-colors duration-150"
             title="Zoom Out Timeline"
           >
             <ZoomOut className="w-3.5 h-3.5" />
@@ -662,13 +663,13 @@ export const TimelinePanel: React.FC = () => {
             max={450}
             value={timelineZoom}
             onChange={(e) => setTimelineZoom(Number(e.target.value))}
-            className="w-20 accent-[#6c5ce7] cursor-pointer"
+            className="w-20 accent-[var(--accent)] cursor-pointer"
             title="Timeline Zoom"
           />
           <button
             type="button"
             onClick={() => setTimelineZoom(timelineZoom * 1.25)}
-            className="p-1 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white"
+            className="p-1 rounded bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] transition-colors duration-150"
             title="Zoom In Timeline"
           >
             <ZoomIn className="w-3.5 h-3.5" />
@@ -679,9 +680,9 @@ export const TimelinePanel: React.FC = () => {
       {/* Main Split Timeline Body: Left Layer/Property Tree + Right Track / Graph Area */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* LEFT COLUMN: Layer Stack & Expandable Property Tree */}
-        <div className="w-[410px] shrink-0 flex flex-col border-r border-[#2e2e33] bg-[#202025]">
+        <div className="w-[410px] shrink-0 flex flex-col border-r border-[var(--border)] bg-[var(--bg-panel)]">
           {/* Column Headers */}
-          <div className="h-[28px] px-2 bg-[#19191d] border-b border-[#2e2e33] flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-[#787885] shrink-0">
+          <div className="h-[28px] px-2 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)] shrink-0">
             <div className="flex items-center">
               <span className="w-[126px] pl-1 text-left">Switches</span>
               <span># / Layer Name</span>
@@ -701,19 +702,19 @@ export const TimelinePanel: React.FC = () => {
                 rightScrollRef.current.scrollTop = st;
               }
             }}
-            className="flex-1 overflow-y-auto overflow-x-hidden divide-y divide-[#28282e]"
+            className="flex-1 overflow-y-auto overflow-x-hidden divide-y divide-[var(--border)]"
           >
             {topSpacerHeight > 0 && (
               <div style={{ height: topSpacerHeight }} aria-hidden="true" />
             )}
             {flatRows.length === 0 && (
-              <div className="p-8 text-center text-[#787885] select-none">
-                <div className="w-10 h-10 rounded-lg bg-[#18181c] border border-[#2e2e33] flex items-center justify-center mx-auto mb-2.5">
-                  <Layers className="w-5 h-5 text-[#6c5ce7] opacity-60" />
+              <div className="p-8 text-center text-[var(--text-muted)] select-none">
+                <div className="w-10 h-10 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mx-auto mb-2.5">
+                  <Layers className="w-5 h-5 text-[var(--steel)] opacity-60" />
                 </div>
-                <div className="text-[12px] font-medium text-[#d4d4dc]">No Layers in Composition</div>
-                <div className="text-[11px] text-[#787885] mt-1 max-w-[240px] mx-auto leading-relaxed">
-                  Press <kbd className="px-1 py-0.5 bg-[#141418] border border-[#2e2e33] rounded font-mono text-[9px] text-[#00d1b2]">Q</kbd> for Shape, <kbd className="px-1 py-0.5 bg-[#141418] border border-[#2e2e33] rounded font-mono text-[9px] text-[#6c5ce7]">Shift+T</kbd> for Text, or import media.
+                <div className="text-[12px] font-medium text-[var(--text-primary)]">No Layers in Composition</div>
+                <div className="text-[11px] text-[var(--text-muted)] mt-1 max-w-[240px] mx-auto leading-relaxed">
+                  Press <kbd className="px-1 py-0.5 bg-[var(--bg-elevated)] border border-[var(--border-strong)] rounded font-mono text-[9px] text-[var(--accent)]">Q</kbd> for Shape, <kbd className="px-1 py-0.5 bg-[var(--bg-elevated)] border border-[var(--border-strong)] rounded font-mono text-[9px] text-[var(--steel-light)]">Shift+T</kbd> for Text, or import media.
                 </div>
               </div>
             )}
@@ -784,10 +785,10 @@ export const TimelinePanel: React.FC = () => {
                         ],
                       });
                     }}
-                    className={`px-1.5 flex items-center justify-between gap-1.5 text-[11px] cursor-pointer transition-colors ${
+                    className={`px-1.5 flex items-center justify-between gap-1.5 text-[11px] cursor-pointer transition-colors duration-150 ${
                       isSelected
-                        ? 'bg-[#6c5ce7]/25 text-white'
-                        : 'bg-[#222227] hover:bg-[#292930] text-[#d4d4dc]'
+                        ? 'bg-[var(--accent-deep)]/25 text-[var(--text-primary)]'
+                        : 'bg-[var(--bg-panel)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
                   >
                     {/* Left Switches: Expand, Eye, Audio, Solo, Lock, Shy, Color Swatch */}
@@ -799,7 +800,7 @@ export const TimelinePanel: React.FC = () => {
                           toggleLayerGroupExpanded(layer.id, 'all');
                         }}
                         title={isExpanded ? "Collapse Layer Properties" : "Expand Layer Properties"}
-                        className="p-0.5 text-[#9b9ba6] hover:text-white rounded hover:bg-[#34343e] transition-colors"
+                        className="p-0.5 text-[var(--steel)] hover:text-[var(--text-primary)] rounded hover:bg-[var(--bg-hover)] transition-colors duration-150"
                       >
                         {isExpanded ? (
                           <ChevronDown className="w-3.5 h-3.5" />
@@ -815,8 +816,8 @@ export const TimelinePanel: React.FC = () => {
                           updateLayerMeta(layer.id, { visible: !layer.visible });
                         }}
                         title="Toggle Visibility"
-                        className={`p-0.5 ${
-                          layer.visible ? 'text-[#e4e4e8]' : 'text-[#52525e]'
+                        className={`p-0.5 transition-colors duration-150 ${
+                          layer.visible ? 'text-[var(--text-primary)]' : 'text-[var(--steel)]/50'
                         }`}
                       >
                         {layer.visible ? (
@@ -834,8 +835,8 @@ export const TimelinePanel: React.FC = () => {
                             updateLayerMeta(layer.id, { audioEnabled: !layer.audioEnabled });
                           }}
                           title="Toggle Audio"
-                          className={`p-0.5 ${
-                            layer.audioEnabled ? 'text-[#10b981]' : 'text-[#52525e]'
+                          className={`p-0.5 transition-colors duration-150 ${
+                            layer.audioEnabled ? 'text-[var(--steel-light)]' : 'text-[var(--steel)]/50'
                           }`}
                         >
                           {layer.audioEnabled ? (
@@ -853,10 +854,10 @@ export const TimelinePanel: React.FC = () => {
                           updateLayerMeta(layer.id, { solo: !layer.solo });
                         }}
                         title="Solo Layer"
-                        className={`w-3.5 h-3.5 rounded text-[9px] font-bold flex items-center justify-center ${
+                        className={`w-3.5 h-3.5 rounded text-[9px] font-bold flex items-center justify-center transition-colors duration-150 ${
                           layer.solo
-                            ? 'bg-[#f59e0b] text-black'
-                            : 'text-[#686873] hover:text-white'
+                            ? 'bg-[var(--blush)] text-[#0b0d11]'
+                            : 'text-[var(--steel)] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         S
@@ -869,8 +870,8 @@ export const TimelinePanel: React.FC = () => {
                           updateLayerMeta(layer.id, { shy: !layer.shy });
                         }}
                         title="Shy Layer Switch"
-                        className={`p-0.5 ${
-                          layer.shy ? 'text-[#00d1b2]' : 'text-[#686873] hover:text-white'
+                        className={`p-0.5 transition-colors duration-150 ${
+                          layer.shy ? 'text-[var(--accent)]' : 'text-[var(--steel)] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         <Ghost className="w-3 h-3" />
@@ -883,8 +884,8 @@ export const TimelinePanel: React.FC = () => {
                           updateLayerMeta(layer.id, { locked: !layer.locked });
                         }}
                         title="Lock Layer"
-                        className={`p-0.5 ${
-                          layer.locked ? 'text-[#ef4444]' : 'text-[#686873] hover:text-white'
+                        className={`p-0.5 transition-colors duration-150 ${
+                          layer.locked ? 'text-[var(--danger)]' : 'text-[var(--steel)] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         {layer.locked ? (
@@ -909,7 +910,7 @@ export const TimelinePanel: React.FC = () => {
                       }}
                       className="flex items-center gap-1.5 min-w-0 flex-1"
                     >
-                      <span className="font-mono text-[10px] text-[#787885]">
+                      <span className="font-mono text-[10px] text-[var(--text-muted)]">
                         {layerIndex + 1}
                       </span>
                       {renamingLayerId === layer.id ? (
@@ -933,7 +934,7 @@ export const TimelinePanel: React.FC = () => {
                             }
                             if (e.key === 'Escape') setRenamingLayerId(null);
                           }}
-                          className="h-5 px-1 bg-[#141418] border border-[#6c5ce7] rounded text-[11px] text-white outline-none w-full"
+                          className="h-5 px-1 bg-[var(--bg-base)] border border-[var(--accent)] rounded text-[11px] text-[var(--text-primary)] outline-none w-full"
                         />
                       ) : (
                         <span className="truncate font-medium">{layer.name}</span>
@@ -957,7 +958,7 @@ export const TimelinePanel: React.FC = () => {
                           setPickWhipFromId(null);
                         }}
                         title="Drag Pick-Whip (@) onto another layer to parent"
-                        className="p-0.5 text-[#00d1b2] hover:bg-[#2e2e38] rounded cursor-grab"
+                        className="p-0.5 text-[var(--steel-light)] hover:bg-[var(--bg-hover)] rounded cursor-grab transition-colors duration-150"
                       >
                         <Link className="w-3 h-3" />
                       </button>
@@ -967,7 +968,7 @@ export const TimelinePanel: React.FC = () => {
                         onChange={(e) =>
                           updateLayerMeta(layer.id, { parentId: e.target.value || null })
                         }
-                        className="w-20 h-5 px-1 bg-[#161619] border border-[#2e2e33] rounded text-[10px] text-[#b8b8c4] outline-none"
+                        className="w-20 h-5 px-1 bg-[var(--bg-base)] border border-[var(--border)] rounded text-[10px] text-[var(--text-secondary)] outline-none"
                       >
                         <option value="">None</option>
                         {comp.layers
@@ -997,7 +998,7 @@ export const TimelinePanel: React.FC = () => {
                   key={`left_prop_${layer.id}_${entry.path}`}
                   style={{ height: PROP_ROW_HEIGHT }}
                   onClick={() => setInspectedPropertyPath(entry.path)}
-                  className="pl-7 pr-2 bg-[#1a1a1f] hover:bg-[#24242c] flex items-center justify-between gap-1 text-[11px]"
+                  className="pl-7 pr-2 bg-[var(--bg-panel)]/80 hover:bg-[var(--bg-hover)] flex items-center justify-between gap-1 text-[11px] transition-colors duration-150"
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <button
@@ -1007,8 +1008,8 @@ export const TimelinePanel: React.FC = () => {
                         togglePropertyStopwatch(layer.id, entry.path);
                       }}
                       title="Toggle Animation Stopwatch"
-                      className={`p-0.5 rounded ${
-                        prop.animated ? 'text-[#00d1b2]' : 'text-[#686873] hover:text-white'
+                      className={`p-0.5 rounded transition-colors duration-150 ${
+                        prop.animated ? 'text-[var(--accent)]' : 'text-[var(--steel)] hover:text-[var(--text-primary)]'
                       }`}
                     >
                       <Clock className="w-3 h-3" />
@@ -1021,14 +1022,14 @@ export const TimelinePanel: React.FC = () => {
                         toggleKeyframeAtTime(layer.id, entry.path);
                       }}
                       title="Add / Remove Keyframe at Playhead"
-                      className={`p-0.5 rounded ${
-                        hasKfNow ? 'text-[#6c5ce7]' : 'text-[#686873] hover:text-white'
+                      className={`p-0.5 rounded transition-colors duration-150 ${
+                        hasKfNow ? 'text-[var(--accent)]' : 'text-[var(--steel)] hover:text-[var(--steel-light)]'
                       }`}
                     >
-                      <Diamond className={`w-2.5 h-2.5 ${hasKfNow ? 'fill-[#6c5ce7]' : ''}`} />
+                      <Diamond className={`w-2.5 h-2.5 ${hasKfNow ? 'fill-[var(--accent)] drop-shadow-[0_0_4px_var(--accent-glow)]' : ''}`} />
                     </button>
 
-                    <span className="text-[#9b9ba6] truncate">{entry.label}</span>
+                    <span className="text-[var(--text-secondary)] truncate">{entry.label}</span>
                   </div>
 
                   {/* Compact Inline Scrubby Input */}
@@ -1071,7 +1072,7 @@ export const TimelinePanel: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN: Either Interactive Graph Editor OR Dope Sheet / Layer Bars */}
-        <div className="flex-1 min-w-0 flex flex-col bg-[#18181c] overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col bg-[var(--bg-base)] overflow-hidden">
           {graphEditorOpen ? (
             <GraphEditor />
           ) : (
@@ -1093,13 +1094,13 @@ export const TimelinePanel: React.FC = () => {
               className="flex-1 overflow-auto relative"
             >
               <div style={{ width: trackWidth }} className="min-h-full relative">
-                {/* Sticky Time Ruler + Green RAM Cache Bar + Work Area Bar */}
+                {/* Sticky Time Ruler + RAM Cache Bar + Work Area Bar */}
                 <div
                   onMouseDown={handleRulerMouseDown}
-                  className="sticky top-0 z-30 h-[28px] bg-[#19191d] border-b border-[#2e2e33] cursor-ew-resize select-none"
+                  className="sticky top-0 z-30 h-[28px] bg-[var(--bg-elevated)] border-b border-[var(--border)] cursor-ew-resize select-none"
                 >
-                  {/* AE Green RAM Frame Cache Indicator Bar */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-[#121215] flex">
+                  {/* RAM Frame Cache Indicator Bar */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--bg-base)] flex">
                     {Array.from({ length: Math.min(240, totalCompFrames) }, (_, i) => {
                       const frameIdx = Math.round((i / Math.min(240, totalCompFrames)) * totalCompFrames);
                       const isCached = cachedFrames.has(frameIdx);
@@ -1108,7 +1109,7 @@ export const TimelinePanel: React.FC = () => {
                           key={i}
                           className="flex-1 h-full"
                           style={{
-                            backgroundColor: isCached ? '#10b981' : 'transparent',
+                            backgroundColor: isCached ? 'var(--success)' : 'transparent',
                           }}
                         />
                       );
@@ -1123,15 +1124,15 @@ export const TimelinePanel: React.FC = () => {
                     }}
                     onMouseDown={(e) => startWorkAreaDrag(e, 'bar')}
                     title="Work Area (Press B / N to set Start / End at Playhead)"
-                    className="absolute top-1 h-2.5 bg-[#6c5ce7]/25 border-y border-[#6c5ce7]/60 cursor-grab flex items-center justify-between"
+                    className="absolute top-1 h-2.5 bg-[var(--denim)]/40 border-y border-[var(--denim-light)] cursor-grab flex items-center justify-between"
                   >
                     <div
                       onMouseDown={(e) => startWorkAreaDrag(e, 'start')}
-                      className="w-1.5 h-full bg-[#6c5ce7] cursor-ew-resize"
+                      className="w-1.5 h-full bg-[var(--denim-light)] hover:bg-[var(--accent)] cursor-ew-resize transition-colors"
                     />
                     <div
                       onMouseDown={(e) => startWorkAreaDrag(e, 'end')}
-                      className="w-1.5 h-full bg-[#6c5ce7] cursor-ew-resize"
+                      className="w-1.5 h-full bg-[var(--denim-light)] hover:bg-[var(--accent)] cursor-ew-resize transition-colors"
                     />
                   </div>
 
@@ -1150,11 +1151,11 @@ export const TimelinePanel: React.FC = () => {
                       >
                         <div
                           className={`border-l ${
-                            isWhole ? 'h-3.5 border-[#5a5a68]' : 'h-2 border-[#34343e]'
+                            isWhole ? 'h-3.5 border-[var(--steel)]' : 'h-2 border-[var(--border-strong)]'
                           }`}
                         />
                         {isWhole && (
-                          <span className="absolute bottom-1.5 left-1 font-mono text-[9px] text-[#9b9ba6]">
+                          <span className="absolute bottom-1.5 left-1 font-mono text-[9px] text-[var(--text-muted)]">
                             {formatShortTimecode(sec, comp.fps)}
                           </span>
                         )}
@@ -1177,7 +1178,7 @@ export const TimelinePanel: React.FC = () => {
                         deleteCompMarker(mrk.id);
                       }}
                       title={`${mrk.label} (Right-click to delete)`}
-                      className="absolute top-3.5 -translate-x-1/2 px-1 py-0.2 rounded bg-[#00d1b2] text-[#141418] font-mono text-[9px] font-bold cursor-pointer shadow"
+                      className="absolute top-3.5 -translate-x-1/2 px-1 py-0.2 rounded bg-[var(--blush)] text-[#0b0d11] font-mono text-[9px] font-bold cursor-pointer shadow-[0_0_6px_rgba(240,212,216,0.3)]"
                     >
                       {mrk.label}
                     </div>
@@ -1188,13 +1189,13 @@ export const TimelinePanel: React.FC = () => {
                 <div
                   ref={trackContentRef}
                   onMouseDown={handleTrackAreaMouseDown}
-                  className="relative divide-y divide-[#24242a]"
+                  className="relative divide-y divide-[var(--border)]"
                 >
                   {/* Work Area Dimmed Overlay Outside Bounds */}
                   {comp.workAreaStart > 0 && (
                     <div
                       style={{ width: timeToPx(comp.workAreaStart) }}
-                      className="absolute top-0 bottom-0 left-0 bg-black/30 pointer-events-none z-10"
+                      className="absolute top-0 bottom-0 left-0 bg-black/40 pointer-events-none z-10"
                     />
                   )}
                   {comp.workAreaEnd < comp.duration && (
@@ -1203,7 +1204,7 @@ export const TimelinePanel: React.FC = () => {
                         left: timeToPx(comp.workAreaEnd),
                         width: timeToPx(comp.duration - comp.workAreaEnd),
                       }}
-                      className="absolute top-0 bottom-0 bg-black/30 pointer-events-none z-10"
+                      className="absolute top-0 bottom-0 bg-black/40 pointer-events-none z-10"
                     />
                   )}
 
@@ -1226,7 +1227,7 @@ export const TimelinePanel: React.FC = () => {
                           key={`track_layer_${layer.id}`}
                           style={{ height: ROW_HEIGHT }}
                           className={`relative ${
-                            isSelected ? 'bg-[#6c5ce7]/10' : 'bg-[#1b1b20]'
+                            isSelected ? 'bg-[var(--accent-deep)]/10' : 'bg-[var(--bg-base)]'
                           }`}
                         >
                           {/* Layer Bar */}
@@ -1234,17 +1235,19 @@ export const TimelinePanel: React.FC = () => {
                             style={{
                               left: barLeft,
                               width: barWidth,
-                              backgroundColor: colorInfo.bg,
-                              borderColor: isSelected ? '#ffffff' : colorInfo.border,
+                              backgroundColor: isSelected ? 'var(--accent-deep)' : colorInfo.bg,
+                              borderTop: isSelected ? '1px solid var(--accent)' : '1px solid var(--denim-light)',
+                              boxShadow: isSelected ? '0 0 8px var(--accent-glow)' : 'inset 0 -1px 0 rgba(0,0,0,0.3)',
+                              borderColor: isSelected ? 'var(--accent)' : colorInfo.border,
                             }}
                             onMouseDown={(e) => startLayerBarDrag(e, layer, 'move')}
-                            className="absolute top-1 bottom-1 rounded border flex items-center justify-between overflow-hidden cursor-grab active:cursor-grabbing group"
+                            className="absolute top-1 bottom-1 rounded border flex items-center justify-between overflow-hidden cursor-grab active:cursor-grabbing group transition-all duration-150"
                           >
                             {/* Left Trim Handle */}
                             <div
                               onMouseDown={(e) => startLayerBarDrag(e, layer, 'trim-in')}
                               title="Drag to Trim Layer In Point (Alt+[)"
-                              className="w-2 h-full bg-white/20 hover:bg-white/60 cursor-ew-resize shrink-0 z-10"
+                              className="w-2 h-full bg-white/15 hover:bg-white/50 cursor-ew-resize shrink-0 z-10 transition-colors"
                             />
 
                             {/* Audio Waveform if Audio Layer */}
@@ -1254,13 +1257,13 @@ export const TimelinePanel: React.FC = () => {
                                   <div
                                     key={wIdx}
                                     style={{ height: `${Math.max(15, peak * 95)}%` }}
-                                    className="flex-1 bg-[#00d1b2] rounded-full"
+                                    className="flex-1 bg-[var(--steel-light)] rounded-full"
                                   />
                                 ))}
                               </div>
                             )}
 
-                            <span className="px-1.5 text-[10px] font-medium text-white/90 truncate pointer-events-none">
+                            <span className="px-1.5 text-[10px] font-medium text-[var(--text-primary)] truncate pointer-events-none">
                               {layer.name}
                             </span>
 
@@ -1268,7 +1271,7 @@ export const TimelinePanel: React.FC = () => {
                             <div
                               onMouseDown={(e) => startLayerBarDrag(e, layer, 'trim-out')}
                               title="Drag to Trim Layer Out Point (Alt+])"
-                              className="w-2 h-full bg-white/20 hover:bg-white/60 cursor-ew-resize shrink-0 z-10"
+                              className="w-2 h-full bg-white/15 hover:bg-white/50 cursor-ew-resize shrink-0 z-10 transition-colors"
                             />
                           </div>
                         </div>
@@ -1283,7 +1286,7 @@ export const TimelinePanel: React.FC = () => {
                       <div
                         key={`track_prop_${layer.id}_${entry.path}`}
                         style={{ height: PROP_ROW_HEIGHT }}
-                        className="relative bg-[#151519] hover:bg-[#1c1c22]"
+                        className="relative bg-[var(--bg-base)] hover:bg-[var(--bg-hover)]/40 transition-colors"
                       >
                         {prop.keyframes.map((kf) => {
                           const kx = timeToPx(kf.time);
@@ -1394,7 +1397,7 @@ export const TimelinePanel: React.FC = () => {
                         width: Math.abs(marquee.x1 - marquee.x0),
                         height: Math.abs(marquee.y1 - marquee.y0),
                       }}
-                      className="absolute bg-[#6c5ce7]/20 border border-[#6c5ce7] pointer-events-none z-30"
+                      className="absolute bg-[var(--accent)]/15 border border-[var(--accent)] pointer-events-none z-30"
                     />
                   )}
                 </div>
@@ -1402,10 +1405,10 @@ export const TimelinePanel: React.FC = () => {
                 {/* Full-Height Playhead Line & Cap */}
                 <div
                   style={{ left: timeToPx(currentTime) }}
-                  className="absolute top-0 bottom-0 w-px bg-[#6c5ce7] pointer-events-none z-40"
+                  className="absolute top-0 bottom-0 w-px bg-[var(--accent)] shadow-[0_0_8px_var(--accent-glow)] pointer-events-none z-40"
                 >
-                  <div className="w-3.5 h-4 -ml-[6.5px] bg-[#6c5ce7] clip-path-playhead rounded-t-sm shadow-md flex items-center justify-center">
-                    <div className="w-1 h-2 bg-white/80 rounded-full" />
+                  <div className="w-3.5 h-4 -ml-[6.5px] bg-[var(--accent)] clip-path-playhead rounded-t-sm shadow-[0_0_8px_var(--accent-glow)] flex items-center justify-center">
+                    <div className="w-1 h-2 bg-[#0b0d11] rounded-full" />
                   </div>
                 </div>
               </div>

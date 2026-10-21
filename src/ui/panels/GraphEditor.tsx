@@ -28,7 +28,7 @@ export const GraphEditor: React.FC = () => {
 
   if (!layer) {
     return (
-      <div className="h-full flex items-center justify-center bg-[#18181c] text-[#787885] text-[12px]">
+      <div className="h-full flex items-center justify-center bg-[var(--bg-panel)] text-[var(--text-muted)] text-[12px]">
         Select a layer to edit animation curves in the Graph Editor.
       </div>
     );
@@ -190,18 +190,18 @@ export const GraphEditor: React.FC = () => {
   const isVec2 = samples[0]?.v1 !== undefined;
 
   return (
-    <div className="h-full flex flex-col bg-[#16161a] select-none overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--bg-base)] select-none overflow-hidden">
       {/* Graph Editor Toolbar */}
-      <div className="h-[28px] px-2.5 bg-[#19191d] border-b border-[#2e2e33] flex items-center justify-between gap-2 text-[11px] shrink-0">
+      <div className="h-[28px] px-2.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center justify-between gap-2 text-[11px] shrink-0">
         {/* Left: Property Selector Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00d1b2] shrink-0">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)] shrink-0">
             Curve:
           </span>
           <select
             value={activePath}
             onChange={(e) => setInspectedPropertyPath(e.target.value)}
-            className="h-[22px] px-1.5 bg-[#141418] border border-[#34343e] hover:border-[#6c5ce7] rounded text-[11px] text-white outline-none cursor-pointer transition-colors"
+            className="h-[22px] px-1.5 bg-[var(--bg-base)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded text-[11px] text-[var(--text-primary)] outline-none cursor-pointer focus:border-[var(--accent)] transition-colors duration-150"
           >
             {allProps.map((p) => (
               <option key={p.path} value={p.path}>
@@ -212,14 +212,14 @@ export const GraphEditor: React.FC = () => {
         </div>
 
         {/* Center: Value Graph vs Speed Graph */}
-        <div className="flex items-center gap-1 bg-[#141418] p-0.5 rounded border border-[#2e2e33]">
+        <div className="flex items-center gap-1 bg-[var(--bg-base)] p-0.5 rounded border border-[var(--border)]">
           <button
             type="button"
             onClick={() => setGraphEditorMode('value')}
-            className={`h-[20px] px-2 rounded text-[10px] font-medium flex items-center gap-1 transition-colors ${
+            className={`h-[20px] px-2 rounded text-[10px] font-medium flex items-center gap-1 transition-colors duration-150 ${
               graphEditorMode === 'value'
-                ? 'bg-[#6c5ce7] text-white'
-                : 'text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--accent)] text-[#0b0d11] font-semibold shadow-[0_0_8px_var(--accent-glow)]'
+                : 'text-[var(--steel)] hover:text-[var(--text-primary)]'
             }`}
           >
             <TrendingUp className="w-3 h-3" /> Value Graph
@@ -227,10 +227,10 @@ export const GraphEditor: React.FC = () => {
           <button
             type="button"
             onClick={() => setGraphEditorMode('speed')}
-            className={`h-[20px] px-2 rounded text-[10px] font-medium flex items-center gap-1 transition-colors ${
+            className={`h-[20px] px-2 rounded text-[10px] font-medium flex items-center gap-1 transition-colors duration-150 ${
               graphEditorMode === 'speed'
-                ? 'bg-[#00d1b2] text-[#141418] font-semibold'
-                : 'text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--accent)] text-[#0b0d11] font-semibold shadow-[0_0_8px_var(--accent-glow)]'
+                : 'text-[var(--steel)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Activity className="w-3 h-3" /> Speed Graph
@@ -243,7 +243,7 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('easy-ease')}
             title="Easy Ease (F9)"
-            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
+            className="h-[22px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
           >
             Easy Ease (F9)
           </button>
@@ -251,7 +251,7 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('ease-in')}
             title="Ease In (Shift+F9)"
-            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
+            className="h-[22px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
           >
             Ease In
           </button>
@@ -259,7 +259,7 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('ease-out')}
             title="Ease Out (Ctrl+Shift+F9)"
-            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
+            className="h-[22px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
           >
             Ease Out
           </button>
@@ -267,7 +267,7 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('linear')}
             title="Linear Keyframe Interpolation"
-            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
+            className="h-[22px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
           >
             Linear
           </button>
@@ -275,7 +275,7 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('hold')}
             title="Toggle Hold (Square) Keyframe"
-            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
+            className="h-[22px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[10px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
           >
             Hold
           </button>
@@ -310,14 +310,14 @@ export const GraphEditor: React.FC = () => {
                   y1={y}
                   x2={width - padR}
                   y2={y}
-                  stroke="#26262f"
+                  stroke="#252b36"
                   strokeWidth={1}
                 />
                 <text
                   x={padL - 6}
                   y={y + 3}
                   textAnchor="end"
-                  fill="#787885"
+                  fill="#5b6475"
                   fontSize="9"
                   fontFamily="JetBrains Mono"
                 >
@@ -337,14 +337,14 @@ export const GraphEditor: React.FC = () => {
                   y1={padT}
                   x2={x}
                   y2={height - padB}
-                  stroke="#26262f"
+                  stroke="#252b36"
                   strokeWidth={1}
                 />
                 <text
                   x={x}
                   y={height - 8}
                   textAnchor="middle"
-                  fill="#787885"
+                  fill="#5b6475"
                   fontSize="9"
                   fontFamily="JetBrains Mono"
                 >
@@ -358,7 +358,7 @@ export const GraphEditor: React.FC = () => {
           {graphEditorMode === 'speed' ? (
             <polyline
               fill="none"
-              stroke="#00d1b2"
+              stroke="#8cc4ec"
               strokeWidth={2}
               points={samples.map((s) => `${timeToX(s.t)},${valToY(s.speed)}`).join(' ')}
             />
@@ -366,14 +366,14 @@ export const GraphEditor: React.FC = () => {
             <>
               <polyline
                 fill="none"
-                stroke={isVec2 ? '#f43f5e' : '#6c5ce7'}
+                stroke={isVec2 ? '#8cc4ec' : '#8cc4ec'}
                 strokeWidth={2.2}
                 points={samples.map((s) => `${timeToX(s.t)},${valToY(s.v0)}`).join(' ')}
               />
               {isVec2 && (
                 <polyline
                   fill="none"
-                  stroke="#00d1b2"
+                  stroke="#f0d4d8"
                   strokeWidth={2.2}
                   points={samples
                     .map((s) => `${timeToX(s.t)},${valToY(s.v1 ?? 0)}`)
@@ -420,14 +420,14 @@ export const GraphEditor: React.FC = () => {
                         y1={ky}
                         x2={outHandleX}
                         y2={outHandleY}
-                        stroke="#f59e0b"
+                        stroke="#8796ab"
                         strokeWidth={1.2}
                       />
                       <circle
                         cx={outHandleX}
                         cy={outHandleY}
                         r={5}
-                        fill="#f59e0b"
+                        fill="#8cc4ec"
                         data-testid={`bezier-handle-out-${idx}`}
                         className="cursor-pointer"
                         onMouseDown={(e) => handleTangentDrag(e, kf, 'out', outSpanPx)}
@@ -443,14 +443,14 @@ export const GraphEditor: React.FC = () => {
                         y1={ky}
                         x2={inHandleX}
                         y2={inHandleY}
-                        stroke="#f59e0b"
+                        stroke="#8796ab"
                         strokeWidth={1.2}
                       />
                       <circle
                         cx={inHandleX}
                         cy={inHandleY}
                         r={5}
-                        fill="#f59e0b"
+                        fill="#8cc4ec"
                         data-testid={`bezier-handle-in-${idx}`}
                         className="cursor-pointer"
                         onMouseDown={(e) => handleTangentDrag(e, kf, 'in', inSpanPx)}
@@ -465,8 +465,8 @@ export const GraphEditor: React.FC = () => {
                       y={ky2 - 5}
                       width={10}
                       height={10}
-                      fill={isSelected ? '#f59e0b' : '#10b981'}
-                      stroke="#064e3b"
+                      fill={isSelected ? '#8cc4ec' : '#f0d4d8'}
+                      stroke="#4f86b5"
                       strokeWidth={1.8}
                       transform={`rotate(45 ${kx} ${ky2})`}
                       data-testid={`graph-kf-y-${idx}`}
@@ -481,8 +481,8 @@ export const GraphEditor: React.FC = () => {
                     y={ky - 5}
                     width={10}
                     height={10}
-                    fill={isSelected ? '#f59e0b' : isVec2 ? '#ef4444' : '#ffffff'}
-                    stroke="#6c5ce7"
+                    fill={isSelected ? '#8cc4ec' : '#e9edf3'}
+                    stroke="#4f86b5"
                     strokeWidth={2}
                     transform={`rotate(45 ${kx} ${ky})`}
                     data-testid={`graph-kf-x-${idx}`}
@@ -499,7 +499,7 @@ export const GraphEditor: React.FC = () => {
             y1={0}
             x2={timeToX(currentTime)}
             y2={height}
-            stroke="#6c5ce7"
+            stroke="#8cc4ec"
             strokeWidth={1.8}
           />
         </svg>

@@ -35,7 +35,7 @@ export const App: React.FC = () => {
   }, [setProject]);
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#1a1a1d] text-[#e8e8ec] overflow-hidden select-none">
+    <div className="w-screen h-screen flex flex-col bg-[var(--bg-base)] text-[var(--text-primary)] overflow-hidden select-none">
       {/* Top Menu & Tool Bar */}
       <TopBar />
 
@@ -61,13 +61,13 @@ export const App: React.FC = () => {
 
               {/* Right: Properties / Effect Controls + Effects & Presets */}
               <Panel defaultSize={26} minSize={18} maxSize={42}>
-                <div className="h-full flex flex-col bg-[#232327] border-l border-[#2e2e33]">
+                <div className="h-full flex flex-col bg-[var(--bg-panel)] border-l border-[var(--border)]">
                   {/* Tab Switcher */}
-                  <div className="h-[28px] bg-[#1e1e22] border-b border-[#2e2e33] flex items-stretch px-1 gap-0.5 shrink-0">
+                  <div className="h-[28px] bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-stretch px-1 gap-0.5 shrink-0">
                     {(
                       [
-                        { id: 'properties', label: 'Properties', icon: <Sliders className="w-3 h-3" />, hint: 'Layer Transform, Masks, Text & Effect Controls' },
-                        { id: 'effects', label: 'Effects & Presets', icon: <Sparkles className="w-3 h-3" />, hint: 'Browse and apply GPU effects & animation presets' },
+                        { id: 'properties', label: 'Properties', icon: <Sliders className="w-3 h-3 text-[var(--steel)]" />, hint: 'Layer Transform, Masks, Text & Effect Controls' },
+                        { id: 'effects', label: 'Effects & Presets', icon: <Sparkles className="w-3 h-3 text-[var(--steel)]" />, hint: 'Browse and apply GPU effects & animation presets' },
                       ] as const
                     ).map((tab) => (
                       <button
@@ -77,15 +77,17 @@ export const App: React.FC = () => {
                         onClick={() => setRightTab(tab.id)}
                         className={`relative px-3 text-[11px] font-medium flex items-center gap-1.5 transition-colors duration-150 ${
                           rightTab === tab.id
-                            ? 'text-white'
-                            : 'text-[#8b8b96] hover:text-[#d4d4dc]'
+                            ? 'text-[var(--text-primary)]'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                         }`}
                       >
                         {tab.icon}
-                        <span className="whitespace-nowrap">{tab.label}</span>
+                        <span className="whitespace-nowrap tracking-wide">{tab.label}</span>
                         <span
-                          className={`absolute left-2 right-2 bottom-0 h-[2px] rounded-full transition-colors duration-150 ${
-                            rightTab === tab.id ? 'bg-[#6c5ce7]' : 'bg-transparent'
+                          className={`absolute left-2 right-2 bottom-0 h-[2px] rounded-full transition-all duration-150 ${
+                            rightTab === tab.id
+                              ? 'bg-[var(--accent)] shadow-[0_0_8px_var(--accent-glow)]'
+                              : 'bg-transparent'
                           }`}
                         />
                       </button>

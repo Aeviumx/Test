@@ -607,7 +607,7 @@ export class WebGLCompositionRenderer {
         p0 = num('threshold', 35);
         p1 = num('radius', 32) * resolutionScale;
         p2 = num('intensity', 1.4);
-        c0 = col('color', '#6c5ce7');
+        c0 = col('color', '#8cc4ec');
         break;
       case 'drop-shadow':
         p0 = num('opacity', 75);
@@ -633,20 +633,20 @@ export class WebGLCompositionRenderer {
         break;
       case 'fill':
         p0 = num('opacity', 100);
-        c0 = col('color', '#6c5ce7');
+        c0 = col('color', '#8cc4ec');
         break;
       case 'tint':
         p0 = num('amount', 100);
-        c0 = col('blackColor', '#130f40');
-        c1 = col('whiteColor', '#00d1b2');
+        c0 = col('blackColor', '#0b0d11');
+        c1 = col('whiteColor', '#8cc4ec');
         break;
       case 'gradient-ramp': {
         const sp = vec('startPoint', [0, 0]);
         const ep = vec('endPoint', [comp.width, comp.height]);
         v0 = [sp[0] * resolutionScale, sp[1] * resolutionScale];
         v1 = [ep[0] * resolutionScale, ep[1] * resolutionScale];
-        c0 = col('startColor', '#6c5ce7');
-        c1 = col('endColor', '#00d1b2');
+        c0 = col('startColor', '#8cc4ec');
+        c1 = col('endColor', '#4f86b5');
         p0 = num('blend', 0);
         break;
       }

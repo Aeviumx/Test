@@ -524,7 +524,7 @@ export const ViewportPanel: React.FC = () => {
   const invZoom = 1 / Math.max(0.15, viewportZoom);
 
   return (
-    <div className="h-full flex flex-col bg-[#161619] select-none overflow-hidden relative">
+    <div className="h-full flex flex-col bg-[var(--bg-base)] select-none overflow-hidden relative">
       {/* Main Interactive Viewport Stage */}
       <div
         ref={containerRef}
@@ -551,23 +551,23 @@ export const ViewportPanel: React.FC = () => {
         {/* Top & Left Rulers */}
         {showRulers && (
           <>
-            <div className="absolute top-0 left-5 right-0 h-5 bg-[#1e1e23]/90 border-b border-[#2e2e33] z-20 flex items-end px-2 pointer-events-none overflow-hidden">
+            <div className="absolute top-0 left-5 right-0 h-5 bg-[var(--bg-elevated)]/90 border-b border-[var(--border)] z-20 flex items-end px-2 pointer-events-none overflow-hidden">
               {Array.from({ length: 20 }, (_, i) => i * 200).map((px) => (
                 <div
                   key={px}
                   style={{ left: `${(px / comp.width) * 100}%` }}
-                  className="absolute bottom-0 border-l border-[#454552] h-2.5 pl-1 font-mono text-[9px] text-[#787885]"
+                  className="absolute bottom-0 border-l border-[var(--border-strong)] h-2.5 pl-1 font-mono text-[9px] text-[var(--text-muted)]"
                 >
                   {px}
                 </div>
               ))}
             </div>
-            <div className="absolute top-5 left-0 bottom-0 w-5 bg-[#1e1e23]/90 border-r border-[#2e2e33] z-20 pointer-events-none overflow-hidden">
+            <div className="absolute top-5 left-0 bottom-0 w-5 bg-[var(--bg-elevated)]/90 border-r border-[var(--border)] z-20 pointer-events-none overflow-hidden">
               {Array.from({ length: 12 }, (_, i) => i * 200).map((py) => (
                 <div
                   key={py}
                   style={{ top: `${(py / comp.height) * 100}%` }}
-                  className="absolute right-0 border-t border-[#454552] w-2.5 pt-0.5 font-mono text-[8px] text-[#787885]"
+                  className="absolute right-0 border-t border-[var(--border-strong)] w-2.5 pt-0.5 font-mono text-[8px] text-[var(--text-muted)]"
                 >
                   {py}
                 </div>
@@ -616,7 +616,7 @@ export const ViewportPanel: React.FC = () => {
 
             {/* Action Safe (90%) & Title Safe (80%) Zones */}
             {showSafeZones && (
-              <g fill="none" stroke="rgba(0, 209, 178, 0.32)" strokeWidth={1 * invZoom}>
+              <g fill="none" stroke="rgba(140, 196, 236, 0.35)" strokeWidth={1 * invZoom}>
                 <rect
                   x={comp.width * 0.05}
                   y={comp.height * 0.05}
@@ -652,7 +652,7 @@ export const ViewportPanel: React.FC = () => {
                 y1={0}
                 x2={snapGuideX}
                 y2={comp.height}
-                stroke="#00d1b2"
+                stroke="#8cc4ec"
                 strokeWidth={1.5 * invZoom}
               />
             )}
@@ -662,7 +662,7 @@ export const ViewportPanel: React.FC = () => {
                 y1={snapGuideY}
                 x2={comp.width}
                 y2={snapGuideY}
-                stroke="#00d1b2"
+                stroke="#8cc4ec"
                 strokeWidth={1.5 * invZoom}
               />
             )}
@@ -686,15 +686,15 @@ export const ViewportPanel: React.FC = () => {
                   <g key={`null_helper_${nullLayer.id}`}>
                     <polygon
                       points={`${p0[0]},${p0[1]} ${p1[0]},${p1[1]} ${p2[0]},${p2[1]} ${p3[0]},${p3[1]}`}
-                      fill="rgba(244, 63, 94, 0.08)"
-                      stroke="#f43f5e"
+                      fill="rgba(240, 212, 216, 0.08)"
+                      stroke="#f0d4d8"
                       strokeWidth={1.5 * invZoom}
                       strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
                     />
                     <text
                       x={p0[0] + 4 * invZoom}
                       y={p0[1] - 5 * invZoom}
-                      fill="#f43f5e"
+                      fill="#f0d4d8"
                       fontSize={10 * invZoom}
                       fontFamily="JetBrains Mono"
                       fontWeight="bold"
@@ -710,7 +710,7 @@ export const ViewportPanel: React.FC = () => {
               <g>
                 <polyline
                   fill="none"
-                  stroke="#00d1b2"
+                  stroke="#8cc4ec"
                   strokeWidth={1.75 * invZoom}
                   strokeDasharray={`${4 * invZoom} ${3 * invZoom}`}
                   points={motionPathData.curvePoints.map((p) => `${p[0]},${p[1]}`).join(' ')}
@@ -728,14 +728,14 @@ export const ViewportPanel: React.FC = () => {
                             y1={pt[1]}
                             x2={pt[0] + outTan[0]}
                             y2={pt[1] + outTan[1]}
-                            stroke="#f59e0b"
+                            stroke="#8796ab"
                             strokeWidth={1.2 * invZoom}
                           />
                           <circle
                             cx={pt[0] + outTan[0]}
                             cy={pt[1] + outTan[1]}
                             r={4.5 * invZoom}
-                            fill="#f59e0b"
+                            fill="#8cc4ec"
                             className="pointer-events-auto cursor-move"
                             onMouseDown={(e) => {
                               e.stopPropagation();
@@ -772,14 +772,14 @@ export const ViewportPanel: React.FC = () => {
                             y1={pt[1]}
                             x2={pt[0] + inTan[0]}
                             y2={pt[1] + inTan[1]}
-                            stroke="#f59e0b"
+                            stroke="#8796ab"
                             strokeWidth={1.2 * invZoom}
                           />
                           <circle
                             cx={pt[0] + inTan[0]}
                             cy={pt[1] + inTan[1]}
                             r={4.5 * invZoom}
-                            fill="#f59e0b"
+                            fill="#8cc4ec"
                             className="pointer-events-auto cursor-move"
                             onMouseDown={(e) => {
                               e.stopPropagation();
@@ -814,8 +814,8 @@ export const ViewportPanel: React.FC = () => {
                         y={pt[1] - 5 * invZoom}
                         width={10 * invZoom}
                         height={10 * invZoom}
-                        fill="#00d1b2"
-                        stroke="#161619"
+                        fill="#8cc4ec"
+                        stroke="#0b0d11"
                         strokeWidth={1.5 * invZoom}
                         transform={`rotate(45 ${pt[0]} ${pt[1]})`}
                       />
@@ -828,7 +828,7 @@ export const ViewportPanel: React.FC = () => {
             {/* Selected Layer Bounding Box, Resize Handles, Rotation Stem, and Anchor Point */}
             {selectedLayerGizmo && selectedLayer && (
               <g>
-                {/* Layer Masks Overlay (Yellow Path / Rect / Ellipse + Bezier Vertices) */}
+                {/* Layer Masks Overlay */}
                 {selectedLayer.masks.map((mask) => {
                   if (!mask.enabled) return null;
                   if (mask.shapeType === 'path' && mask.vertices.length >= 1) {
@@ -841,8 +841,8 @@ export const ViewportPanel: React.FC = () => {
                         {worldVerts.length >= 3 || mask.closed ? (
                           <polygon
                             points={polyPts}
-                            fill="rgba(245, 158, 11, 0.08)"
-                            stroke="#f59e0b"
+                            fill="rgba(140, 196, 236, 0.08)"
+                            stroke="#8cc4ec"
                             strokeWidth={1.8 * invZoom}
                             strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
                           />
@@ -850,7 +850,7 @@ export const ViewportPanel: React.FC = () => {
                           <polyline
                             points={polyPts}
                             fill="none"
-                            stroke="#f59e0b"
+                            stroke="#8cc4ec"
                             strokeWidth={1.8 * invZoom}
                             strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
                           />
@@ -862,8 +862,8 @@ export const ViewportPanel: React.FC = () => {
                             y={pt[1] - 4.5 * invZoom}
                             width={9 * invZoom}
                             height={9 * invZoom}
-                            fill={vi === 0 ? '#f59e0b' : '#ffffff'}
-                            stroke="#92400e"
+                            fill={vi === 0 ? '#8cc4ec' : '#e9edf3'}
+                            stroke="#343c4a"
                             strokeWidth={1.5 * invZoom}
                           />
                         ))}
@@ -892,7 +892,7 @@ export const ViewportPanel: React.FC = () => {
                       data-testid={`viewport-mask-${mask.id}`}
                       points={`${mTl[0]},${mTl[1]} ${mTr[0]},${mTr[1]} ${mBr[0]},${mBr[1]} ${mBl[0]},${mBl[1]}`}
                       fill="none"
-                      stroke="#f59e0b"
+                      stroke="#8cc4ec"
                       strokeWidth={1.6 * invZoom}
                       strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
                     />
@@ -902,7 +902,7 @@ export const ViewportPanel: React.FC = () => {
                 <polygon
                   points={`${selectedLayerGizmo.tl[0]},${selectedLayerGizmo.tl[1]} ${selectedLayerGizmo.trPt[0]},${selectedLayerGizmo.trPt[1]} ${selectedLayerGizmo.br[0]},${selectedLayerGizmo.br[1]} ${selectedLayerGizmo.bl[0]},${selectedLayerGizmo.bl[1]}`}
                   fill="none"
-                  stroke="#6c5ce7"
+                  stroke="#8cc4ec"
                   strokeWidth={1.8 * invZoom}
                 />
 
@@ -912,15 +912,15 @@ export const ViewportPanel: React.FC = () => {
                   y1={selectedLayerGizmo.tm[1]}
                   x2={selectedLayerGizmo.rotHandle[0]}
                   y2={selectedLayerGizmo.rotHandle[1]}
-                  stroke="#6c5ce7"
+                  stroke="#8cc4ec"
                   strokeWidth={1.5 * invZoom}
                 />
                 <circle
                   cx={selectedLayerGizmo.rotHandle[0]}
                   cy={selectedLayerGizmo.rotHandle[1]}
                   r={6 * invZoom}
-                  fill="#00d1b2"
-                  stroke="#161619"
+                  fill="#8cc4ec"
+                  stroke="#0b0d11"
                   strokeWidth={1.5 * invZoom}
                   className={
                     activeTool === 'select' || activeTool === 'rotate'
@@ -947,8 +947,8 @@ export const ViewportPanel: React.FC = () => {
                     y={h.pt[1] - 5 * invZoom}
                     width={10 * invZoom}
                     height={10 * invZoom}
-                    fill="#ffffff"
-                    stroke="#6c5ce7"
+                    fill="#e9edf3"
+                    stroke="#4f86b5"
                     strokeWidth={1.8 * invZoom}
                     className={
                       activeTool === 'select'
@@ -972,8 +972,8 @@ export const ViewportPanel: React.FC = () => {
                     cx={selectedLayerGizmo.anchorWorld[0]}
                     cy={selectedLayerGizmo.anchorWorld[1]}
                     r={7 * invZoom}
-                    fill="rgba(108, 92, 231, 0.25)"
-                    stroke="#00d1b2"
+                    fill="rgba(140, 196, 236, 0.2)"
+                    stroke="#8cc4ec"
                     strokeWidth={1.8 * invZoom}
                   />
                   <line
@@ -981,7 +981,7 @@ export const ViewportPanel: React.FC = () => {
                     y1={selectedLayerGizmo.anchorWorld[1]}
                     x2={selectedLayerGizmo.anchorWorld[0] + 10 * invZoom}
                     y2={selectedLayerGizmo.anchorWorld[1]}
-                    stroke="#00d1b2"
+                    stroke="#8cc4ec"
                     strokeWidth={1.5 * invZoom}
                   />
                   <line
@@ -989,7 +989,7 @@ export const ViewportPanel: React.FC = () => {
                     y1={selectedLayerGizmo.anchorWorld[1] - 10 * invZoom}
                     x2={selectedLayerGizmo.anchorWorld[0]}
                     y2={selectedLayerGizmo.anchorWorld[1] + 10 * invZoom}
-                    stroke="#00d1b2"
+                    stroke="#8cc4ec"
                     strokeWidth={1.5 * invZoom}
                   />
                 </g>
@@ -1000,14 +1000,14 @@ export const ViewportPanel: React.FC = () => {
       </div>
 
       {/* Bottom Viewport Status & Overlay Controls Bar */}
-      <div className="h-[28px] bg-[#1e1e22] border-t border-[#2e2e33] px-2.5 flex items-center justify-between text-[11px] shrink-0 z-20">
+      <div className="h-[28px] bg-[var(--bg-elevated)] border-t border-[var(--border)] px-2.5 flex items-center justify-between text-[11px] shrink-0 z-20">
         {/* Left: Zoom & Fit Controls */}
         <div className="flex items-center gap-1.5">
           <select
             value={Math.round(viewportZoom * 100)}
             onChange={(e) => setViewportZoom(Number(e.target.value) / 100)}
             title="Zoom Level (Alt+Scroll or Z)"
-            className="h-[22px] px-1.5 bg-[#1a1a1d] border border-[#2e2e33] hover:border-[#3d3d46] rounded font-mono text-[11px] text-white outline-none cursor-pointer transition-colors"
+            className="h-[22px] px-1.5 bg-[var(--bg-base)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded font-mono text-[11px] text-[var(--text-primary)] outline-none cursor-pointer focus:border-[var(--accent)] transition-colors"
           >
             {[15, 25, 33, 50, 75, 100, 150, 200, 400].map((pct) => (
               <option key={pct} value={pct}>
@@ -1032,20 +1032,20 @@ export const ViewportPanel: React.FC = () => {
               }
             }}
             title="Fit Composition to Viewport (Shift+/)"
-            className="h-[22px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1 text-[11px] transition-colors"
+            className="h-[22px] px-2 rounded bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 text-[11px] transition-colors"
           >
-            <Maximize2 className="w-3 h-3 text-[#6c5ce7]" />
+            <Maximize2 className="w-3 h-3 text-[var(--accent)]" />
             <span>Fit</span>
           </button>
 
-          <div className="h-4 w-px bg-[#2e2e33] mx-1" />
+          <div className="h-3.5 w-px bg-[var(--border)] mx-1" />
 
           {/* Preview Resolution */}
           <select
             value={previewResolution}
             onChange={(e) => setPreviewResolution(e.target.value as PreviewResolution)}
             title="WebGL2 Render Resolution"
-            className="h-[22px] px-1.5 bg-[#1a1a1d] border border-[#2e2e33] hover:border-[#3d3d46] rounded text-[11px] text-[#00d1b2] font-medium outline-none cursor-pointer transition-colors"
+            className="h-[22px] px-1.5 bg-[var(--bg-base)] border border-[var(--border)] hover:border-[var(--border-strong)] rounded text-[11px] text-[var(--accent)] font-medium outline-none cursor-pointer transition-colors"
           >
             <option value="full">Full (1:1)</option>
             <option value="half">Half (1:2)</option>
@@ -1061,8 +1061,8 @@ export const ViewportPanel: React.FC = () => {
             title="Toggle Proportional Grid"
             className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showGrid
-                ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
-                : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--bg-hover)] border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'bg-[var(--bg-base)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
             }`}
           >
             <Grid className="w-3 h-3" />
@@ -1075,8 +1075,8 @@ export const ViewportPanel: React.FC = () => {
             title="Toggle Title/Action Safe Zones"
             className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showSafeZones
-                ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
-                : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--bg-hover)] border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'bg-[var(--bg-base)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
             }`}
           >
             <Shield className="w-3 h-3" />
@@ -1089,8 +1089,8 @@ export const ViewportPanel: React.FC = () => {
             title="Toggle Spatial Motion Trajectory & Handles"
             className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showMotionPaths
-                ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
-                : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--bg-hover)] border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'bg-[var(--bg-base)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
             }`}
           >
             <Route className="w-3 h-3" />
@@ -1103,8 +1103,8 @@ export const ViewportPanel: React.FC = () => {
             title="Toggle Smart Snapping"
             className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               snapEnabled
-                ? 'bg-[#00d1b2]/20 border-[#00d1b2] text-[#00d1b2]'
-                : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--bg-hover)] border-[var(--accent)] text-[var(--accent)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'bg-[var(--bg-base)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
             }`}
           >
             <Magnet className="w-3 h-3" />
@@ -1117,8 +1117,8 @@ export const ViewportPanel: React.FC = () => {
             title="Toggle Transparency Grid"
             className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showCheckerboard
-                ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
-                : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                ? 'bg-[var(--bg-hover)] border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'bg-[var(--bg-base)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
             }`}
           >
             <Scan className="w-3 h-3" />
@@ -1126,14 +1126,14 @@ export const ViewportPanel: React.FC = () => {
         </div>
 
         {/* Right: Cursor X/Y & Active Comp Badge */}
-        <div className="flex items-center gap-3 font-mono text-[10px] text-[#9b9ba6]">
+        <div className="flex items-center gap-3 font-mono text-[10px] text-[var(--text-secondary)]">
           <span className="flex items-center gap-1">
-            <Crosshair className="w-3 h-3 text-[#6c5ce7]" />
+            <Crosshair className="w-3 h-3 text-[var(--accent)]" />
             <span>X:{cursorCompPos[0]}</span>
-            <span className="text-[#555562]">·</span>
+            <span className="text-[var(--text-muted)]">·</span>
             <span>Y:{cursorCompPos[1]}</span>
           </span>
-          <span className="text-[#00d1b2] hidden sm:inline">WebGL2 GPU</span>
+          <span className="text-[var(--success)] font-semibold hidden sm:inline">WebGL2 GPU</span>
         </div>
       </div>
     </div>

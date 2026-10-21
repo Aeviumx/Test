@@ -44,11 +44,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
     <div
       ref={menuRef}
       style={{ left: clampedX, top: clampedY }}
-      className="fixed z-[100] min-w-[205px] py-1 bg-[#232327]/95 backdrop-blur-md border border-[#383842] rounded-md shadow-2xl select-none"
+      className="fixed z-[100] min-w-[205px] py-1 bg-[var(--bg-elevated)]/95 backdrop-blur-md border border-[var(--border)] rounded-md shadow-[0_12px_32px_rgba(0,0,0,0.6)] select-none"
     >
       {items.map((item) => (
         <React.Fragment key={item.id}>
-          {item.dividerAbove && <div className="my-1 border-t border-[#2e2e33]" />}
+          {item.dividerAbove && <div className="my-1 border-t border-[var(--border)]" />}
           <button
             type="button"
             disabled={item.disabled}
@@ -58,17 +58,17 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }
                 onClose();
               }
             }}
-            className={`w-full flex items-center justify-between px-3 py-1.5 text-left text-[12px] transition-colors ${
+            className={`w-full flex items-center justify-between px-3 py-1.5 text-left text-[11px] transition-colors duration-150 ${
               item.disabled
-                ? 'opacity-40 cursor-not-allowed text-[#787885]'
+                ? 'opacity-35 cursor-not-allowed text-[var(--text-muted)]'
                 : item.danger
-                ? 'text-[#f87171] hover:bg-[#ef4444]/20'
-                : 'text-[#e4e4e8] hover:bg-[#6c5ce7] hover:text-white'
+                ? 'text-[var(--danger)] hover:bg-[var(--danger)]/15'
+                : 'text-[var(--text-primary)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent)]'
             }`}
           >
             <span>{item.label}</span>
             {item.shortcut && (
-              <span className="ml-4 font-mono text-[10px] opacity-70">{item.shortcut}</span>
+              <span className="ml-4 font-mono text-[10px] text-[var(--text-muted)]">{item.shortcut}</span>
             )}
           </button>
         </React.Fragment>

@@ -65,16 +65,16 @@ export const ShortcutsModal: React.FC = () => {
         {SHORTCUT_GROUPS.map((group) => (
           <div
             key={group.title}
-            className="bg-[#1a1a1d] border border-[#2e2e33] rounded-md p-3 space-y-2"
+            className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-md p-3 space-y-2"
           >
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#00d1b2] pb-1 border-b border-[#2e2e33]">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)] pb-1 border-b border-[var(--border)]">
               {group.title}
             </h3>
             <div className="space-y-1.5">
               {group.items.map((item) => (
                 <div key={item.key} className="flex items-center justify-between gap-2 text-[11px]">
-                  <span className="text-[#b8b8c4]">{item.desc}</span>
-                  <kbd className="px-1.5 py-0.5 bg-[#26262c] border border-[#3a3a44] rounded font-mono text-[10px] text-[#e4e4e8] shrink-0">
+                  <span className="text-[var(--text-secondary)]">{item.desc}</span>
+                  <kbd className="px-1.5 py-0.5 bg-[var(--bg-base)] border border-[var(--border-strong)] rounded font-mono text-[10px] text-[var(--text-primary)] shrink-0">
                     {item.key}
                   </kbd>
                 </div>

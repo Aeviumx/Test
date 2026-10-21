@@ -3,19 +3,37 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #1a1a1d;
-  --bg-panel: #232327;
-  --bg-elevated: #2a2a30;
-  --bg-hover: #323239;
-  --border-color: #2e2e33;
-  --accent-primary: #6c5ce7;
-  --accent-secondary: #00d1b2;
-  --text-primary: #e8e8ec;
-  --text-secondary: #9b9ba6;
-  --text-muted: #686873;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --cache-green: #10b981;
+  /* Midnight Ice Palette */
+  --bg-base:        #0b0d11;   /* глянцевый чёрный, фон приложения */
+  --bg-panel:       #12151b;   /* панели */
+  --bg-elevated:    #191d25;   /* шапки панелей, инпуты, меню */
+  --bg-hover:       #212631;   /* hover состояние */
+  --border:         #252b36;   /* тонкие линии 1px */
+  --border-strong:  #343c4a;   /* контрастные границы */
+  --steel:          #5a6a80;   /* стальной блик: иконки, неактивные элементы */
+  --steel-light:    #8796ab;   /* светлая сталь */
+  --text-primary:   #e9edf3;   /* бледный, как кожа на арте */
+  --text-secondary: #8a94a6;   /* подписи, второстепенный текст */
+  --text-muted:     #5b6475;   /* плейсхолдеры, отключённый текст */
+  --accent:         #8cc4ec;   /* ледяной голубой глаз — ГЛАВНЫЙ акцент */
+  --accent-hover:   #b0d9f7;   /* hover акцента */
+  --accent-deep:    #4f86b5;   /* нажатое состояние, выделение слоёв */
+  --accent-glow:    rgba(140, 196, 236, 0.35); /* свечение */
+  --denim:          #3b4658;   /* вторичный акцент: work area, полосы слоёв */
+  --denim-light:    #55647c;   /* подвёрнутый край джинсовых шорт */
+  --blush:          #f0d4d8;   /* тёплый бледно-розовый: маркеры, акценты */
+  --danger:         #e2727f;   /* ошибка, удаление */
+  --warning:        #e8c27a;   /* предупреждения, выражения */
+  --success:        #7fd1b9;   /* полоса RAM-кэша */
+
+  /* Legacy mappings to ensure complete coverage */
+  --bg-primary: var(--bg-base);
+  --border-color: var(--border);
+  --accent-primary: var(--accent);
+  --accent-secondary: var(--steel-light);
+  --warning-color: var(--warning);
+  --danger-color: var(--danger);
+  --cache-green: var(--success);
 }
 
 * {
@@ -29,7 +47,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: var(--bg-primary);
+  background-color: var(--bg-base);
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
@@ -37,56 +55,96 @@ body,
   overflow: hidden;
 }
 
-/* Custom sleek Adobe/Figma style scrollbars */
+/* 8. Скроллбары тонкие (6px), --border-strong, при наведении --steel */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a1d;
+  background: var(--bg-base);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #383842;
+  background: var(--border-strong);
   border-radius: 3px;
+  transition: background-color 150ms ease-out;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #525260;
+  background: var(--steel);
 }
 
 ::-webkit-scrollbar-corner {
-  background: #1a1a1d;
+  background: var(--bg-base);
 }
 
-/* Resizable panel handles */
+/* 1. «Глянец очков»: TopBar и шапки модальных окон */
+.gloss-glasses {
+  background: linear-gradient(180deg, #161a21 0%, #0b0d11 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* 2. «Пряди волос»: разделители панелей */
 [data-panel-group-direction='horizontal'] > [data-resize-handle] {
-  width: 4px;
-  background-color: #1a1a1d;
-  transition: background-color 150ms ease;
+  width: 1px;
+  background: linear-gradient(180deg, transparent 0%, var(--steel) 50%, transparent 100%);
+  opacity: 0.6;
+  transition: background 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out;
   position: relative;
+  cursor: col-resize;
+}
+
+[data-panel-group-direction='horizontal'] > [data-resize-handle]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  right: -3px;
 }
 
 [data-panel-group-direction='vertical'] > [data-resize-handle] {
-  height: 4px;
-  background-color: #1a1a1d;
-  transition: background-color 150ms ease;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--steel) 50%, transparent 100%);
+  opacity: 0.6;
+  transition: background 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease-out;
   position: relative;
+  cursor: row-resize;
+}
+
+[data-panel-group-direction='vertical'] > [data-resize-handle]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -3px;
+  bottom: -3px;
 }
 
 [data-resize-handle]:hover,
 [data-resize-handle][data-resize-handle-active] {
-  background-color: #6c5ce7 !important;
+  background: var(--accent) !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 8px var(--accent-glow) !important;
+}
+
+/* 4. «Взгляд»: фокус на инпутах — ледяной голубой с лёгким свечением */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 6px var(--accent-glow) !important;
+  outline: none !important;
 }
 
 .checkerboard-bg {
   background-image:
-    linear-gradient(45deg, #252529 25%, transparent 25%),
-    linear-gradient(-45deg, #252529 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #252529 75%),
-    linear-gradient(-45deg, transparent 75%, #252529 75%);
+    linear-gradient(45deg, #151821 25%, transparent 25%),
+    linear-gradient(-45deg, #151821 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #151821 75%),
+    linear-gradient(-45deg, transparent 75%, #151821 75%);
   background-size: 16px 16px;
   background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-  background-color: #1c1c20;
+  background-color: #0d1015;
 }

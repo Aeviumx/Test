@@ -24,29 +24,29 @@ export const PrecomposeModal: React.FC = () => {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[11px] text-[#9b9ba6] mb-1">New Composition Name</label>
+          <label className="block text-[11px] text-[var(--text-secondary)] mb-1">New Composition Name</label>
           <input
             type="text"
             value={compName}
             onChange={(e) => setCompName(e.target.value)}
             autoFocus
-            className="w-full h-8 px-2.5 bg-[#161619] border border-[#2e2e33] focus:border-[#6c5ce7] rounded text-white text-[12px] outline-none"
+            className="w-full h-8 px-2.5 bg-[var(--bg-elevated)] border border-[var(--border)] focus:border-[var(--accent)] rounded text-[var(--text-primary)] text-[12px] outline-none"
           />
         </div>
-        <div className="p-2.5 rounded bg-[#1a1a1d] border border-[#2e2e33] text-[11px] text-[#9b9ba6]">
+        <div className="p-2.5 rounded bg-[var(--bg-elevated)] border border-[var(--border)] text-[11px] text-[var(--text-secondary)]">
           Moves all selected layer attributes, keyframes, masks, and GPU effects into the new composition and replaces them with a single Pre-comp layer.
         </div>
-        <div className="flex justify-end gap-2 pt-2 border-t border-[#2e2e33]">
+        <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border)]">
           <button
             type="button"
             onClick={() => setActiveModal('none')}
-            className="px-3 py-1.5 rounded bg-[#2a2a30] hover:bg-[#34343c] text-[12px] text-[#d4d4dc]"
+            className="px-3 py-1.5 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[12px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-1.5 rounded bg-[#6c5ce7] hover:bg-[#5b4bc4] text-[12px] font-medium text-white"
+            className="px-4 py-1.5 rounded bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[12px] font-semibold text-[#0b0d11] shadow-[0_0_12px_var(--accent-glow)] transition-all duration-150"
           >
             Pre-compose
           </button>

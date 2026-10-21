@@ -496,7 +496,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         id: createId('mrk'),
         time: snapToFrame(time, comp.fps),
         label,
-        color: '#00d1b2',
+        color: '#f0d4d8',
       });
     });
   },

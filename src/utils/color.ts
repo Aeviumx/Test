@@ -1,14 +1,15 @@
 import { ColorRGBA, LabelColor } from '../types';
 
 export const LABEL_COLOR_MAP: Record<LabelColor, { hex: string; bg: string; border: string; name: string }> = {
-  violet: { hex: '#6c5ce7', bg: 'rgba(108, 92, 231, 0.35)', border: '#6c5ce7', name: 'Violet' },
-  teal: { hex: '#00d1b2', bg: 'rgba(0, 209, 178, 0.35)', border: '#00d1b2', name: 'Teal' },
-  amber: { hex: '#f59e0b', bg: 'rgba(245, 158, 11, 0.35)', border: '#f59e0b', name: 'Amber' },
-  rose: { hex: '#f43f5e', bg: 'rgba(244, 63, 94, 0.35)', border: '#f43f5e', name: 'Rose' },
-  sky: { hex: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.35)', border: '#0ea5e9', name: 'Sky' },
-  emerald: { hex: '#10b981', bg: 'rgba(16, 185, 129, 0.35)', border: '#10b981', name: 'Emerald' },
-  fuchsia: { hex: '#d946ef', bg: 'rgba(217, 70, 239, 0.35)', border: '#d946ef', name: 'Fuchsia' },
-  slate: { hex: '#64748b', bg: 'rgba(100, 116, 139, 0.35)', border: '#64748b', name: 'Slate' },
+  // Midnight Ice Cool Muted Palette (Ice, Denim, Steel, Mint, Lavender, Blush, Sand, Coral)
+  ice: { hex: '#8cc4ec', bg: 'rgba(140, 196, 236, 0.28)', border: '#8cc4ec', name: 'Ice' },
+  denim: { hex: '#55647c', bg: 'rgba(59, 70, 88, 0.45)', border: '#55647c', name: 'Denim' },
+  steel: { hex: '#8796ab', bg: 'rgba(90, 106, 128, 0.35)', border: '#8796ab', name: 'Steel' },
+  mint: { hex: '#7fd1b9', bg: 'rgba(127, 209, 185, 0.28)', border: '#7fd1b9', name: 'Mint' },
+  lavender: { hex: '#8288a4', bg: 'rgba(130, 136, 164, 0.28)', border: '#8288a4', name: 'Lavender' },
+  blush: { hex: '#f0d4d8', bg: 'rgba(240, 212, 216, 0.28)', border: '#f0d4d8', name: 'Blush' },
+  sand: { hex: '#c4b89e', bg: 'rgba(196, 184, 158, 0.28)', border: '#c4b89e', name: 'Sand' },
+  coral: { hex: '#d98b8b', bg: 'rgba(217, 139, 139, 0.28)', border: '#d98b8b', name: 'Coral' },
 };
 
 export function hexToRgba(hex: string, alpha = 1): ColorRGBA {

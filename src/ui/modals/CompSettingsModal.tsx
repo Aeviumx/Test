@@ -63,17 +63,17 @@ export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) 
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[11px] text-[#9b9ba6] mb-1">Composition Name</label>
+          <label className="block text-[11px] text-[var(--text-secondary)] mb-1">Composition Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full h-8 px-2.5 bg-[#161619] border border-[#2e2e33] focus:border-[#6c5ce7] rounded text-white text-[12px] outline-none"
+            className="w-full h-8 px-2.5 bg-[var(--bg-elevated)] border border-[var(--border)] focus:border-[var(--accent)] rounded text-[var(--text-primary)] text-[12px] outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] text-[#9b9ba6] mb-1">Preset</label>
+          <label className="block text-[11px] text-[var(--text-secondary)] mb-1">Preset</label>
           <div className="grid grid-cols-2 gap-1.5">
             {COMP_PRESETS.map((preset) => {
               const active = width === preset.width && height === preset.height;
@@ -86,14 +86,14 @@ export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) 
                     setHeight(preset.height);
                     setFps(preset.fps);
                   }}
-                  className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                  className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors duration-150 ${
                     active
-                      ? 'bg-[#6c5ce7]/20 border-[#6c5ce7] text-white'
-                      : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                      ? 'bg-[var(--accent-deep)]/25 border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                      : 'bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
                   }`}
                 >
                   <div className="font-medium">{preset.label}</div>
-                  <div className="font-mono text-[10px] opacity-75">
+                  <div className="font-mono text-[10px] text-[var(--text-muted)]">
                     {preset.width} × {preset.height} px
                   </div>
                 </button>
@@ -103,8 +103,8 @@ export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) 
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center justify-between bg-[#1a1a1d] px-3 py-2 rounded border border-[#2e2e33]">
-            <span className="text-[11px] text-[#9b9ba6]">Width</span>
+          <div className="flex items-center justify-between bg-[var(--bg-elevated)] px-3 py-2 rounded border border-[var(--border)]">
+            <span className="text-[11px] text-[var(--text-secondary)]">Width</span>
             <ScrubbyInput
               value={width}
               onChange={setWidth}
@@ -115,8 +115,8 @@ export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) 
               className="w-24"
             />
           </div>
-          <div className="flex items-center justify-between bg-[#1a1a1d] px-3 py-2 rounded border border-[#2e2e33]">
-            <span className="text-[11px] text-[#9b9ba6]">Height</span>
+          <div className="flex items-center justify-between bg-[var(--bg-elevated)] px-3 py-2 rounded border border-[var(--border)]">
+            <span className="text-[11px] text-[var(--text-secondary)]">Height</span>
             <ScrubbyInput
               value={height}
               onChange={setHeight}
@@ -130,18 +130,18 @@ export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) 
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-[#1a1a1d] px-3 py-2 rounded border border-[#2e2e33]">
-            <span className="block text-[10px] text-[#9b9ba6] mb-1">Frame Rate (FPS)</span>
+          <div className="bg-[var(--bg-elevated)] px-3 py-2 rounded border border-[var(--border)]">
+            <span className="block text-[10px] text-[var(--text-secondary)] mb-1">Frame Rate (FPS)</span>
             <div className="flex gap-1">
               {[24, 25, 30, 60].map((rate) => (
                 <button
                   key={rate}
                   type="button"
                   onClick={() => setFps(rate)}
-                  className={`flex-1 h-6 rounded font-mono text-[11px] transition-colors ${
+                  className={`flex-1 h-6 rounded font-mono text-[11px] transition-colors duration-150 ${
                     fps === rate
-                      ? 'bg-[#6c5ce7] text-white'
-                      : 'bg-[#232327] text-[#9b9ba6] hover:text-white'
+                      ? 'bg-[var(--accent)] text-[#0b0d11] font-bold shadow-[0_0_6px_var(--accent-glow)]'
+                      : 'bg-[var(--bg-base)] text-[var(--steel)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {rate}
@@ -150,8 +150,8 @@ export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) 
             </div>
           </div>
 
-          <div className="bg-[#1a1a1d] px-3 py-2 rounded border border-[#2e2e33] flex flex-col justify-between">
-            <span className="block text-[10px] text-[#9b9ba6] mb-1">Duration (sec)</span>
+          <div className="bg-[var(--bg-elevated)] px-3 py-2 rounded border border-[var(--border)] flex flex-col justify-between">
+            <span className="block text-[10px] text-[var(--text-secondary)] mb-1">Duration (sec)</span>
             <ScrubbyInput
               value={duration}
               onChange={setDuration}
@@ -163,23 +163,23 @@ export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) 
             />
           </div>
 
-          <div className="bg-[#1a1a1d] px-3 py-2 rounded border border-[#2e2e33] flex flex-col justify-between">
-            <span className="block text-[10px] text-[#9b9ba6] mb-1">Background</span>
+          <div className="bg-[var(--bg-elevated)] px-3 py-2 rounded border border-[var(--border)] flex flex-col justify-between">
+            <span className="block text-[10px] text-[var(--text-secondary)] mb-1">Background</span>
             <ColorPicker value={backgroundColor} onChange={setBackgroundColor} />
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-[#2e2e33]">
+        <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border)]">
           <button
             type="button"
             onClick={() => setActiveModal('none')}
-            className="px-3.5 py-1.5 rounded bg-[#2a2a30] hover:bg-[#34343c] text-[12px] text-[#d4d4dc]"
+            className="px-3.5 py-1.5 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[12px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-1.5 rounded bg-[#6c5ce7] hover:bg-[#5b4bc4] text-[12px] font-medium text-white"
+            className="px-4 py-1.5 rounded bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[12px] font-semibold text-[#0b0d11] shadow-[0_0_12px_var(--accent-glow)] transition-all duration-150"
           >
             {mode === 'new' ? 'Create Composition' : 'Save Changes'}
           </button>

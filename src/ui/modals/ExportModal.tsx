@@ -90,7 +90,7 @@ export const ExportModal: React.FC = () => {
       <div className="space-y-4">
         {/* Format Selector */}
         <div>
-          <label className="block text-[11px] text-[#9b9ba6] mb-1.5">Output Format</label>
+          <label className="block text-[11px] text-[var(--text-secondary)] mb-1.5">Output Format</label>
           <div className="grid grid-cols-4 gap-2">
             {[
               { id: 'mp4', title: 'MP4 (H.264)', sub: 'WebCodecs + Muxer' },
@@ -103,14 +103,14 @@ export const ExportModal: React.FC = () => {
                 type="button"
                 disabled={isExporting}
                 onClick={() => setFormat(item.id as ExportFormat)}
-                className={`p-2 rounded border text-left transition-colors ${
+                className={`p-2 rounded border text-left transition-colors duration-150 ${
                   format === item.id
-                    ? 'bg-[#6c5ce7]/20 border-[#6c5ce7] text-white'
-                    : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
+                    ? 'bg-[var(--accent-deep)]/25 border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                    : 'bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
                 }`}
               >
                 <div className="text-[12px] font-semibold">{item.title}</div>
-                <div className="text-[10px] opacity-70">{item.sub}</div>
+                <div className="text-[10px] text-[var(--text-muted)]">{item.sub}</div>
               </button>
             ))}
           </div>
@@ -118,8 +118,8 @@ export const ExportModal: React.FC = () => {
 
         {/* Settings Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-[#1a1a1d] p-2.5 rounded border border-[#2e2e33]">
-            <label className="block text-[10px] text-[#9b9ba6] mb-1">
+          <div className="bg-[var(--bg-elevated)] p-2.5 rounded border border-[var(--border)]">
+            <label className="block text-[10px] text-[var(--text-secondary)] mb-1">
               Resolution ({outWidth} × {outHeight} px)
             </label>
             <div className="flex gap-1.5">
@@ -133,10 +133,10 @@ export const ExportModal: React.FC = () => {
                   type="button"
                   disabled={isExporting}
                   onClick={() => setScale(s.val as 1 | 0.5 | 0.25)}
-                  className={`flex-1 py-1 rounded text-[11px] font-mono ${
+                  className={`flex-1 py-1 rounded text-[11px] font-mono transition-colors duration-150 ${
                     scale === s.val
-                      ? 'bg-[#6c5ce7] text-white'
-                      : 'bg-[#25252b] text-[#9b9ba6] hover:text-white'
+                      ? 'bg-[var(--accent)] text-[#0b0d11] font-semibold shadow-[0_0_6px_var(--accent-glow)]'
+                      : 'bg-[var(--bg-base)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
                   }`}
                 >
                   {s.label}
@@ -145,17 +145,17 @@ export const ExportModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-[#1a1a1d] p-2.5 rounded border border-[#2e2e33]">
-            <label className="block text-[10px] text-[#9b9ba6] mb-1">Time Span</label>
+          <div className="bg-[var(--bg-elevated)] p-2.5 rounded border border-[var(--border)]">
+            <label className="block text-[10px] text-[var(--text-secondary)] mb-1">Time Span</label>
             <div className="flex gap-1.5">
               <button
                 type="button"
                 disabled={isExporting}
                 onClick={() => setRange('workArea')}
-                className={`flex-1 py-1 rounded text-[11px] ${
+                className={`flex-1 py-1 rounded text-[11px] transition-colors duration-150 ${
                   range === 'workArea'
-                    ? 'bg-[#6c5ce7] text-white'
-                    : 'bg-[#25252b] text-[#9b9ba6] hover:text-white'
+                    ? 'bg-[var(--accent)] text-[#0b0d11] font-semibold shadow-[0_0_6px_var(--accent-glow)]'
+                    : 'bg-[var(--bg-base)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
                 }`}
               >
                 Work Area ({(comp.workAreaEnd - comp.workAreaStart).toFixed(1)}s)
@@ -164,10 +164,10 @@ export const ExportModal: React.FC = () => {
                 type="button"
                 disabled={isExporting}
                 onClick={() => setRange('full')}
-                className={`flex-1 py-1 rounded text-[11px] ${
+                className={`flex-1 py-1 rounded text-[11px] transition-colors duration-150 ${
                   range === 'full'
-                    ? 'bg-[#6c5ce7] text-white'
-                    : 'bg-[#25252b] text-[#9b9ba6] hover:text-white'
+                    ? 'bg-[var(--accent)] text-[#0b0d11] font-semibold shadow-[0_0_6px_var(--accent-glow)]'
+                    : 'bg-[var(--bg-base)] text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
                 }`}
               >
                 Entire Comp ({comp.duration.toFixed(1)}s)
@@ -177,8 +177,8 @@ export const ExportModal: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center justify-between bg-[#1a1a1d] px-3 py-2 rounded border border-[#2e2e33]">
-            <span className="text-[11px] text-[#9b9ba6]">Frame Rate</span>
+          <div className="flex items-center justify-between bg-[var(--bg-elevated)] px-3 py-2 rounded border border-[var(--border)]">
+            <span className="text-[11px] text-[var(--text-secondary)]">Frame Rate</span>
             <ScrubbyInput
               value={fps}
               onChange={setFps}
@@ -190,8 +190,8 @@ export const ExportModal: React.FC = () => {
               className="w-24"
             />
           </div>
-          <div className="flex items-center justify-between bg-[#1a1a1d] px-3 py-2 rounded border border-[#2e2e33]">
-            <span className="text-[11px] text-[#9b9ba6]">Target Bitrate</span>
+          <div className="flex items-center justify-between bg-[var(--bg-elevated)] px-3 py-2 rounded border border-[var(--border)]">
+            <span className="text-[11px] text-[var(--text-secondary)]">Target Bitrate</span>
             <ScrubbyInput
               value={bitrateMbps}
               onChange={setBitrateMbps}
@@ -207,24 +207,24 @@ export const ExportModal: React.FC = () => {
 
         {/* Live Progress & Thumbnail Preview */}
         {(isExporting || progress > 0 || errorMsg) && (
-          <div className="bg-[#161619] border border-[#2e2e33] rounded-md p-3 space-y-2.5">
+          <div className="bg-[var(--bg-base)] border border-[var(--border)] rounded-md p-3 space-y-2.5">
             {previewUrl && (
-              <div className="flex justify-center bg-black/60 rounded overflow-hidden border border-[#2e2e33] h-32">
+              <div className="flex justify-center bg-black/60 rounded overflow-hidden border border-[var(--border)] h-32">
                 <img src={previewUrl} alt="Render Frame Preview" className="h-full object-contain" />
               </div>
             )}
             <div className="flex items-center justify-between text-[11px]">
-              <span className="text-[#d4d4dc] truncate">{statusText}</span>
-              <span className="font-mono text-[#00d1b2] font-semibold">{Math.round(progress)}%</span>
+              <span className="text-[var(--text-primary)] truncate">{statusText}</span>
+              <span className="font-mono text-[var(--accent)] font-semibold">{Math.round(progress)}%</span>
             </div>
-            <div className="w-full h-2 bg-[#232327] rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#6c5ce7] to-[#00d1b2] transition-all duration-150"
+                className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-deep)] transition-all duration-150"
                 style={{ width: `${Math.min(100, progress)}%` }}
               />
             </div>
             {errorMsg && (
-              <div className="text-[11px] text-[#f87171] flex items-center gap-1.5">
+              <div className="text-[11px] text-[var(--danger)] flex items-center gap-1.5">
                 <XCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
@@ -232,9 +232,9 @@ export const ExportModal: React.FC = () => {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2 border-t border-[#2e2e33]">
-          <div className="flex items-center gap-1.5 text-[11px] text-[#9b9ba6]">
-            <Film className="w-3.5 h-3.5 text-[#6c5ce7]" />
+        <div className="flex items-center justify-between pt-2 border-t border-[var(--border)]">
+          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
+            <Film className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>
               {Math.round(
                 ((range === 'workArea' ? comp.workAreaEnd - comp.workAreaStart : comp.duration) || 1) * fps
@@ -247,7 +247,7 @@ export const ExportModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-[#ef4444]/20 hover:bg-[#ef4444]/30 border border-[#ef4444] text-[#f87171] text-[12px]"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-[var(--danger)]/20 hover:bg-[var(--danger)]/30 border border-[var(--danger)] text-[var(--danger)] text-[12px]"
               >
                 <XCircle className="w-3.5 h-3.5" />
                 Cancel Render
@@ -257,14 +257,14 @@ export const ExportModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveModal('none')}
-                  className="px-3.5 py-1.5 rounded bg-[#2a2a30] hover:bg-[#34343c] text-[12px] text-[#d4d4dc]"
+                  className="px-3.5 py-1.5 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[12px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"
                 >
                   Close
                 </button>
                 <button
                   type="button"
                   onClick={handleStartExport}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-[#6c5ce7] hover:bg-[#5b4bc4] text-[12px] font-medium text-white shadow-lg shadow-[#6c5ce7]/20"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[12px] font-semibold text-[#0b0d11] shadow-[0_0_12px_var(--accent-glow)] transition-all duration-150"
                 >
                   {isExporting ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

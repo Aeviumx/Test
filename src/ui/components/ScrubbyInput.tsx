@@ -110,7 +110,7 @@ export const ScrubbyInput: React.FC<ScrubbyInputProps> = ({
           if (e.key === 'Enter') commitDraft();
           if (e.key === 'Escape') setIsEditing(false);
         }}
-        className={`h-6 px-1.5 bg-[#141418] border border-[#6c5ce7] rounded text-[11px] font-mono text-white outline-none w-16 ${className}`}
+        className={`h-6 px-1.5 bg-[var(--bg-base)] border border-[var(--accent)] rounded text-[11px] font-mono text-[var(--text-primary)] outline-none shadow-[0_0_6px_var(--accent-glow)] w-16 ${className}`}
       />
     );
   }
@@ -119,14 +119,14 @@ export const ScrubbyInput: React.FC<ScrubbyInputProps> = ({
     <div
       onMouseDown={handleMouseDown}
       title="Drag horizontally to scrub (Shift ×10, Alt ×0.1) or click to enter value"
-      className={`inline-flex items-center justify-between gap-1 h-6 px-1.5 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border ${
-        isScrubbing ? 'border-[#6c5ce7] bg-[#2a2a36]' : 'border-[#2e2e33]'
+      className={`inline-flex items-center justify-between gap-1 h-6 px-1.5 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border ${
+        isScrubbing ? 'border-[var(--accent)] bg-[var(--bg-hover)] shadow-[0_0_6px_var(--accent-glow)]' : 'border-[var(--border)]'
       } text-[11px] font-mono select-none transition-colors duration-150 ${
-        disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-ew-resize'
+        disabled ? 'opacity-35 cursor-not-allowed' : 'cursor-ew-resize'
       } ${className}`}
     >
-      {prefix && <span className="text-[#787885] text-[10px] font-sans mr-0.5">{prefix}</span>}
-      <span className="text-[#6c5ce7] font-medium hover:text-[#8f82f5] truncate">
+      {prefix && <span className="text-[var(--text-muted)] text-[10px] font-sans mr-0.5">{prefix}</span>}
+      <span className="text-[var(--accent)] font-medium hover:text-[var(--accent-hover)] truncate">
         {displayStr}
         {unit}
       </span>
