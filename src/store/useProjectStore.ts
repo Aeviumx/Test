@@ -7,6 +7,7 @@ import {
   createDefaultMask,
   createEffectInstance,
   createKeyframe,
+  recomputeSpatialTangents,
 } from '../core/defaults';
 import { createDemoProject } from '../core/demoProject';
 import {
@@ -21,6 +22,7 @@ import {
   ClipboardKeyframe,
   Composition,
   EffectType,
+  Keyframe,
   Layer,
   LayerType,
   Mask,
@@ -1069,8 +1071,11 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         if (existing) {
           existing.value = value;
         } else {
-          prop.keyframes.push(createKeyframe(snappedT, value, 'bezier'));
+          prop.keyframes.push(createKeyframe(snappedT, value, 'linear'));
           prop.keyframes.sort((a, b) => a.time - b.time);
+        }
+        if (propertyPath === 'transform.position') {
+          recomputeSpatialTangents(prop.keyframes as Keyframe<Vec2>[]);
         }
       }
     });
@@ -1098,7 +1103,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       } else {
         prop.animated = true;
         const snappedT = snapToFrame(currentTime, comp.fps);
-        prop.keyframes = [createKeyframe(snappedT, evaluatedNow, 'bezier')];
+        prop.keyframes = [createKeyframe(snappedT, evaluatedNow, 'linear')];
       }
     });
   },
@@ -1107,6 +1112,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     const { project, currentTime } = get();
     const compId = project.activeCompId;
     const targetTime = time ?? currentTime;
+    let addedRef: SelectedKeyframeRef | null = null;
 
     get().commitCommand('Add/Remove Keyframe', (draft) => {
       const comp = draft.compositions.find((c) => c.id === compId);
@@ -1122,7 +1128,9 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
 
       if (!prop.animated) {
         prop.animated = true;
-        prop.keyframes = [createKeyframe(snappedT, currentVal, 'bezier')];
+        const kf = createKeyframe(snappedT, currentVal, 'linear');
+        prop.keyframes = [kf];
+        addedRef = { layerId, propertyPath, keyframeId: kf.id };
         return;
       }
 
@@ -1133,10 +1141,19 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           prop.animated = false;
         }
       } else {
-        prop.keyframes.push(createKeyframe(snappedT, currentVal, 'bezier'));
+        const kf = createKeyframe(snappedT, currentVal, 'linear');
+        prop.keyframes.push(kf);
         prop.keyframes.sort((a, b) => a.time - b.time);
+        addedRef = { layerId, propertyPath, keyframeId: kf.id };
+      }
+      if (propertyPath === 'transform.position') {
+        recomputeSpatialTangents(prop.keyframes as Keyframe<Vec2>[]);
       }
     });
+
+    if (addedRef) {
+      set({ selectedKeyframes: [addedRef], inspectedPropertyPath: propertyPath });
+    }
   },
 
   setSelectedKeyframes: (refs) => {
@@ -1206,6 +1223,14 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         kf.spatialOutTangent = updates.spatialOutTangent;
       }
       prop.keyframes.sort((a, b) => a.time - b.time);
+      if (
+        propertyPath === 'transform.position' &&
+        updates.value !== undefined &&
+        !updates.spatialInTangent &&
+        !updates.spatialOutTangent
+      ) {
+        recomputeSpatialTangents(prop.keyframes as Keyframe<Vec2>[]);
+      }
     });
   },
 
@@ -1232,20 +1257,14 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   },
 
   applyEasingToSelectedKeyframes: (preset) => {
-    const { selectedKeyframes, project } = get();
-    if (selectedKeyframes.length === 0) return;
+    const { selectedKeyframes, selectedLayerIds, project } = get();
     const compId = project.activeCompId;
 
     get().commitCommand(`Apply ${preset}`, (draft) => {
       const comp = draft.compositions.find((c) => c.id === compId);
       if (!comp) return;
-      for (const ref of selectedKeyframes) {
-        const layer = comp.layers.find((l) => l.id === ref.layerId);
-        if (!layer || layer.locked) continue;
-        const prop = getLayerPropertyByPath(layer, ref.propertyPath);
-        const kf = prop?.keyframes.find((k) => k.id === ref.keyframeId);
-        if (!kf) continue;
 
+      const applyPresetToKf = (kf: Keyframe<unknown>) => {
         if (preset === 'linear') {
           kf.interpolation = 'linear';
           kf.inTangent = { x: 0.25, y: 0 };
@@ -1264,6 +1283,28 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           kf.interpolation = 'bezier';
           kf.inTangent = { x: 0.15, y: 0 };
           kf.outTangent = { x: 0.65, y: 0 };
+        }
+      };
+
+      if (selectedKeyframes.length > 0) {
+        for (const ref of selectedKeyframes) {
+          const layer = comp.layers.find((l) => l.id === ref.layerId);
+          if (!layer || layer.locked) continue;
+          const prop = getLayerPropertyByPath(layer, ref.propertyPath);
+          const kf = prop?.keyframes.find((k) => k.id === ref.keyframeId);
+          if (kf) applyPresetToKf(kf);
+        }
+      } else if (selectedLayerIds.length > 0) {
+        for (const layerId of selectedLayerIds) {
+          const layer = comp.layers.find((l) => l.id === layerId);
+          if (!layer || layer.locked) continue;
+          for (const entry of listLayerAnimatableProperties(layer)) {
+            if (entry.property.animated) {
+              for (const kf of entry.property.keyframes) {
+                applyPresetToKf(kf);
+              }
+            }
+          }
         }
       }
     });
@@ -1429,3 +1470,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
 
   setLastSavedAt: (iso) => set({ lastSavedAt: iso }),
 }));
+
+if (typeof window !== 'undefined') {
+  (window as unknown as Record<string, unknown>).__MF_STORE__ = useProjectStore;
+}

@@ -110,7 +110,11 @@ export const GraphEditor: React.FC = () => {
     return [sx, sy];
   };
 
-  const handleKeyframeDrag = (e: React.MouseEvent, kf: Keyframe<number | Vec2 | string>) => {
+  const handleKeyframeDrag = (
+    e: React.MouseEvent,
+    kf: Keyframe<number | Vec2 | string>,
+    axisIndex: 0 | 1 = 0
+  ) => {
     e.stopPropagation();
     setSelectedKeyframes([{ layerId: layer.id, propertyPath: activePath, keyframeId: kf.id }]);
 
@@ -127,7 +131,8 @@ export const GraphEditor: React.FC = () => {
         } else if (Array.isArray(kf.value)) {
           updateKeyframeTangentsAndValue(layer.id, activePath, kf.id, {
             time: nextTime,
-            value: [nextScalar, kf.value[1]],
+            value:
+              axisIndex === 1 ? [kf.value[0], nextScalar] : [nextScalar, kf.value[1]],
           });
         }
       } else {
@@ -376,9 +381,8 @@ export const GraphEditor: React.FC = () => {
             </>
           )}
 
-          {/* Keyframe Nodes & Interactive Bezier Handles (in Value Mode) */}
-          {graphEditorMode === 'value' &&
-            prop.keyframes.map((kf, idx) => {
+          {/* Keyframe Nodes & Interactive Bezier Handles */}
+          {prop.keyframes.map((kf, idx) => {
               const kx = timeToX(kf.time);
               const scalar =
                 typeof kf.value === 'number'
@@ -386,7 +390,11 @@ export const GraphEditor: React.FC = () => {
                   : Array.isArray(kf.value)
                   ? kf.value[0]
                   : 0;
-              const ky = valToY(scalar);
+              const isVec2 = Array.isArray(kf.value) && typeof kf.value[0] === 'number';
+              const scalarY = isVec2 ? (kf.value as number[])[1] : null;
+              const ky = graphEditorMode === 'value' ? valToY(scalar) : plotTop + plotH * 0.5;
+              const ky2 =
+                graphEditorMode === 'value' && scalarY !== null ? valToY(scalarY) : null;
               const isSelected = selectedKeyframes.some((s) => s.keyframeId === kf.id);
 
               const nextKf = prop.keyframes[idx + 1];
@@ -416,8 +424,9 @@ export const GraphEditor: React.FC = () => {
                       <circle
                         cx={outHandleX}
                         cy={outHandleY}
-                        r={4.5}
+                        r={5}
                         fill="#f59e0b"
+                        data-testid={`bezier-handle-out-${idx}`}
                         className="cursor-pointer"
                         onMouseDown={(e) => handleTangentDrag(e, kf, 'out', outSpanPx)}
                       />
@@ -438,26 +447,45 @@ export const GraphEditor: React.FC = () => {
                       <circle
                         cx={inHandleX}
                         cy={inHandleY}
-                        r={4.5}
+                        r={5}
                         fill="#f59e0b"
+                        data-testid={`bezier-handle-in-${idx}`}
                         className="cursor-pointer"
                         onMouseDown={(e) => handleTangentDrag(e, kf, 'in', inSpanPx)}
                       />
                     </>
                   )}
 
-                  {/* Keyframe Diamond */}
+                  {/* Secondary Y-axis Keyframe Diamond (for 2D properties like Position/Scale) */}
+                  {ky2 !== null && (
+                    <rect
+                      x={kx - 5}
+                      y={ky2 - 5}
+                      width={10}
+                      height={10}
+                      fill={isSelected ? '#f59e0b' : '#10b981'}
+                      stroke="#064e3b"
+                      strokeWidth={1.8}
+                      transform={`rotate(45 ${kx} ${ky2})`}
+                      data-testid={`graph-kf-y-${idx}`}
+                      className="cursor-move"
+                      onMouseDown={(e) => handleKeyframeDrag(e, kf, 1)}
+                    />
+                  )}
+
+                  {/* Primary / X-axis Keyframe Diamond */}
                   <rect
                     x={kx - 5}
                     y={ky - 5}
                     width={10}
                     height={10}
-                    fill={isSelected ? '#f59e0b' : '#ffffff'}
+                    fill={isSelected ? '#f59e0b' : isVec2 ? '#ef4444' : '#ffffff'}
                     stroke="#6c5ce7"
                     strokeWidth={2}
                     transform={`rotate(45 ${kx} ${ky})`}
+                    data-testid={`graph-kf-x-${idx}`}
                     className="cursor-move"
-                    onMouseDown={(e) => handleKeyframeDrag(e, kf)}
+                    onMouseDown={(e) => handleKeyframeDrag(e, kf, 0)}
                   />
                 </g>
               );

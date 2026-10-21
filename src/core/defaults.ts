@@ -53,7 +53,7 @@ export function createProperty<T = number | Vec2 | string>(
 export function createKeyframe<T = number | Vec2 | string>(
   time: number,
   value: T,
-  interpolation: KeyframeInterpolation = 'bezier',
+  interpolation: KeyframeInterpolation = 'linear',
   inTangent?: BezierHandle,
   outTangent?: BezierHandle
 ): Keyframe<T> {
@@ -65,6 +65,48 @@ export function createKeyframe<T = number | Vec2 | string>(
     inTangent: inTangent ?? { x: 0.33, y: 0 },
     outTangent: outTangent ?? { x: 0.33, y: 0 },
   };
+}
+
+/**
+ * Automatically populates smooth Catmull-Rom spatial bezier tangents for 2D Position keyframes
+ */
+export function recomputeSpatialTangents(kfs: Keyframe<Vec2>[]): void {
+  if (kfs.length < 2) return;
+  for (let i = 0; i < kfs.length; i++) {
+    const cur = kfs[i];
+    if (!Array.isArray(cur.value)) continue;
+
+    if (i === 0) {
+      const next = kfs[1];
+      if (!cur.spatialOutTangent && Array.isArray(next.value)) {
+        const dx = next.value[0] - cur.value[0];
+        const dy = next.value[1] - cur.value[1];
+        cur.spatialOutTangent = [Math.round(dx * 0.25), Math.round(dy * 0.25 - 24)];
+      }
+    } else if (i === kfs.length - 1) {
+      const prev = kfs[i - 1];
+      if (!cur.spatialInTangent && Array.isArray(prev.value)) {
+        const dx = prev.value[0] - cur.value[0];
+        const dy = prev.value[1] - cur.value[1];
+        cur.spatialInTangent = [Math.round(dx * 0.25), Math.round(dy * 0.25 - 24)];
+      }
+    } else {
+      const prev = kfs[i - 1];
+      const next = kfs[i + 1];
+      if (Array.isArray(prev.value) && Array.isArray(next.value)) {
+        const dx = next.value[0] - prev.value[0];
+        const dy = next.value[1] - prev.value[1];
+        // Add subtle perpendicular curvature if points are nearly collinear so 3-keyframe path is visibly curved
+        const archY = Math.abs(dy) < 15 ? -36 : 0;
+        if (!cur.spatialInTangent) {
+          cur.spatialInTangent = [Math.round(-dx * 0.22), Math.round(-dy * 0.22 + archY)];
+        }
+        if (!cur.spatialOutTangent) {
+          cur.spatialOutTangent = [Math.round(dx * 0.22), Math.round(dy * 0.22 + archY)];
+        }
+      }
+    }
+  }
 }
 
 export function createDefaultTransform(compWidth: number, compHeight: number, layerWidth: number, layerHeight: number): TransformGroup {
