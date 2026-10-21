@@ -1167,6 +1167,68 @@ export class WebGLCompositionRenderer {
     return img;
   }
 
+  public async prepareMediaAtTime(
+    comp: Composition,
+    time: number,
+    project: Project
+  ): Promise<void> {
+    const tasks: Promise<void>[] = [];
+    for (const layer of comp.layers) {
+      if (!layer.visible || time < layer.inPoint || time > layer.outPoint) continue;
+      if (layer.type === 'image' && layer.assetId) {
+        const asset = project.assets.find((a) => a.id === layer.assetId);
+        if (asset) {
+          const img = this.getOrLoadImage(asset);
+          if (img && !img.complete) {
+            tasks.push(
+              new Promise<void>((resolve) => {
+                img.addEventListener('load', () => resolve(), { once: true });
+                img.addEventListener('error', () => resolve(), { once: true });
+              })
+            );
+          }
+        }
+      } else if (layer.type === 'video' && layer.assetId) {
+        const asset = project.assets.find((a) => a.id === layer.assetId);
+        if (asset) {
+          const localTime = Math.max(0, time - layer.startTime);
+          const vid = this.getOrLoadVideo(asset, localTime);
+          if (vid) {
+            tasks.push(
+              new Promise<void>((resolve) => {
+                const syncSeek = () => {
+                  const dur = Number.isFinite(vid.duration) && vid.duration > 0 ? vid.duration : 1;
+                  const target = localTime % dur;
+                  if (Math.abs(vid.currentTime - target) < 0.02) {
+                    resolve();
+                    return;
+                  }
+                  const onSeeked = () => {
+                    vid.removeEventListener('seeked', onSeeked);
+                    resolve();
+                  };
+                  vid.addEventListener('seeked', onSeeked);
+                  vid.currentTime = target;
+                  setTimeout(onSeeked, 120);
+                };
+                if (vid.readyState >= 1) {
+                  syncSeek();
+                } else {
+                  vid.addEventListener('loadedmetadata', syncSeek, { once: true });
+                  vid.addEventListener('error', () => resolve(), { once: true });
+                  setTimeout(() => resolve(), 200);
+                }
+              })
+            );
+          }
+        }
+      }
+    }
+    if (tasks.length > 0) {
+      await Promise.all(tasks);
+    }
+  }
+
   private getOrLoadVideo(asset: MediaAsset, targetTime: number): HTMLVideoElement | null {
     let vid = this.videoCache.get(asset.id);
     if (!vid) {
@@ -1183,7 +1245,7 @@ export class WebGLCompositionRenderer {
     }
     if (vid.readyState >= 1 && Number.isFinite(vid.duration) && vid.duration > 0) {
       const clamped = targetTime % vid.duration;
-      if (Math.abs(vid.currentTime - clamped) > 0.08 && !vid.seeking) {
+      if (Math.abs(vid.currentTime - clamped) > 0.09 && !vid.seeking) {
         vid.currentTime = clamped;
       }
     }

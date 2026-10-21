@@ -38,6 +38,56 @@ async function canvasToUint8Png(canvas: HTMLCanvasElement): Promise<Uint8Array> 
   });
 }
 
+async function mixCompositionAudio(
+  comp: Composition,
+  project: Project,
+  startTime: number,
+  duration: number,
+  sampleRate = 48000
+): Promise<AudioBuffer | null> {
+  if (typeof OfflineAudioContext === 'undefined') return null;
+  const totalSamples = Math.max(1024, Math.ceil(duration * sampleRate));
+  const offlineCtx = new OfflineAudioContext(2, totalSamples, sampleRate);
+  const anySolo = comp.layers.some((l) => l.solo);
+
+  for (const layer of comp.layers) {
+    if (layer.type !== 'audio' && layer.type !== 'video') continue;
+    if (!layer.audioEnabled || !layer.assetId) continue;
+    if (anySolo && !layer.solo) continue;
+
+    const clipStart = Math.max(startTime, layer.inPoint);
+    const clipEnd = Math.min(startTime + duration, layer.outPoint);
+    if (clipEnd <= clipStart) continue;
+
+    const asset = project.assets.find((a) => a.id === layer.assetId);
+    if (!asset) continue;
+
+    try {
+      const resp = await fetch(asset.url);
+      const rawBuf = await resp.arrayBuffer();
+      const decoded = await offlineCtx.decodeAudioData(rawBuf);
+      const source = offlineCtx.createBufferSource();
+      source.buffer = decoded;
+      source.connect(offlineCtx.destination);
+
+      const when = Math.max(0, clipStart - startTime);
+      const mediaOffset = Math.max(0, clipStart - layer.startTime) % Math.max(0.01, decoded.duration);
+      const playDuration = Math.min(clipEnd - clipStart, decoded.duration - mediaOffset);
+      if (playDuration > 0.005) {
+        source.start(when, mediaOffset, playDuration);
+      }
+    } catch {
+      // Skip asset if audio decoding fails (e.g. video without audio stream)
+    }
+  }
+
+  try {
+    return await offlineCtx.startRendering();
+  } catch {
+    return null;
+  }
+}
+
 export async function exportComposition(
   comp: Composition,
   project: Project,
@@ -64,9 +114,30 @@ export async function exportComposition(
 
   const safeBaseName = comp.name.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-  // 1. MP4 via WebCodecs VideoEncoder + mp4-muxer
+  // 1. MP4 via WebCodecs VideoEncoder (+ AudioEncoder AAC) + mp4-muxer
   if (format === 'mp4' && typeof window !== 'undefined' && 'VideoEncoder' in window) {
     try {
+      const sampleRate = 48000;
+      let canEncodeAudio = false;
+      if ('AudioEncoder' in window && 'AudioData' in window) {
+        try {
+          const audioSupport = await AudioEncoder.isConfigSupported({
+            codec: 'mp4a.40.2',
+            sampleRate,
+            numberOfChannels: 2,
+            bitrate: 128_000,
+          });
+          canEncodeAudio = Boolean(audioSupport.supported);
+        } catch {
+          canEncodeAudio = false;
+        }
+      }
+
+      const mixedAudioBuffer = canEncodeAudio
+        ? await mixCompositionAudio(comp, project, startTime, duration, sampleRate)
+        : null;
+      const includeAudioTrack = Boolean(canEncodeAudio && mixedAudioBuffer);
+
       const target = new ArrayBufferTarget();
       const muxer = new Muxer({
         target,
@@ -75,6 +146,15 @@ export async function exportComposition(
           width: exportWidth,
           height: exportHeight,
         },
+        ...(includeAudioTrack
+          ? {
+              audio: {
+                codec: 'aac',
+                sampleRate,
+                numberOfChannels: 2,
+              },
+            }
+          : {}),
         fastStart: 'in-memory',
       });
 
@@ -120,6 +200,7 @@ export async function exportComposition(
         if (encoderError) throw encoderError;
 
         const t = startTime + f / fps;
+        await renderer.prepareMediaAtTime(comp, t, project);
         renderer.renderComposition(comp, t, project, effectiveScale);
 
         const timestampUs = Math.round((f / fps) * 1_000_000);
@@ -133,7 +214,7 @@ export async function exportComposition(
 
         if (f % 4 === 0 || f === totalFrames - 1) {
           onProgress({
-            progress: ((f + 1) / totalFrames) * 100,
+            progress: ((f + 1) / totalFrames) * 95,
             currentFrame: f + 1,
             totalFrames,
             previewDataUrl: offscreenCanvas.toDataURL('image/jpeg', 0.55),
@@ -145,6 +226,47 @@ export async function exportComposition(
 
       await encoder.flush();
       encoder.close();
+
+      if (includeAudioTrack && mixedAudioBuffer) {
+        const audioEncoder = new AudioEncoder({
+          output: (chunk, meta) => {
+            muxer.addAudioChunk(chunk, meta);
+          },
+          error: (e) => {
+            console.warn('AudioEncoder warning:', e);
+          },
+        });
+        audioEncoder.configure({
+          codec: 'mp4a.40.2',
+          sampleRate,
+          numberOfChannels: 2,
+          bitrate: 128_000,
+        });
+
+        const ch0 = mixedAudioBuffer.getChannelData(0);
+        const ch1 =
+          mixedAudioBuffer.numberOfChannels > 1 ? mixedAudioBuffer.getChannelData(1) : ch0;
+        const chunkFrames = 1024;
+        for (let offset = 0; offset < mixedAudioBuffer.length; offset += chunkFrames) {
+          const framesInChunk = Math.min(chunkFrames, mixedAudioBuffer.length - offset);
+          const planar = new Float32Array(framesInChunk * 2);
+          planar.set(ch0.subarray(offset, offset + framesInChunk), 0);
+          planar.set(ch1.subarray(offset, offset + framesInChunk), framesInChunk);
+          const audioData = new AudioData({
+            format: 'f32-planar',
+            sampleRate,
+            numberOfFrames: framesInChunk,
+            numberOfChannels: 2,
+            timestamp: Math.round((offset / sampleRate) * 1_000_000),
+            data: planar,
+          });
+          audioEncoder.encode(audioData);
+          audioData.close();
+        }
+        await audioEncoder.flush();
+        audioEncoder.close();
+      }
+
       muxer.finalize();
 
       return {
