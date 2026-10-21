@@ -24,6 +24,7 @@ import {
   invertMatrix,
 } from '../../utils/geometry';
 import { timeToFrame } from '../../utils/timecode';
+import { SourceMonitor } from '../components/SourceMonitor';
 
 export const ViewportPanel: React.FC = () => {
   const project = useProjectStore((s) => s.project);
@@ -45,6 +46,10 @@ export const ViewportPanel: React.FC = () => {
   const showMotionPaths = useProjectStore((s) => s.showMotionPaths);
   const showCheckerboard = useProjectStore((s) => s.showCheckerboard);
   const snapEnabled = useProjectStore((s) => s.snapEnabled);
+  const viewportMode = useProjectStore((s) => s.viewportMode);
+  const setViewportMode = useProjectStore((s) => s.setViewportMode);
+  const sourceMonitorAssetId = useProjectStore((s) => s.sourceMonitorAssetId);
+  const sourceMonitorAsset = project.assets.find((a) => a.id === sourceMonitorAssetId);
 
   const selectLayer = useProjectStore((s) => s.selectLayer);
   const setPropertyValue = useProjectStore((s) => s.setPropertyValue);
@@ -525,8 +530,47 @@ export const ViewportPanel: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-[var(--bg-base)] select-none overflow-hidden relative">
-      {/* Main Interactive Viewport Stage */}
-      <div
+      {/* Top Monitor Mode Switch Bar */}
+      <div className="h-[28px] px-2 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center justify-between shrink-0 select-none z-30">
+        <div className="flex items-center gap-1 h-full">
+          <button
+            type="button"
+            onClick={() => setViewportMode('program')}
+            className={`h-full px-3 flex items-center gap-1.5 text-[11px] font-semibold border-b-2 transition-all ${
+              viewportMode === 'program'
+                ? 'border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+            }`}
+          >
+            <span>Program:</span>
+            <span className="text-[var(--accent)]">{comp.name}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewportMode('source')}
+            className={`h-full px-3 flex items-center gap-1.5 text-[11px] font-semibold border-b-2 transition-all ${
+              viewportMode === 'source'
+                ? 'border-[var(--accent)] text-[var(--text-primary)] shadow-[0_0_8px_var(--accent-glow)]'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+            }`}
+          >
+            <span>Source Monitor</span>
+            {sourceMonitorAsset && (
+              <span className="text-[var(--steel-light)] truncate max-w-[140px]">
+                ({sourceMonitorAsset.name})
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {viewportMode === 'source' ? (
+        <SourceMonitor />
+      ) : (
+        <>
+          {/* Main Interactive Viewport Stage */}
+          <div
         ref={containerRef}
         onMouseDown={handleViewportMouseDown}
         onMouseMove={(e) => {
@@ -1136,6 +1180,8 @@ export const ViewportPanel: React.FC = () => {
           <span className="text-[var(--success)] font-semibold hidden sm:inline">WebGL2 GPU</span>
         </div>
       </div>
-    </div>
+    </>
+  )}
+</div>
   );
 };

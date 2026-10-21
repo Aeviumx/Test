@@ -100,7 +100,7 @@ export function useKeyboardShortcuts(): void {
         return;
       }
 
-      // Export Modal (Ctrl+M) or Comp Settings (Ctrl+K)
+      // Export Modal (Ctrl+M) or Comp Settings (Ctrl+Shift+K) / Cut at playhead (Ctrl+K)
       if (isCtrl && e.key.toLowerCase() === 'm') {
         e.preventDefault();
         state.setActiveModal('export');
@@ -108,7 +108,11 @@ export function useKeyboardShortcuts(): void {
       }
       if (isCtrl && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        state.setActiveModal('comp-settings');
+        if (e.shiftKey) {
+          state.setActiveModal('comp-settings');
+        } else {
+          state.splitSelectedLayersAtPlayhead();
+        }
         return;
       }
 
@@ -160,15 +164,33 @@ export function useKeyboardShortcuts(): void {
         return;
       }
 
-      // Delete / Backspace
+      // Delete / Backspace (with Shift+Delete for Ripple Delete)
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
-        if (state.selectedKeyframes.length > 0) {
+        if (e.shiftKey && state.selectedLayerIds.length > 0) {
+          state.rippleDeleteLayer(state.selectedLayerIds[0]);
+        } else if (state.selectedKeyframes.length > 0) {
           state.deleteSelectedKeyframes();
         } else if (state.selectedLayerIds.length > 0) {
           state.deleteSelectedLayers();
         }
         return;
+      }
+
+      // Source Monitor Insert (,) and Overwrite (.)
+      if (e.key === ',' || e.code === 'Comma') {
+        if (!isCtrl && !e.altKey) {
+          e.preventDefault();
+          state.insertSourceClipToTimeline({ mode: 'insert' });
+          return;
+        }
+      }
+      if (e.key === '.' || e.code === 'Period') {
+        if (!isCtrl && !e.altKey) {
+          e.preventDefault();
+          state.insertSourceClipToTimeline({ mode: 'overwrite' });
+          return;
+        }
       }
 
       // [ and ] or Alt+[ and Alt+]
@@ -218,6 +240,27 @@ export function useKeyboardShortcuts(): void {
           break;
         case 'Y':
           state.setActiveTool('anchor');
+          break;
+        case 'C':
+          state.setActiveTool('razor');
+          break;
+        case 'I':
+          if (state.viewportMode === 'source') {
+            state.setSourceInPoint();
+          } else {
+            state.updateActiveComposition({
+              workAreaStart: Math.min(state.currentTime, comp.workAreaEnd - 1 / comp.fps),
+            });
+          }
+          break;
+        case 'O':
+          if (state.viewportMode === 'source') {
+            state.setSourceOutPoint();
+          } else {
+            state.updateActiveComposition({
+              workAreaEnd: Math.max(state.currentTime, comp.workAreaStart + 1 / comp.fps),
+            });
+          }
           break;
         case 'Q': {
           if (state.activeTool === 'shape') {

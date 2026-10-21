@@ -280,6 +280,17 @@ export interface Composition {
 
 export type AssetType = 'image' | 'video' | 'audio';
 
+export interface SceneClip {
+  id: string;
+  assetId: string;
+  sceneIndex: number;
+  name: string;
+  inPoint: number; // seconds in source asset
+  outPoint: number; // seconds in source asset
+  duration: number; // seconds
+  thumbnail?: string; // base64/dataURL preview image
+}
+
 export interface MediaAsset {
   id: string;
   name: string;
@@ -291,6 +302,9 @@ export interface MediaAsset {
   duration?: number;
   sizeBytes?: number;
   waveform?: number[]; // normalized 0..1 peak samples for timeline audio visualization
+  scenes?: SceneClip[];
+  sourceIn?: number;
+  sourceOut?: number;
 }
 
 export interface Project {
@@ -312,7 +326,9 @@ export type ToolType =
   | 'anchor'
   | 'shape'
   | 'pen'
-  | 'text';
+  | 'text'
+  | 'razor'
+  | 'slip';
 
 export type PreviewResolution = 'full' | 'half' | 'quarter';
 

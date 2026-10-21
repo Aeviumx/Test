@@ -1,19 +1,25 @@
 import React, { useRef, useState } from 'react';
 import {
+  ChevronDown,
+  ChevronRight,
   FileAudio,
   FileImage,
   FileVideo,
   Film,
   FolderPlus,
   Layers,
+  Loader2,
+  MonitorPlay,
   Plus,
   Search,
+  Sparkles,
   Trash2,
   Upload,
 } from 'lucide-react';
 import { importMediaFile } from '../../store/persistence';
 import { useProjectStore } from '../../store/useProjectStore';
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu';
+import { formatTimecode } from '../../utils/timecode';
 
 export const ProjectPanel: React.FC = () => {
   const project = useProjectStore((s) => s.project);
@@ -24,9 +30,15 @@ export const ProjectPanel: React.FC = () => {
   const removeMediaAsset = useProjectStore((s) => s.removeMediaAsset);
   const addLayer = useProjectStore((s) => s.addLayer);
   const deleteComposition = useProjectStore((s) => s.deleteComposition);
+  const setSourceMonitorAsset = useProjectStore((s) => s.setSourceMonitorAsset);
+  const detectScenesForAsset = useProjectStore((s) => s.detectScenesForAsset);
+  const insertSceneToTimeline = useProjectStore((s) => s.insertSceneToTimeline);
+  const isDetectingScenes = useProjectStore((s) => s.isDetectingScenes);
+  const sceneDetectionProgress = useProjectStore((s) => s.sceneDetectionProgress);
 
   const [search, setSearch] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [expandedScenes, setExpandedScenes] = useState<Record<string, boolean>>({});
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -270,85 +282,183 @@ export const ProjectPanel: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="space-y-0.5 mt-0.5">
-              {filteredAssets.map((asset) => (
-                <div
-                  key={asset.id}
-                  onDoubleClick={() =>
-                    addLayer(asset.type, {
-                      name: asset.name,
-                      assetId: asset.id,
-                      width: asset.width,
-                      height: asset.height,
-                    })
-                  }
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setContextMenu({
-                      x: e.clientX,
-                      y: e.clientY,
-                      items: [
-                        {
-                          id: 'add-to-comp',
-                          label: `Add to "${activeComp.name}"`,
-                          onClick: () =>
+            <div className="space-y-1 mt-0.5">
+              {filteredAssets.map((asset) => {
+                const hasScenes = !!(asset.scenes && asset.scenes.length > 0);
+                const isExpanded = !!expandedScenes[asset.id];
+
+                return (
+                  <div key={asset.id} className="space-y-0.5">
+                    <div
+                      onDoubleClick={() => setSourceMonitorAsset(asset.id)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setContextMenu({
+                          x: e.clientX,
+                          y: e.clientY,
+                          items: [
+                            {
+                              id: 'open-source-monitor',
+                              label: 'Open in Source Monitor',
+                              onClick: () => setSourceMonitorAsset(asset.id),
+                            },
+                            {
+                              id: 'add-to-comp',
+                              label: `Add to "${activeComp.name}"`,
+                              onClick: () =>
+                                addLayer(asset.type, {
+                                  name: asset.name,
+                                  assetId: asset.id,
+                                  width: asset.width,
+                                  height: asset.height,
+                                }),
+                            },
+                            ...(asset.type === 'video'
+                              ? [
+                                  {
+                                    id: 'detect-scenes',
+                                    label: hasScenes
+                                      ? `Re-detect Scenes (${asset.scenes?.length})`
+                                      : 'Auto-Detect Scenes (Scene Detection)',
+                                    dividerAbove: true,
+                                    onClick: () => void detectScenesForAsset(asset.id),
+                                  },
+                                ]
+                              : []),
+                            {
+                              id: 'remove-asset',
+                              label: 'Delete Asset',
+                              danger: true,
+                              dividerAbove: true,
+                              onClick: () => removeMediaAsset(asset.id),
+                            },
+                          ],
+                        });
+                      }}
+                      title={`${asset.name} — double-click to preview in Source Monitor`}
+                      className="group h-[26px] flex items-center justify-between px-2 rounded border border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors duration-150"
+                    >
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {hasScenes && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedScenes((prev) => ({
+                                ...prev,
+                                [asset.id]: !prev[asset.id],
+                              }));
+                            }}
+                            className="p-0.5 -ml-1 text-[var(--steel)] hover:text-[var(--accent)]"
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="w-3 h-3" />
+                            ) : (
+                              <ChevronRight className="w-3 h-3" />
+                            )}
+                          </button>
+                        )}
+                        {asset.type === 'image' && (
+                          <FileImage className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                        )}
+                        {asset.type === 'video' && (
+                          <FileVideo className="w-3.5 h-3.5 text-[var(--steel-light)] shrink-0" />
+                        )}
+                        {asset.type === 'audio' && (
+                          <FileAudio className="w-3.5 h-3.5 text-[var(--blush)] shrink-0" />
+                        )}
+                        <span className="truncate text-[11px]">{asset.name}</span>
+                        {hasScenes && (
+                          <span className="text-[9px] px-1 rounded bg-[var(--accent-deep)]/25 text-[var(--accent)] font-mono">
+                            {asset.scenes?.length} scenes
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSourceMonitorAsset(asset.id);
+                          }}
+                          title="Open in Source Monitor"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[var(--bg-hover)] text-[var(--steel-light)] hover:text-[var(--accent)]"
+                        >
+                          <MonitorPlay className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             addLayer(asset.type, {
                               name: asset.name,
                               assetId: asset.id,
                               width: asset.width,
                               height: asset.height,
-                            }),
-                        },
-                        {
-                          id: 'remove-asset',
-                          label: 'Delete Asset',
-                          danger: true,
-                          dividerAbove: true,
-                          onClick: () => removeMediaAsset(asset.id),
-                        },
-                      ],
-                    });
-                  }}
-                  title={`${asset.name} — double-click to add to composition`}
-                  className="group h-[26px] flex items-center justify-between px-2 rounded border border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors duration-150"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {asset.type === 'image' && <FileImage className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />}
-                    {asset.type === 'video' && <FileVideo className="w-3.5 h-3.5 text-[var(--steel-light)] shrink-0" />}
-                    {asset.type === 'audio' && <FileAudio className="w-3.5 h-3.5 text-[var(--blush)] shrink-0" />}
-                    <span className="truncate text-[11px]">{asset.name}</span>
+                            });
+                          }}
+                          title="Add to Active Composition"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[var(--bg-hover)] text-[var(--accent)]"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMediaAsset(asset.id);
+                          }}
+                          title="Remove Asset"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[var(--danger)] text-white"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Collapsible Detected Scene Subclips */}
+                    {hasScenes && isExpanded && (
+                      <div className="pl-4 pr-1 space-y-1 py-1 border-l border-[var(--border)] ml-3">
+                        {asset.scenes?.map((scene) => (
+                          <div
+                            key={scene.id}
+                            onDoubleClick={() => insertSceneToTimeline(scene)}
+                            title={`${scene.name} (${formatTimecode(scene.inPoint, 30)} - ${formatTimecode(scene.outPoint, 30)}) — double click to insert`}
+                            className="group/scn flex items-center justify-between p-1 rounded hover:bg-[var(--bg-hover)] cursor-pointer text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border border-transparent hover:border-[var(--border)]"
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {scene.thumbnail ? (
+                                <img
+                                  src={scene.thumbnail}
+                                  alt={scene.name}
+                                  className="w-8 h-5 object-cover rounded bg-black shrink-0 border border-[var(--border)]"
+                                />
+                              ) : (
+                                <Film className="w-4 h-4 text-[var(--steel)] shrink-0" />
+                              )}
+                              <span className="font-medium truncate">{scene.name}</span>
+                              <span className="font-mono text-[9px] text-[var(--text-muted)]">
+                                {scene.duration.toFixed(1)}s
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                insertSceneToTimeline(scene);
+                              }}
+                              title="Insert Scene to Timeline at Playhead"
+                              className="opacity-0 group-hover/scn:opacity-100 p-0.5 rounded text-[var(--accent)] hover:bg-[var(--bg-elevated)]"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addLayer(asset.type, {
-                          name: asset.name,
-                          assetId: asset.id,
-                          width: asset.width,
-                          height: asset.height,
-                        });
-                      }}
-                      title="Add to Active Composition"
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[var(--bg-hover)] text-[var(--accent)]"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeMediaAsset(asset.id);
-                      }}
-                      title="Remove Asset"
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[var(--danger)] text-white"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

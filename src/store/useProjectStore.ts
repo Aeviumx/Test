@@ -30,13 +30,15 @@ import {
   MediaAsset,
   PreviewResolution,
   Project,
+  SceneClip,
   SelectedKeyframeRef,
   ShapeGeometryType,
   ToolType,
   Vec2,
 } from '../types';
 import { createId } from '../utils/id';
-import { clamp, snapToFrame } from '../utils/timecode';
+import { detectScenesInVideo } from '../utils/sceneDetection';
+import { clamp, formatShortTimecode, snapToFrame } from '../utils/timecode';
 import { saveProjectToIndexedDB } from './persistence';
 
 enablePatches();
@@ -251,6 +253,29 @@ export interface ProjectStoreState {
   setRightTab: (tab: 'properties' | 'effects') => void;
   setActiveModal: (modal: ActiveModalType) => void;
   setLastSavedAt: (iso: string) => void;
+
+  // Stage A: Edit Mode, Source Monitor & Scene Detection
+  viewportMode: 'program' | 'source';
+  sourceMonitorAssetId: string | null;
+  sourceInTime: number | null;
+  sourceOutTime: number | null;
+  sourceCurrentTime: number;
+  isDetectingScenes: boolean;
+  sceneDetectionProgress: number;
+
+  setViewportMode: (mode: 'program' | 'source') => void;
+  setSourceMonitorAsset: (assetId: string | null) => void;
+  setSourceInPoint: (time?: number) => void;
+  setSourceOutPoint: (time?: number) => void;
+  clearSourceInOut: () => void;
+  setSourceCurrentTime: (time: number) => void;
+  insertSourceClipToTimeline: (options?: { mode?: 'insert' | 'overwrite'; time?: number }) => void;
+  insertSceneToTimeline: (scene: SceneClip, time?: number) => void;
+  splitLayerAtTime: (layerId: string, time: number) => void;
+  rippleDeleteLayer: (layerId: string) => void;
+  slipLayer: (layerId: string, deltaSeconds: number) => void;
+  slideLayer: (layerId: string, deltaSeconds: number) => void;
+  detectScenesForAsset: (assetId: string) => Promise<SceneClip[]>;
 }
 
 const initialProject = createDemoProject();
@@ -291,6 +316,14 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   graphEditorMode: 'value',
   rightTab: 'properties',
   activeModal: 'none',
+
+  viewportMode: 'program',
+  sourceMonitorAssetId: null,
+  sourceInTime: null,
+  sourceOutTime: null,
+  sourceCurrentTime: 0,
+  isDetectingScenes: false,
+  sceneDetectionProgress: 0,
 
   getActiveComp: () => {
     const { project } = get();
@@ -640,20 +673,34 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
 
   splitSelectedLayersAtPlayhead: () => {
     const { selectedLayerIds, currentTime, project } = get();
-    if (selectedLayerIds.length === 0) return;
     const compId = project.activeCompId;
-    const newSelectedIds: string[] = [];
+    const comp = project.compositions.find((c) => c.id === compId);
+    if (!comp) return;
 
+    let targetIds = [...selectedLayerIds];
+    if (targetIds.length === 0) {
+      // Find topmost unlocked layer under playhead
+      const hitLayer = comp.layers.find(
+        (l) => !l.locked && currentTime > l.inPoint + 1 / comp.fps && currentTime < l.outPoint - 1 / comp.fps
+      );
+      if (hitLayer) {
+        targetIds = [hitLayer.id];
+      } else {
+        return;
+      }
+    }
+
+    const newSelectedIds: string[] = [];
     get().commitCommand('Split Layer', (draft) => {
-      const comp = draft.compositions.find((c) => c.id === compId);
-      if (!comp) return;
+      const draftComp = draft.compositions.find((c) => c.id === compId);
+      if (!draftComp) return;
       const nextLayers: Layer[] = [];
 
-      for (const layer of comp.layers) {
+      for (const layer of draftComp.layers) {
         if (
-          selectedLayerIds.includes(layer.id) &&
-          currentTime > layer.inPoint + 1 / comp.fps &&
-          currentTime < layer.outPoint - 1 / comp.fps
+          targetIds.includes(layer.id) &&
+          currentTime > layer.inPoint + 1 / draftComp.fps &&
+          currentTime < layer.outPoint - 1 / draftComp.fps
         ) {
           const upperHalf: Layer = JSON.parse(JSON.stringify(layer));
           upperHalf.id = createId('layer');
@@ -667,12 +714,155 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           nextLayers.push(layer);
         }
       }
-      comp.layers = nextLayers;
+      draftComp.layers = nextLayers;
     });
 
     if (newSelectedIds.length > 0) {
       set({ selectedLayerIds: newSelectedIds });
+      globalFrameCache.invalidateAll();
     }
+  },
+
+  splitLayerAtTime: (layerId: string, time: number) => {
+    const { project } = get();
+    const compId = project.activeCompId;
+    let newId: string | null = null;
+
+    get().commitCommand('Razor Cut Layer', (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (!comp) return;
+      const targetLayer = comp.layers.find((l) => l.id === layerId);
+      if (!targetLayer) return;
+      if (time <= targetLayer.inPoint + 1 / comp.fps || time >= targetLayer.outPoint - 1 / comp.fps) {
+        return;
+      }
+
+      const nextLayers: Layer[] = [];
+      for (const layer of comp.layers) {
+        if (layer.id === layerId) {
+          const upperHalf: Layer = JSON.parse(JSON.stringify(layer));
+          upperHalf.id = createId('layer');
+          newId = upperHalf.id;
+          upperHalf.name = `${layer.name} [2]`;
+          upperHalf.inPoint = time;
+          layer.outPoint = time;
+          nextLayers.push(upperHalf);
+          nextLayers.push(layer);
+        } else {
+          nextLayers.push(layer);
+        }
+      }
+      comp.layers = nextLayers;
+    });
+
+    if (newId) {
+      set({ selectedLayerIds: [newId] });
+      globalFrameCache.invalidateAll();
+    }
+  },
+
+  rippleDeleteLayer: (layerId: string) => {
+    const { project } = get();
+    const compId = project.activeCompId;
+
+    get().commitCommand('Ripple Delete Clip', (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (!comp) return;
+      const targetLayer = comp.layers.find((l) => l.id === layerId);
+      if (!targetLayer) return;
+
+      const gapStart = targetLayer.inPoint;
+      const gapEnd = targetLayer.outPoint;
+      const gapDuration = Math.max(0, gapEnd - gapStart);
+
+      // Remove the target layer
+      comp.layers = comp.layers.filter((l) => l.id !== layerId);
+
+      // If gapDuration > 0, shift subsequent layers left by gapDuration
+      if (gapDuration > 0) {
+        for (const layer of comp.layers) {
+          if (layer.inPoint >= gapEnd - 0.001) {
+            layer.startTime -= gapDuration;
+            layer.inPoint -= gapDuration;
+            layer.outPoint -= gapDuration;
+
+            const props = listLayerAnimatableProperties(layer);
+            for (const p of props) {
+              if (p.property.animated && p.property.keyframes) {
+                for (const kf of p.property.keyframes) {
+                  kf.time -= gapDuration;
+                }
+              }
+            }
+          } else if (layer.outPoint > gapEnd) {
+            layer.outPoint -= gapDuration;
+          }
+        }
+
+        for (const mrk of comp.markers) {
+          if (mrk.time >= gapEnd) {
+            mrk.time -= gapDuration;
+          }
+        }
+      }
+    });
+
+    set({ selectedLayerIds: [] });
+    globalFrameCache.invalidateAll();
+  },
+
+  slipLayer: (layerId: string, deltaSeconds: number) => {
+    if (Math.abs(deltaSeconds) < 0.001) return;
+    const { project } = get();
+    const compId = project.activeCompId;
+
+    get().commitCommand('Slip Layer', (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (!comp) return;
+      const layer = comp.layers.find((l) => l.id === layerId);
+      if (!layer) return;
+
+      layer.startTime += deltaSeconds;
+
+      const props = listLayerAnimatableProperties(layer);
+      for (const p of props) {
+        if (p.property.animated && p.property.keyframes) {
+          for (const kf of p.property.keyframes) {
+            kf.time += deltaSeconds;
+          }
+        }
+      }
+    });
+
+    globalFrameCache.invalidateAll();
+  },
+
+  slideLayer: (layerId: string, deltaSeconds: number) => {
+    if (Math.abs(deltaSeconds) < 0.001) return;
+    const { project } = get();
+    const compId = project.activeCompId;
+
+    get().commitCommand('Slide Layer', (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (!comp) return;
+      const layer = comp.layers.find((l) => l.id === layerId);
+      if (!layer) return;
+
+      layer.startTime += deltaSeconds;
+      layer.inPoint += deltaSeconds;
+      layer.outPoint += deltaSeconds;
+
+      const props = listLayerAnimatableProperties(layer);
+      for (const p of props) {
+        if (p.property.animated && p.property.keyframes) {
+          for (const kf of p.property.keyframes) {
+            kf.time += deltaSeconds;
+          }
+        }
+      }
+    });
+
+    globalFrameCache.invalidateAll();
   },
 
   precomposeSelectedLayers: (newCompName) => {
@@ -1515,6 +1705,167 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   setActiveModal: (modal) => set({ activeModal: modal }),
 
   setLastSavedAt: (iso) => set({ lastSavedAt: iso }),
+
+  // Stage A: Source Monitor & Scene Detection actions
+  setViewportMode: (mode) => set({ viewportMode: mode }),
+
+  setSourceMonitorAsset: (assetId) => {
+    const asset = get().project.assets.find((a) => a.id === assetId);
+    set({
+      sourceMonitorAssetId: assetId,
+      viewportMode: assetId ? 'source' : 'program',
+      sourceInTime: asset?.sourceIn ?? null,
+      sourceOutTime: asset?.sourceOut ?? null,
+      sourceCurrentTime: asset?.sourceIn ?? 0,
+    });
+  },
+
+  setSourceInPoint: (time) => {
+    const cur = time !== undefined ? time : get().sourceCurrentTime;
+    const outT = get().sourceOutTime;
+    const finalIn = outT !== null && cur >= outT ? Math.max(0, outT - 0.1) : cur;
+    set({ sourceInTime: finalIn });
+  },
+
+  setSourceOutPoint: (time) => {
+    const cur = time !== undefined ? time : get().sourceCurrentTime;
+    const inT = get().sourceInTime;
+    const finalOut = inT !== null && cur <= inT ? inT + 0.1 : cur;
+    set({ sourceOutTime: finalOut });
+  },
+
+  clearSourceInOut: () => set({ sourceInTime: null, sourceOutTime: null }),
+
+  setSourceCurrentTime: (time) => set({ sourceCurrentTime: Math.max(0, time) }),
+
+  insertSourceClipToTimeline: (options) => {
+    const { sourceMonitorAssetId, sourceInTime, sourceOutTime, currentTime, project } = get();
+    if (!sourceMonitorAssetId) return;
+    const asset = project.assets.find((a) => a.id === sourceMonitorAssetId);
+    if (!asset) return;
+
+    const inT = sourceInTime !== null ? sourceInTime : 0;
+    const outT = sourceOutTime !== null ? sourceOutTime : (asset.duration && asset.duration > 0 ? asset.duration : 5);
+    const clipDur = Math.max(0.1, outT - inT);
+    const targetTime = options?.time !== undefined ? options.time : currentTime;
+    const isInsert = options?.mode !== 'overwrite';
+
+    const compId = project.activeCompId;
+    let createdLayerId: string | null = null;
+
+    get().commitCommand(isInsert ? 'Insert Clip to Timeline' : 'Overwrite Clip to Timeline', (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (!comp) return;
+
+      if (isInsert) {
+        for (const l of comp.layers) {
+          if (l.inPoint >= targetTime - 0.001) {
+            l.startTime += clipDur;
+            l.inPoint += clipDur;
+            l.outPoint += clipDur;
+            const props = listLayerAnimatableProperties(l);
+            for (const p of props) {
+              if (p.property.animated && p.property.keyframes) {
+                for (const kf of p.property.keyframes) {
+                  kf.time += clipDur;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const layer = createDefaultLayer(comp, asset.type, `${asset.name} [Clip]`, {
+        assetId: asset.id,
+        width: asset.width,
+        height: asset.height,
+      });
+      layer.startTime = targetTime - inT;
+      layer.inPoint = targetTime;
+      layer.outPoint = targetTime + clipDur;
+
+      comp.layers.unshift(layer);
+      createdLayerId = layer.id;
+    });
+
+    if (createdLayerId) {
+      set({
+        selectedLayerIds: [createdLayerId],
+        currentTime: targetTime + clipDur,
+      });
+      globalFrameCache.invalidateAll();
+    }
+  },
+
+  insertSceneToTimeline: (scene, time) => {
+    const { currentTime, project } = get();
+    const asset = project.assets.find((a) => a.id === scene.assetId);
+    if (!asset) return;
+
+    const targetTime = time !== undefined ? time : currentTime;
+    const compId = project.activeCompId;
+    let createdLayerId: string | null = null;
+
+    get().commitCommand(`Insert ${scene.name}`, (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (!comp) return;
+
+      const layer = createDefaultLayer(comp, asset.type, `${asset.name} - ${scene.name}`, {
+        assetId: asset.id,
+        width: asset.width,
+        height: asset.height,
+      });
+      layer.startTime = targetTime - scene.inPoint;
+      layer.inPoint = targetTime;
+      layer.outPoint = targetTime + scene.duration;
+
+      comp.layers.unshift(layer);
+      createdLayerId = layer.id;
+    });
+
+    if (createdLayerId) {
+      set({
+        selectedLayerIds: [createdLayerId],
+        currentTime: targetTime + scene.duration,
+      });
+      globalFrameCache.invalidateAll();
+    }
+  },
+
+  detectScenesForAsset: async (assetId) => {
+    const asset = get().project.assets.find((a) => a.id === assetId);
+    if (!asset || asset.type !== 'video' || !asset.url) return [];
+
+    set({ isDetectingScenes: true, sceneDetectionProgress: 0 });
+    try {
+      const scenes = await detectScenesInVideo(asset.id, asset.url, {
+        onProgress: (pct) => set({ sceneDetectionProgress: pct }),
+      });
+
+      get().commitCommand(`Detect Scenes for ${asset.name}`, (draft) => {
+        const a = draft.assets.find((item) => item.id === assetId);
+        if (a) {
+          a.scenes = scenes;
+        }
+
+        const comp = draft.compositions.find((c) => c.id === draft.activeCompId);
+        if (comp && scenes.length > 1) {
+          for (const scn of scenes) {
+            comp.markers.push({
+              id: createId('mrk'),
+              time: scn.inPoint,
+              label: scn.name,
+              color: '#8cc4ec',
+            });
+          }
+        }
+      });
+
+      return scenes;
+    } finally {
+      set({ isDetectingScenes: false, sceneDetectionProgress: 100 });
+    }
+  },
 }));
 
 if (typeof window !== 'undefined') {

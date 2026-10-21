@@ -88,6 +88,10 @@ export const TimelinePanel: React.FC = () => {
   const setGraphEditorOpen = useProjectStore((s) => s.setGraphEditorOpen);
   const setInspectedPropertyPath = useProjectStore((s) => s.setInspectedPropertyPath);
   const setActiveModal = useProjectStore((s) => s.setActiveModal);
+  const activeTool = useProjectStore((s) => s.activeTool);
+  const splitLayerAtTime = useProjectStore((s) => s.splitLayerAtTime);
+  const rippleDeleteLayer = useProjectStore((s) => s.rippleDeleteLayer);
+  const slipLayer = useProjectStore((s) => s.slipLayer);
 
   const [editingTimecode, setEditingTimecode] = useState(false);
   const [timecodeInput, setTimecodeInput] = useState('');
@@ -223,7 +227,7 @@ export const TimelinePanel: React.FC = () => {
     window.addEventListener('mouseup', onUp);
   };
 
-  // Drag layer bar (move or trim in/out)
+  // Drag layer bar (move, trim, razor cut, or slip)
   const startLayerBarDrag = (
     e: React.MouseEvent,
     layer: Layer,
@@ -231,7 +235,33 @@ export const TimelinePanel: React.FC = () => {
   ) => {
     e.stopPropagation();
     if (layer.locked || e.button !== 0) return;
+
+    // Razor tool: cut layer right at click time
+    if (activeTool === 'razor') {
+      const rect = trackContentRef.current?.getBoundingClientRect();
+      const clickX = rect ? e.clientX - rect.left : 0;
+      const clickTime = pxToTime(clickX);
+      splitLayerAtTime(layer.id, snapToFrame(clickTime, comp.fps));
+      return;
+    }
+
     selectLayer(layer.id, e.shiftKey);
+
+    // Slip tool: slide media in window without moving inPoint / outPoint
+    if (activeTool === 'slip' || (mode === 'move' && e.altKey)) {
+      const startX = e.clientX;
+      const onMove = (me: MouseEvent) => {
+        const dt = (me.clientX - startX) / timelineZoom;
+        slipLayer(layer.id, dt);
+      };
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      return;
+    }
 
     const startX = e.clientX;
     const origStart = layer.startTime;
@@ -764,8 +794,15 @@ export const TimelinePanel: React.FC = () => {
                           {
                             id: 'split',
                             label: 'Split Layer at Playhead',
-                            shortcut: 'Ctrl+Shift+D',
+                            shortcut: 'Ctrl+K',
                             onClick: () => splitSelectedLayersAtPlayhead(),
+                          },
+                          {
+                            id: 'ripple-delete',
+                            label: 'Ripple Delete (Close Gap)',
+                            shortcut: 'Shift+Del',
+                            danger: true,
+                            onClick: () => rippleDeleteLayer(layer.id),
                           },
                           {
                             id: 'precomp',
@@ -1241,7 +1278,13 @@ export const TimelinePanel: React.FC = () => {
                               borderColor: isSelected ? 'var(--accent)' : colorInfo.border,
                             }}
                             onMouseDown={(e) => startLayerBarDrag(e, layer, 'move')}
-                            className="absolute top-1 bottom-1 rounded border flex items-center justify-between overflow-hidden cursor-grab active:cursor-grabbing group transition-all duration-150"
+                            className={`absolute top-1 bottom-1 rounded border flex items-center justify-between overflow-hidden group transition-all duration-150 ${
+                              activeTool === 'razor'
+                                ? 'cursor-crosshair'
+                                : activeTool === 'slip'
+                                ? 'cursor-ew-resize'
+                                : 'cursor-grab active:cursor-grabbing'
+                            }`}
                           >
                             {/* Left Trim Handle */}
                             <div

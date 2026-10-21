@@ -9,10 +9,12 @@ import {
   HelpCircle,
   Hexagon,
   MousePointer,
+  MoveHorizontal,
   PenTool,
   Redo2,
   RotateCw,
   Save,
+  Scissors,
   Sparkles,
   Square,
   Star,
@@ -336,6 +338,8 @@ export const TopBar: React.FC = () => {
     },
     { id: 'pen', label: 'Pen / Bezier Path Tool', shortcut: 'G', icon: <PenTool className="w-3.5 h-3.5" /> },
     { id: 'text', label: 'Text Tool', shortcut: 'Shift+T', icon: <Type className="w-3.5 h-3.5" /> },
+    { id: 'razor', label: 'Razor Tool (Cut at Click) [C]', shortcut: 'C', icon: <Scissors className="w-3.5 h-3.5" /> },
+    { id: 'slip', label: 'Slip Tool (Slide Media in Window) [U]', shortcut: 'U', icon: <MoveHorizontal className="w-3.5 h-3.5" /> },
   ];
 
   return (
