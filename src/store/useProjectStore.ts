@@ -451,7 +451,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       project: editProj,
       undoStack: [],
       redoStack: [],
-      currentTime: 3.65,
+      currentTime: 3.86,
       isPlaying: false,
       viewportMode: 'program',
       selectedLayerIds: editProj.compositions[0]?.layers[1] ? [editProj.compositions[0].layers[1].id] : [],

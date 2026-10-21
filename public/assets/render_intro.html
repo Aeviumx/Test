@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Intro Stage</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,700;0,900;1,900&family=Noto+Sans+JP:wght@700;900&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 3200px;
+      height: 1080px;
+      background: #ffffff;
+      background: radial-gradient(circle at 50% 40%, #ffffff 0%, #f6f7fb 60%, #e8ebf2 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      position: relative;
+    }
+
+    /* Studio floor subtle reflection line */
+    .floor-line {
+      position: absolute;
+      bottom: 220px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.06) 20%, rgba(0,0,0,0.06) 80%, transparent);
+    }
+
+    /* Subtle background graphic elements */
+    .bg-text-top {
+      position: absolute;
+      top: 90px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 140px;
+      font-weight: 900;
+      letter-spacing: 24px;
+      color: rgba(0, 0, 0, 0.03);
+      user-select: none;
+      text-transform: uppercase;
+    }
+
+    .cards-container {
+      position: absolute;
+      top: 240px;
+      display: flex;
+      gap: 160px;
+      z-index: 5;
+    }
+
+    .card {
+      width: 440px;
+      height: 580px;
+      background: #fff;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12), 0 10px 20px rgba(0, 0, 0, 0.06);
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-bg-gradient {
+      position: absolute;
+      inset: 0;
+      opacity: 0.95;
+    }
+
+    .card.kafka .card-bg-gradient {
+      background: linear-gradient(145deg, #2a0b36, #58166c, #91278f);
+    }
+
+    .card.acheron .card-bg-gradient {
+      background: linear-gradient(145deg, #0d040e, #3d0514, #8b0024);
+    }
+
+    .card.firefly .card-bg-gradient {
+      background: linear-gradient(145deg, #062b2e, #0e5b61, #139396);
+    }
+
+    .card-photo {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      mix-blend-mode: luminosity;
+      opacity: 0.85;
+      filter: contrast(1.15) brightness(0.95);
+    }
+
+    .card.acheron .card-photo {
+      mix-blend-mode: normal;
+      opacity: 0.95;
+      filter: contrast(1.1);
+    }
+
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, transparent 40%, rgba(0,0,0,0.85) 100%);
+    }
+
+    .card-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 30px;
+      color: #fff;
+      z-index: 10;
+    }
+
+    .card-number {
+      position: absolute;
+      top: 25px;
+      left: 30px;
+      font-size: 54px;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.4);
+      z-index: 10;
+      line-height: 1;
+    }
+
+    .card-jp-badge {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 16px;
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      letter-spacing: 2px;
+      z-index: 10;
+    }
+
+    .card-name {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 6px;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .card-role {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      opacity: 0.8;
+      color: #ffcad4;
+    }
+
+    .card.firefly .card-role {
+      color: #a7f3d0;
+    }
+
+    .card.kafka .card-role {
+      color: #f5d0fe;
+    }
+
+    /* Full standing characters */
+    .character-stand {
+      position: absolute;
+      bottom: 150px;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    .character-stand.kafka-char {
+      left: 560px;
+      width: 580px;
+      height: 750px;
+      transform: scale(0.9);
+      opacity: 0.95;
+    }
+
+    .character-stand.acheron-char {
+      left: 1300px;
+      width: 740px;
+      height: 900px;
+      bottom: 120px;
+      z-index: 20;
+    }
+
+    .character-stand.firefly-char {
+      left: 2060px;
+      width: 600px;
+      height: 780px;
+      transform: scale(0.92);
+      opacity: 0.95;
+    }
+
+    .char-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.25));
+    }
+
+    /* Floor contact shadows */
+    .floor-shadow {
+      position: absolute;
+      bottom: 150px;
+      height: 35px;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.12) 40%, transparent 70%);
+      border-radius: 50%;
+      z-index: 8;
+    }
+
+    .floor-shadow.s1 { left: 680px; width: 340px; }
+    .floor-shadow.s2 { left: 1470px; width: 420px; height: 45px; bottom: 125px; }
+    .floor-shadow.s3 { left: 2180px; width: 350px; }
+
+    /* Aesthetic bottom bar */
+    .bottom-bar {
+      position: absolute;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 120px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: rgba(0, 0, 0, 0.35);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-text-top">CHARACTER ARCHIVE</div>
+  <div class="floor-line"></div>
+
+  <div class="floor-shadow s1"></div>
+  <div class="floor-shadow s2"></div>
+  <div class="floor-shadow s3"></div>
+
+  <div class="cards-container">
+    <!-- Card 1: Kafka -->
+    <div class="card kafka">
+      <div class="card-bg-gradient"></div>
+      <div class="card-photo" style="background-image: url('characters/kafka_preview.png');"></div>
+      <div class="card-overlay"></div>
+      <div class="card-number">01</div>
+      <div class="card-jp-badge">カフカ</div>
+      <div class="card-content">
+        <div class="card-name">Kafka</div>
+        <div class="card-role">Stellaron Hunter</div>
+      </div>
+    </div>
+
+    <!-- Card 2: Acheron -->
+    <div class="card acheron">
+      <div class="card-bg-gradient"></div>
+      <div class="card-photo" style="background-image: url('characters/acheron_preview.png');"></div>
+      <div class="card-overlay"></div>
+      <div class="card-number">02</div>
+      <div class="card-jp-badge">黄泉</div>
+      <div class="card-content">
+        <div class="card-name">Acheron</div>
+        <div class="card-role">Emanator of Nihility</div>
+      </div>
+    </div>
+
+    <!-- Card 3: Firefly -->
+    <div class="card firefly">
+      <div class="card-bg-gradient"></div>
+      <div class="card-photo" style="background-image: url('characters/firefly_preview.png');"></div>
+      <div class="card-overlay"></div>
+      <div class="card-number">03</div>
+      <div class="card-jp-badge">流蛍</div>
+      <div class="card-content">
+        <div class="card-name">Firefly</div>
+        <div class="card-role">Iron Cavalry AR-267</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Standing character cutouts -->
+  <div class="character-stand kafka-char">
+    <img class="char-img" src="characters/kafka_portrait.png" />
+  </div>
+
+  <div class="character-stand acheron-char">
+    <img class="char-img" src="characters/acheron_portrait.png" />
+  </div>
+
+  <div class="character-stand firefly-char">
+    <img class="char-img" src="characters/firefly_portrait.png" />
+  </div>
+
+  <div class="bottom-bar">
+    <div>PROJECT // KŌRI 氷</div>
+    <div>TRENDING EDIT // 2026 EDITION</div>
+    <div>SELECT CHARACTER // [02] LOCKED</div>
+  </div>
+</body>
+</html>

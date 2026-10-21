@@ -10,253 +10,255 @@ import {
   createDefaultLayer,
   createEffectInstance,
   createKeyframe,
+  createProperty,
 } from './defaults';
 
 export function createTrendingAnimeEditProject(): Project {
-  // 1. Assets: Makima 4K Twixtor + Phonk Audio Drop
-  const makimaAsset: MediaAsset = {
-    id: 'asset_makima_twixtor',
-    name: 'Makima_Twixtor_4K60.mp4',
+  // 1. Assets: Rendered Master Edit + Soundtrack + Raw Stills & Clips
+  const masterVideoAsset: MediaAsset = {
+    id: 'asset_acheron_master_edit',
+    name: 'Acheron_Viral_Velocity_Edit_1080p60.mp4',
     type: 'video',
     mimeType: 'video/mp4',
-    url: '/assets/makima_twixtor.mp4',
-    width: 1920,
+    url: '/assets/trending_character_edit.mp4',
+    width: 1080,
     height: 1080,
-    duration: 15.45,
+    duration: 13.51,
     scenes: [
-      { id: 'scn_m1', assetId: 'asset_makima_twixtor', sceneIndex: 1, name: 'Scene 01 (Golden Glance)', inPoint: 0.0, outPoint: 1.58, duration: 1.58, thumbnail: '/assets/thumbs/scene1.jpg' },
-      { id: 'scn_m2', assetId: 'asset_makima_twixtor', sceneIndex: 2, name: 'Scene 02 (Eerie Build-up)', inPoint: 1.58, outPoint: 3.65, duration: 2.07, thumbnail: '/assets/thumbs/scene2.jpg' },
-      { id: 'scn_m3', assetId: 'asset_makima_twixtor', sceneIndex: 3, name: 'Scene 03 (🔥 PHONK DROP)', inPoint: 3.65, outPoint: 4.98, duration: 1.33, thumbnail: '/assets/thumbs/scene3.jpg' },
-      { id: 'scn_m4', assetId: 'asset_makima_twixtor', sceneIndex: 4, name: 'Scene 04 (Deadly Gaze)', inPoint: 4.98, outPoint: 7.32, duration: 2.34, thumbnail: '/assets/thumbs/scene4.jpg' },
-      { id: 'scn_m5', assetId: 'asset_makima_twixtor', sceneIndex: 5, name: 'Scene 05 (Devil Aura)', inPoint: 7.32, outPoint: 9.12, duration: 1.80, thumbnail: '/assets/thumbs/scene5.jpg' },
-      { id: 'scn_m6', assetId: 'asset_makima_twixtor', sceneIndex: 6, name: 'Scene 06 (Lethal Smile)', inPoint: 9.12, outPoint: 11.23, duration: 2.11, thumbnail: '/assets/thumbs/scene6.jpg' },
-      { id: 'scn_m7', assetId: 'asset_makima_twixtor', sceneIndex: 7, name: 'Scene 07 (Dark Silhouette)', inPoint: 11.23, outPoint: 14.12, duration: 2.89, thumbnail: '/assets/thumbs/scene7.jpg' },
+      { id: 'scn_0', assetId: 'asset_acheron_master_edit', sceneIndex: 0, name: '00 // Teaser Intro', inPoint: 0.0, outPoint: 0.70, duration: 0.70 },
+      { id: 'scn_1', assetId: 'asset_acheron_master_edit', sceneIndex: 1, name: '01 // 3-Card Stage Pan', inPoint: 0.70, outPoint: 2.40, duration: 1.70 },
+      { id: 'scn_2', assetId: 'asset_acheron_master_edit', sceneIndex: 2, name: '02 // 360° Spin Zoom Build-up', inPoint: 2.40, outPoint: 3.86, duration: 1.46 },
+      { id: 'scn_3', assetId: 'asset_acheron_master_edit', sceneIndex: 3, name: '03 // 🔥 BASS DROP (Blade Draw)', inPoint: 3.86, outPoint: 4.35, duration: 0.49 },
+      { id: 'scn_4', assetId: 'asset_acheron_master_edit', sceneIndex: 4, name: '04 // Crimson Eyes Close-up', inPoint: 4.35, outPoint: 5.45, duration: 1.10 },
+      { id: 'scn_5', assetId: 'asset_acheron_master_edit', sceneIndex: 5, name: '05 // Floating Kimono in Wind', inPoint: 5.45, outPoint: 6.93, duration: 1.48 },
+      { id: 'scn_6', assetId: 'asset_acheron_master_edit', sceneIndex: 6, name: '06 // Lipstick Smile', inPoint: 6.93, outPoint: 7.50, duration: 0.57 },
+      { id: 'scn_7', assetId: 'asset_acheron_master_edit', sceneIndex: 7, name: '07 // Blood Moon Silhouette', inPoint: 7.50, outPoint: 8.55, duration: 1.05 },
+      { id: 'scn_8', assetId: 'asset_acheron_master_edit', sceneIndex: 8, name: '08 // 🔥 CLIMAX Shattered Shockwave', inPoint: 8.55, outPoint: 9.61, duration: 1.06 },
+      { id: 'scn_9', assetId: 'asset_acheron_master_edit', sceneIndex: 9, name: '09 // Rain Umbrella Turn', inPoint: 9.61, outPoint: 11.10, duration: 1.49 },
+      { id: 'scn_10', assetId: 'asset_acheron_master_edit', sceneIndex: 10, name: '10 // Head Tilt Looking Up', inPoint: 11.10, outPoint: 11.66, duration: 0.56 },
+      { id: 'scn_11', assetId: 'asset_acheron_master_edit', sceneIndex: 11, name: '11 // Compact Mirror Glint', inPoint: 11.66, outPoint: 12.71, duration: 1.05 },
+      { id: 'scn_12', assetId: 'asset_acheron_master_edit', sceneIndex: 12, name: '12 // Final Direct Gaze & Fade', inPoint: 12.71, outPoint: 13.51, duration: 0.80 },
     ],
   };
 
   const audioAsset: MediaAsset = {
-    id: 'asset_midnight_phonk',
-    name: 'PLAYAMANE x Nateki - MIDNIGHT [Phonk Drop].mp3',
+    id: 'asset_trending_soundtrack',
+    name: 'Viral_Edit_Soundtrack.aac',
     type: 'audio',
-    mimeType: 'audio/mpeg',
-    url: '/assets/midnight_phonk_drop.mp3',
-    duration: 15.0,
+    mimeType: 'audio/aac',
+    url: '/assets/trending_audio.aac',
+    duration: 13.51,
   };
 
-  // 2. Main 9:16 Vertical AMV Composition (1080x1920 @ 60 FPS)
+  const acheronPortraitAsset: MediaAsset = {
+    id: 'asset_acheron_portrait',
+    name: 'Acheron_Portrait_2K.png',
+    type: 'image',
+    mimeType: 'image/png',
+    url: '/assets/characters/acheron_portrait.png',
+    width: 2048,
+    height: 2048,
+  };
+
+  const introStageAsset: MediaAsset = {
+    id: 'asset_intro_stage',
+    name: '3Card_Intro_Stage_3200x1080.png',
+    type: 'image',
+    mimeType: 'image/png',
+    url: '/assets/intro_stage.png',
+    width: 3200,
+    height: 1080,
+  };
+
+  // 2. Main 1:1 Square Edit Composition (1080x1080 @ 60 FPS, 13.51s)
   const mainComp: Composition = createDefaultComposition({
-    name: 'Makima 氷 [Midnight Phonk 9:16]',
+    name: 'Acheron 氷 [Viral Character Velocity Edit 1:1]',
     width: 1080,
-    height: 1920,
+    height: 1080,
     fps: 60,
-    duration: 12.0,
-    backgroundColor: '#0b0d11',
+    duration: 13.51,
+    backgroundColor: '#0a0a0f',
   });
 
-  // Precise Beat Markers synced to MIDNIGHT Phonk
+  // Precise Beat Markers matching the viral reference track
   mainComp.markers = [
-    { id: createId('mrk'), time: 0.0, label: 'Intro // Eerie Synth', color: '#5a6a80' },
-    { id: createId('mrk'), time: 1.82, label: 'Build-up Snare', color: '#8796ab' },
-    { id: createId('mrk'), time: 3.65, label: '🔥 DROP // PHONK KICK 808', color: '#e2727f' },
-    { id: createId('mrk'), time: 4.56, label: 'Kick 2', color: '#8cc4ec' },
-    { id: createId('mrk'), time: 5.48, label: 'Snare 2', color: '#f0d4d8' },
-    { id: createId('mrk'), time: 6.39, label: 'Kick 3', color: '#8cc4ec' },
-    { id: createId('mrk'), time: 7.32, label: '🔥 DROP 2 // Cowbell Speedup', color: '#e2727f' },
-    { id: createId('mrk'), time: 8.22, label: 'Kick 4', color: '#8cc4ec' },
-    { id: createId('mrk'), time: 9.14, label: 'Snare 3', color: '#f0d4d8' },
-    { id: createId('mrk'), time: 10.05, label: 'Kick 5', color: '#8cc4ec' },
-    { id: createId('mrk'), time: 11.23, label: 'Outro Slowdown', color: '#5a6a80' },
+    { id: createId('mrk'), time: 0.00, label: 'Kafka Teaser // Zoom In', color: '#8796ab' },
+    { id: createId('mrk'), time: 0.35, label: 'Firefly Teaser // Zoom In', color: '#8cc4ec' },
+    { id: createId('mrk'), time: 0.70, label: '3-Card Stage Pan // Left to Right', color: '#e9edf3' },
+    { id: createId('mrk'), time: 1.80, label: 'Card 03 Firefly Glide', color: '#8cc4ec' },
+    { id: createId('mrk'), time: 2.40, label: 'Lock on [02] Acheron // Zoom In', color: '#e2727f' },
+    { id: createId('mrk'), time: 3.00, label: '360° Spin Ramp // Build-up', color: '#f0d4d8' },
+    { id: createId('mrk'), time: 3.86, label: '🔥 THE BASS DROP // Acheron Blade Draw', color: '#e2727f' },
+    { id: createId('mrk'), time: 4.35, label: 'Kick 2 // Crimson Eyes Glow', color: '#8cc4ec' },
+    { id: createId('mrk'), time: 5.45, label: 'Kick 3 // Kimono Whip Pan', color: '#e2727f' },
+    { id: createId('mrk'), time: 6.93, label: 'Melody Drop // Lipstick Brush', color: '#f0d4d8' },
+    { id: createId('mrk'), time: 7.50, label: 'Kick 4 // Blood Moon Silhouette', color: '#8cc4ec' },
+    { id: createId('mrk'), time: 8.55, label: '🔥 CLIMAX DROP // Slashed Dream Shockwave', color: '#e2727f' },
+    { id: createId('mrk'), time: 9.61, label: 'Kick 5 // Dark Rain Umbrella', color: '#8cc4ec' },
+    { id: createId('mrk'), time: 11.10, label: 'Kick 6 // Head Tilt Violet Eyes', color: '#8cc4ec' },
+    { id: createId('mrk'), time: 11.66, label: 'Double Snare // Mirror Snap Glint', color: '#f0d4d8' },
+    { id: createId('mrk'), time: 12.71, label: 'Climax Outro // Direct Gaze & Fade', color: '#e2727f' },
   ];
 
-  // Layer 1: Adjustment Layer — FX Grade (Vignette + Chromatic Aberration)
-  const adjLayer = createDefaultLayer(mainComp, 'adjustment', 'FX Grade // Phonk Cold Vignette');
-  adjLayer.labelColor = 'sand';
+  // Layer 1: Adjustment Layer — Anime CC & Color Grade (Vignette + Deep Contrast)
+  const adjCcLayer = createDefaultLayer(mainComp, 'adjustment', 'FX Grade // Anime Vivid CC');
+  adjCcLayer.labelColor = 'sand';
   const vignetteFx = createEffectInstance('vignette');
-  vignetteFx.params.amount.value = 72;
-  vignetteFx.params.midpoint.value = 46;
-  vignetteFx.params.feather.value = 68;
+  vignetteFx.params.amount.value = 68;
+  vignetteFx.params.midpoint.value = 45;
+  vignetteFx.params.feather.value = 65;
+
+  const glowFx = createEffectInstance('glow');
+  glowFx.params.intensity.value = 1.4;
+  glowFx.params.radius.value = 32;
+  glowFx.params.threshold.value = 45;
 
   const chromaFx = createEffectInstance('chromatic-aberration');
   chromaFx.params.offsetX.animated = true;
   chromaFx.params.offsetX.keyframes = [
-    createKeyframe(0, 2, 'bezier'),
-    createKeyframe(3.6, 3, 'bezier'),
-    createKeyframe(3.65, 22, 'bezier'), // explosive split on drop
-    createKeyframe(4.1, 4, 'bezier'),
-    createKeyframe(7.32, 26, 'bezier'), // second drop spike
-    createKeyframe(7.8, 3, 'bezier'),
+    createKeyframe(0, 1, 'linear'),
+    createKeyframe(3.80, 2, 'bezier'),
+    createKeyframe(3.86, 26, 'bezier'), // explosive split on drop
+    createKeyframe(4.25, 2, 'bezier'),
+    createKeyframe(8.50, 3, 'bezier'),
+    createKeyframe(8.55, 30, 'bezier'), // massive spike on climax shatter
+    createKeyframe(9.00, 2, 'bezier'),
   ];
-  chromaFx.params.radial.value = 85;
-  adjLayer.effects = [chromaFx, vignetteFx];
+  adjCcLayer.effects = [glowFx, chromaFx, vignetteFx];
 
-  // Layer 2: Kinetic Typography — "BANG." on drop
-  const dropTextLayer = createDefaultLayer(mainComp, 'text', 'BANG. // Impact Punch', {
-    text: 'BANG.',
-    width: 900,
-    height: 300,
+  // Layer 2: Adjustment Layer — Impact Camera Shake with Keyframed Translation
+  const shakeLayer = createDefaultLayer(mainComp, 'adjustment', 'Camera Shake // Impact Decay');
+  shakeLayer.labelColor = 'coral';
+  shakeLayer.transform.position.animated = true;
+  shakeLayer.transform.position.keyframes = [
+    createKeyframe<Vec2>(0.00, [540, 540], 'hold'),
+    createKeyframe<Vec2>(3.86, [564, 552], 'bezier'), // Drop impact jitter
+    createKeyframe<Vec2>(3.92, [522, 530], 'bezier'),
+    createKeyframe<Vec2>(3.98, [548, 545], 'bezier'),
+    createKeyframe<Vec2>(4.10, [540, 540], 'bezier'),
+    createKeyframe<Vec2>(8.55, [568, 556], 'bezier'), // Climax shockwave impact
+    createKeyframe<Vec2>(8.62, [518, 526], 'bezier'),
+    createKeyframe<Vec2>(8.70, [550, 546], 'bezier'),
+    createKeyframe<Vec2>(8.90, [540, 540], 'bezier'),
+  ];
+
+  // Layer 3: Solid Layer — White Flash Impact Frames (Screen Blend)
+  const flashLayer = createDefaultLayer(mainComp, 'solid', 'Flash Frames // White Beat Strobe', {
+    solidColor: '#ffffff',
+    width: 1080,
+    height: 1080,
   });
-  dropTextLayer.labelColor = 'blush';
-  dropTextLayer.inPoint = 3.65;
-  dropTextLayer.outPoint = 4.56;
-  dropTextLayer.transform.position.value = [540, 960];
+  flashLayer.labelColor = 'blush';
+  flashLayer.blendMode = 'screen';
+  flashLayer.transform.opacity.animated = true;
+  flashLayer.transform.opacity.keyframes = [
+    createKeyframe<number>(0.00, 90, 'bezier'),
+    createKeyframe<number>(0.07, 0, 'bezier'),
+    createKeyframe<number>(0.35, 90, 'bezier'),
+    createKeyframe<number>(0.42, 0, 'bezier'),
+    createKeyframe<number>(3.86, 100, 'bezier'), // Drop whiteout flash
+    createKeyframe<number>(3.94, 0, 'bezier'),
+    createKeyframe<number>(4.35, 75, 'bezier'),
+    createKeyframe<number>(4.40, 0, 'bezier'),
+    createKeyframe<number>(8.55, 100, 'bezier'), // Climax shockwave flash
+    createKeyframe<number>(8.63, 0, 'bezier'),
+    createKeyframe<number>(11.66, 85, 'bezier'),
+    createKeyframe<number>(11.71, 0, 'bezier'),
+  ];
+
+  // Layer 4: Kinetic Typography — "黄泉 • ACHERON"
+  const textIntroTag = createDefaultLayer(mainComp, 'text', 'Typography // 黄泉 • ACHERON', {
+    text: '黄泉 • ACHERON',
+    width: 900,
+    height: 160,
+  });
+  textIntroTag.labelColor = 'lavender';
+  textIntroTag.inPoint = 0.70;
+  textIntroTag.outPoint = 2.40;
+  textIntroTag.transform.position.value = [540, 160];
+  textIntroTag.transform.scale.animated = true;
+  textIntroTag.transform.scale.keyframes = [
+    createKeyframe<Vec2>(0.70, [85, 85], 'bezier'),
+    createKeyframe<Vec2>(1.60, [100, 100], 'bezier'),
+    createKeyframe<Vec2>(2.40, [108, 108], 'bezier'),
+  ];
+  if (textIntroTag.textContents) {
+    textIntroTag.textContents.fontFamily = 'Montserrat';
+    textIntroTag.textContents.fontWeight = '800';
+    textIntroTag.textContents.fontSize.value = 46;
+    textIntroTag.textContents.fillColor.value = '#ffffff';
+  }
+
+  // Layer 5: Drop Kinetic Typography — "SLASHED DREAM" on 3.86s
+  const dropTextLayer = createDefaultLayer(mainComp, 'text', 'Impact Text // SLASHED DREAM', {
+    text: 'SLASHED DREAM',
+    width: 1000,
+    height: 200,
+  });
+  dropTextLayer.labelColor = 'coral';
+  dropTextLayer.inPoint = 3.86;
+  dropTextLayer.outPoint = 4.35;
+  dropTextLayer.transform.position.value = [540, 540];
   dropTextLayer.transform.scale.animated = true;
   dropTextLayer.transform.scale.keyframes = [
-    createKeyframe<Vec2>(3.65, [140, 140], 'bezier'),
-    createKeyframe<Vec2>(3.9, [100, 100], 'bezier'),
-    createKeyframe<Vec2>(4.56, [95, 95], 'bezier'),
+    createKeyframe<Vec2>(3.86, [145, 145], 'bezier'),
+    createKeyframe<Vec2>(4.05, [100, 100], 'bezier'),
+    createKeyframe<Vec2>(4.35, [92, 92], 'linear'),
   ];
   dropTextLayer.transform.opacity.animated = true;
   dropTextLayer.transform.opacity.keyframes = [
-    createKeyframe<number>(3.65, 100, 'hold'),
-    createKeyframe<number>(4.3, 100, 'bezier'),
-    createKeyframe<number>(4.56, 0, 'bezier'),
+    createKeyframe<number>(3.86, 100, 'hold'),
+    createKeyframe<number>(4.20, 100, 'bezier'),
+    createKeyframe<number>(4.35, 0, 'bezier'),
   ];
   if (dropTextLayer.textContents) {
-    dropTextLayer.textContents.fontFamily = 'Orbitron';
+    dropTextLayer.textContents.fontFamily = 'Montserrat';
     dropTextLayer.textContents.fontWeight = '800';
-    dropTextLayer.textContents.fontSize.value = 138;
-    dropTextLayer.textContents.fillColor.value = '#f0d4d8';
+    dropTextLayer.textContents.fontSize.value = 88;
+    dropTextLayer.textContents.fillColor.value = '#ff3355';
     dropTextLayer.textContents.strokeEnabled = true;
-    dropTextLayer.textContents.strokeColor.value = '#8cc4ec';
-    dropTextLayer.textContents.strokeWidth.value = 4;
+    dropTextLayer.textContents.strokeColor.value = '#ffffff';
+    dropTextLayer.textContents.strokeWidth = createProperty('Stroke Width', 3, { min: 0, max: 50, unit: 'px' });
   }
-  const glowBang = createEffectInstance('glow');
-  glowBang.params.intensity.value = 2.4;
-  glowBang.params.radius.value = 35;
-  dropTextLayer.effects = [glowBang];
 
-  // Layer 3: Main Title — "M A K I M A"
-  const titleLayer = createDefaultLayer(mainComp, 'text', 'Title // M A K I M A', {
-    text: 'M A K I M A',
-    width: 900,
-    height: 180,
+  // Layer 6: Master Rendered Video Track (1080x1080 @ 60 FPS)
+  const masterVideoLayer = createDefaultLayer(mainComp, 'video', 'Video Track // Master Velocity Edit (60 FPS)', {
+    assetId: masterVideoAsset.id,
+    width: 1080,
+    height: 1080,
   });
-  titleLayer.labelColor = 'ice';
-  titleLayer.inPoint = 0.0;
-  titleLayer.outPoint = 3.65;
-  titleLayer.transform.position.value = [540, 1420];
-  titleLayer.transform.scale.animated = true;
-  titleLayer.transform.scale.keyframes = [
-    createKeyframe<Vec2>(0.0, [88, 88], 'bezier'),
-    createKeyframe<Vec2>(1.82, [102, 102], 'bezier'),
-    createKeyframe<Vec2>(3.65, [118, 118], 'bezier'),
-  ];
-  if (titleLayer.textContents) {
-    titleLayer.textContents.fontFamily = 'Orbitron';
-    titleLayer.textContents.fontWeight = '800';
-    titleLayer.textContents.fontSize.value = 72;
-    titleLayer.textContents.fillColor.value = '#e9edf3';
-  }
+  masterVideoLayer.labelColor = 'ice';
+  masterVideoLayer.startTime = 0.0;
+  masterVideoLayer.inPoint = 0.0;
+  masterVideoLayer.outPoint = 13.51;
+  masterVideoLayer.transform.position.value = [540, 540];
+  masterVideoLayer.transform.scale.value = [100, 100];
 
-  // Layer 4: Subtitle — "マキマ • CONTROL DEVIL"
-  const subLayer = createDefaultLayer(mainComp, 'text', 'Subtitle // マキマ • CONTROL DEVIL', {
-    text: 'マキマ • CONTROL DEVIL',
-    width: 900,
-    height: 90,
-  });
-  subLayer.labelColor = 'steel';
-  subLayer.inPoint = 0.4;
-  subLayer.outPoint = 3.65;
-  subLayer.transform.position.value = [540, 1510];
-  if (subLayer.textContents) {
-    subLayer.textContents.fontFamily = 'JetBrains Mono';
-    subLayer.textContents.fontWeight = '600';
-    subLayer.textContents.fontSize.value = 24;
-    subLayer.textContents.fillColor.value = '#8cc4ec';
-  }
-
-  // Helper to create full-bleed 9:16 video clip layers centered on Makima
-  const createClipLayer = (
-    name: string,
-    inT: number,
-    outT: number,
-    sourceT: number,
-    labelColor: 'ice' | 'denim' | 'coral' | 'mint' | 'lavender',
-    scalePunch = false
-  ) => {
-    const layer = createDefaultLayer(mainComp, 'video', name, {
-      assetId: makimaAsset.id,
-      width: 1920,
-      height: 1080,
-    });
-    layer.labelColor = labelColor;
-    layer.startTime = inT - sourceT;
-    layer.inPoint = inT;
-    layer.outPoint = outT;
-    layer.transform.position.value = [540, 960]; // center in 1080x1920
-
-    if (scalePunch) {
-      // Impact Zoom Punch on the drop!
-      layer.transform.scale.animated = true;
-      layer.transform.scale.keyframes = [
-        createKeyframe<Vec2>(inT, [215, 215], 'bezier'),
-        createKeyframe<Vec2>(inT + 0.35, [180, 180], 'bezier'),
-        createKeyframe<Vec2>(outT, [178, 178], 'linear'),
-      ];
-    } else {
-      layer.transform.scale.value = [178, 178]; // fill vertical frame 1920x1080 -> 1080x1920
-    }
-    return layer;
-  };
-
-  // Video Clips synced to the Phonk beats
-  // Scene 1: Intro Eyes Glance (0.0s - 1.58s)
-  const clip1 = createClipLayer('Clip 1 // Golden Eyes Glance', 0.0, 1.58, 0.0, 'ice');
-  clip1.transform.scale.animated = true;
-  clip1.transform.scale.keyframes = [
-    createKeyframe<Vec2>(0.0, [178, 178], 'bezier'),
-    createKeyframe<Vec2>(1.58, [192, 192], 'bezier'),
-  ];
-
-  // Scene 2: Eerie Build-up (1.58s - 3.65s)
-  const clip2 = createClipLayer('Clip 2 // Eerie Build-up', 1.58, 3.65, 1.58, 'denim');
-  clip2.transform.scale.animated = true;
-  clip2.transform.scale.keyframes = [
-    createKeyframe<Vec2>(1.58, [180, 180], 'bezier'),
-    createKeyframe<Vec2>(3.65, [205, 205], 'bezier'),
-  ];
-
-  // Scene 3: 🔥 THE PHONK DROP (3.65s - 4.98s)
-  const clip3 = createClipLayer('Clip 3 // 🔥 PHONK 808 DROP', 3.65, 4.98, 3.65, 'coral', true);
-
-  // Scene 4: Deadly Gaze (4.98s - 7.32s)
-  const clip4 = createClipLayer('Clip 4 // Deadly Gaze', 4.98, 7.32, 4.98, 'lavender', true);
-
-  // Scene 5: Devil Aura (7.32s - 9.12s)
-  const clip5 = createClipLayer('Clip 5 // Devil Aura Speedup', 7.32, 9.12, 7.32, 'coral', true);
-
-  // Scene 6: Lethal Smile & Outro (9.12s - 12.0s)
-  const clip6 = createClipLayer('Clip 6 // Lethal Smile', 9.12, 12.0, 9.12, 'mint');
-
-  // Background Audio Track
-  const audioLayer = createDefaultLayer(mainComp, 'audio', 'Audio // MIDNIGHT (Phonk Drop)');
+  // Layer 7: Background Soundtrack
+  const audioLayer = createDefaultLayer(mainComp, 'audio', 'Audio // Viral Edit Soundtrack (AAC)');
   audioLayer.assetId = audioAsset.id;
-  audioLayer.labelColor = 'blush';
+  audioLayer.labelColor = 'denim';
   audioLayer.inPoint = 0.0;
-  audioLayer.outPoint = 12.0;
+  audioLayer.outPoint = 13.51;
 
   mainComp.layers = [
-    adjLayer,
+    adjCcLayer,
+    shakeLayer,
+    flashLayer,
     dropTextLayer,
-    titleLayer,
-    subLayer,
-    clip3,
-    clip5,
-    clip4,
-    clip2,
-    clip1,
-    clip6,
+    textIntroTag,
+    masterVideoLayer,
     audioLayer,
   ];
 
   return {
-    id: createId('proj_makima'),
-    name: 'Makima // MIDNIGHT Phonk (9_16 Anime Edit).mfproj',
+    id: createId('proj_acheron'),
+    name: 'Acheron 氷 // Viral 1:1 Velocity Edit.mfproj',
     version: '1.0.0',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     activeCompId: mainComp.id,
     compositions: [mainComp],
-    assets: [makimaAsset, audioAsset],
+    assets: [masterVideoAsset, audioAsset, introStageAsset, acheronPortraitAsset],
   };
 }

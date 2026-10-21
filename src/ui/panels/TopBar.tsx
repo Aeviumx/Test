@@ -146,7 +146,7 @@ export const TopBar: React.FC = () => {
       { label: 'New Empty Project', onClick: () => createNewEmptyProject() },
       { label: 'Open Demo Project', onClick: () => loadDemoProject() },
       {
-        label: 'Trending Edit: Makima 氷 (Midnight Phonk 9:16)',
+        label: 'Trending Edit: Acheron 氷 (Viral 1:1 Velocity Edit)',
         onClick: () => loadTrendingAnimeEdit(),
       },
       {
@@ -318,7 +318,7 @@ export const TopBar: React.FC = () => {
         onClick: () => loadDemoProject(),
       },
       {
-        label: 'Load Makima Phonk Edit (9:16)',
+        label: 'Load Acheron Velocity Edit (1:1)',
         onClick: () => loadTrendingAnimeEdit(),
       },
     ],
@@ -508,11 +508,11 @@ export const TopBar: React.FC = () => {
         <button
           type="button"
           onClick={() => loadTrendingAnimeEdit()}
-          title="Load Trending Anime Edit: Makima 氷 (Midnight Phonk 9:16)"
+          title="Load Trending Anime Edit: Acheron 氷 (Viral 1:1 Velocity Edit)"
           className="h-[24px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--accent)] hover:text-[var(--accent-hover)] flex items-center gap-1.5 text-[11px] font-medium transition-colors duration-150"
         >
           <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-          <span className="hidden xl:inline">Makima Edit (9:16)</span>
+          <span className="hidden xl:inline">Acheron Edit (1:1)</span>
         </button>
         <button
           type="button"

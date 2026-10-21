@@ -23,3 +23,10 @@ Thumbs.db
 verify_*.mjs
 shots.mjs
 zones.mjs
+
+public/assets/edit_segments/
+public/assets/raw_clips/
+acheron_cuts.txt
+*.mp4
+test_cuts.mjs
+fetch_assets.mjs
