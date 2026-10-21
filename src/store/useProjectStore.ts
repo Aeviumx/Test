@@ -9,8 +9,13 @@ import {
   createKeyframe,
 } from '../core/defaults';
 import { createDemoProject } from '../core/demoProject';
-import { evaluateProperty } from '../engine/evaluator';
+import {
+  computeLayerWorldMatrix,
+  evaluateLayerTransform,
+  evaluateProperty,
+} from '../engine/evaluator';
 import { globalFrameCache } from '../render/FrameCache';
+import { applyMatrixToPoint, invertMatrix } from '../utils/geometry';
 import {
   BezierVertex,
   ClipboardKeyframe,
@@ -724,11 +729,48 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   },
 
   updateLayerMeta: (layerId, updates) => {
-    const compId = get().project.activeCompId;
+    const { project, currentTime } = get();
+    const compId = project.activeCompId;
     get().commitCommand('Update Layer', (draft) => {
       const comp = draft.compositions.find((c) => c.id === compId);
       const layer = comp?.layers.find((l) => l.id === layerId);
-      if (!layer) return;
+      if (!comp || !layer) return;
+
+      if (updates.parentId !== undefined && updates.parentId !== layer.parentId) {
+        const layerIdx = comp.layers.indexOf(layer);
+        const childTr = evaluateLayerTransform(layer, currentTime, comp, layerIdx);
+        const oldWorldMat = computeLayerWorldMatrix(layer, comp, currentTime);
+        const worldAnchorPt = applyMatrixToPoint(oldWorldMat, childTr.anchorPoint);
+        const worldRotDeg = (Math.atan2(oldWorldMat[1], oldWorldMat[0]) * 180) / Math.PI;
+
+        let newLocalPos: Vec2 = [Math.round(worldAnchorPt[0]), Math.round(worldAnchorPt[1])];
+        let newLocalRot = Math.round(worldRotDeg * 10) / 10;
+
+        if (updates.parentId) {
+          const newParent = comp.layers.find((l) => l.id === updates.parentId);
+          if (newParent && newParent.id !== layer.id) {
+            const parentWorldMat = computeLayerWorldMatrix(newParent, comp, currentTime);
+            const invParentMat = invertMatrix(parentWorldMat);
+            const pt = applyMatrixToPoint(invParentMat, worldAnchorPt);
+            const parentRotDeg = (Math.atan2(parentWorldMat[1], parentWorldMat[0]) * 180) / Math.PI;
+            newLocalPos = [Math.round(pt[0]), Math.round(pt[1])];
+            newLocalRot = Math.round((worldRotDeg - parentRotDeg) * 10) / 10;
+          }
+        }
+
+        const deltaPos: Vec2 = [
+          newLocalPos[0] - layer.transform.position.value[0],
+          newLocalPos[1] - layer.transform.position.value[1],
+        ];
+        layer.transform.position.value = newLocalPos;
+        if (layer.transform.position.animated) {
+          for (const kf of layer.transform.position.keyframes) {
+            kf.value = [kf.value[0] + deltaPos[0], kf.value[1] + deltaPos[1]];
+          }
+        }
+        layer.transform.rotation.value = newLocalRot;
+      }
+
       Object.assign(layer, updates);
     });
   },

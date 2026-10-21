@@ -20,6 +20,7 @@ import { useProjectStore } from '../../store/useProjectStore';
 import { PreviewResolution, Vec2 } from '../../types';
 import {
   applyMatrixToPoint,
+  buildLayerTransformMatrix,
   invertMatrix,
 } from '../../utils/geometry';
 import { timeToFrame } from '../../utils/timecode';
@@ -248,9 +249,18 @@ export const ViewportPanel: React.FC = () => {
     // Rotation tool (W)
     if (activeTool === 'rotate') {
       const startRot = startTr.rotation;
+      const worldMat = computeLayerWorldMatrix(hit, comp, currentTime);
+      const anchorWorld = applyMatrixToPoint(worldMat, startTr.anchorPoint);
+      const startAngle = Math.atan2(compPt[1] - anchorWorld[1], compPt[0] - anchorWorld[0]);
       const onMove = (me: MouseEvent) => {
-        const dx = me.clientX - startMouseX;
-        setPropertyValue(hit.id, 'transform.rotation', Math.round((startRot + dx * 0.6) * 10) / 10);
+        const curPt = clientToCompCoords(me.clientX, me.clientY);
+        const curAngle = Math.atan2(curPt[1] - anchorWorld[1], curPt[0] - anchorWorld[0]);
+        let deltaDeg = ((curAngle - startAngle) * 180) / Math.PI;
+        if (deltaDeg > 180) deltaDeg -= 360;
+        if (deltaDeg < -180) deltaDeg += 360;
+        let nextRot = Math.round((startRot + deltaDeg) * 10) / 10;
+        if (me.shiftKey) nextRot = Math.round(nextRot / 15) * 15;
+        setPropertyValue(hit.id, 'transform.rotation', nextRot);
       };
       const onUp = () => {
         window.removeEventListener('mousemove', onMove);
@@ -261,20 +271,26 @@ export const ViewportPanel: React.FC = () => {
       return;
     }
 
-    // Pan Behind / Anchor Point tool (Y)
+    // Pan Behind / Anchor Point tool (Y) — keeps layer visually stationary under any rotation/scale
     if (activeTool === 'anchor') {
+      const startLocalMat = buildLayerTransformMatrix(startTr);
+      const startWorldMat = computeLayerWorldMatrix(hit, comp, currentTime);
+      const invStartWorldMat = invertMatrix(startWorldMat);
+      const startLocalClick = applyMatrixToPoint(invStartWorldMat, compPt);
       const startAnchor: Vec2 = [...startTr.anchorPoint];
-      const startPos: Vec2 = [...startTr.position];
+
       const onMove = (me: MouseEvent) => {
-        const dx = (me.clientX - startMouseX) / viewportZoom;
-        const dy = (me.clientY - startMouseY) / viewportZoom;
-        setPropertyValue(hit.id, 'transform.anchorPoint', [
-          Math.round(startAnchor[0] + dx),
-          Math.round(startAnchor[1] + dy),
-        ]);
+        const curPt = clientToCompCoords(me.clientX, me.clientY);
+        const curLocalPt = applyMatrixToPoint(invStartWorldMat, curPt);
+        const newAnchor: Vec2 = [
+          Math.round(startAnchor[0] + (curLocalPt[0] - startLocalClick[0])),
+          Math.round(startAnchor[1] + (curLocalPt[1] - startLocalClick[1])),
+        ];
+        const newPos = applyMatrixToPoint(startLocalMat, newAnchor);
+        setPropertyValue(hit.id, 'transform.anchorPoint', newAnchor);
         setPropertyValue(hit.id, 'transform.position', [
-          Math.round(startPos[0] + dx),
-          Math.round(startPos[1] + dy),
+          Math.round(newPos[0]),
+          Math.round(newPos[1]),
         ]);
       };
       const onUp = () => {
@@ -362,28 +378,54 @@ export const ViewportPanel: React.FC = () => {
     if (!selectedLayer || selectedLayer.locked) return;
 
     const startTr = evaluateLayerTransform(selectedLayer, currentTime, comp, selectedLayerIdx);
-    const startMouseX = e.clientX;
-    const startMouseY = e.clientY;
+    const startCompPt = clientToCompCoords(e.clientX, e.clientY);
+    const startLocalMat = buildLayerTransformMatrix(startTr);
+    const startWorldMat = computeLayerWorldMatrix(selectedLayer, comp, currentTime);
+    const invStartWorldMat = invertMatrix(startWorldMat);
+    const anchorWorld = applyMatrixToPoint(startWorldMat, startTr.anchorPoint);
+    const startAngle = Math.atan2(
+      startCompPt[1] - anchorWorld[1],
+      startCompPt[0] - anchorWorld[0]
+    );
+    const startLocalClick = applyMatrixToPoint(invStartWorldMat, startCompPt);
+    const worldRotRad = Math.atan2(startWorldMat[1], startWorldMat[0]);
+    const cosR = Math.cos(worldRotRad);
+    const sinR = Math.sin(worldRotRad);
 
     const onMove = (me: MouseEvent) => {
-      const dx = (me.clientX - startMouseX) / viewportZoom;
-      const dy = (me.clientY - startMouseY) / viewportZoom;
+      const curCompPt = clientToCompCoords(me.clientX, me.clientY);
 
       if (handleType === 'rotate') {
-        const nextRot = Math.round((startTr.rotation + dx * 0.65) * 10) / 10;
+        const curAngle = Math.atan2(
+          curCompPt[1] - anchorWorld[1],
+          curCompPt[0] - anchorWorld[0]
+        );
+        let deltaDeg = ((curAngle - startAngle) * 180) / Math.PI;
+        if (deltaDeg > 180) deltaDeg -= 360;
+        if (deltaDeg < -180) deltaDeg += 360;
+        let nextRot = Math.round((startTr.rotation + deltaDeg) * 10) / 10;
+        if (me.shiftKey) nextRot = Math.round(nextRot / 15) * 15;
         setPropertyValue(selectedLayer.id, 'transform.rotation', nextRot);
       } else if (handleType === 'anchor') {
-        setPropertyValue(selectedLayer.id, 'transform.anchorPoint', [
-          Math.round(startTr.anchorPoint[0] + dx),
-          Math.round(startTr.anchorPoint[1] + dy),
-        ]);
+        const curLocalPt = applyMatrixToPoint(invStartWorldMat, curCompPt);
+        const newAnchor: Vec2 = [
+          Math.round(startTr.anchorPoint[0] + (curLocalPt[0] - startLocalClick[0])),
+          Math.round(startTr.anchorPoint[1] + (curLocalPt[1] - startLocalClick[1])),
+        ];
+        const newPos = applyMatrixToPoint(startLocalMat, newAnchor);
+        setPropertyValue(selectedLayer.id, 'transform.anchorPoint', newAnchor);
         setPropertyValue(selectedLayer.id, 'transform.position', [
-          Math.round(startTr.position[0] + dx),
-          Math.round(startTr.position[1] + dy),
+          Math.round(newPos[0]),
+          Math.round(newPos[1]),
         ]);
       } else {
-        const deltaSx = (dx * dirX) / Math.max(20, selectedLayer.width / 200);
-        const deltaSy = (dy * dirY) / Math.max(20, selectedLayer.height / 200);
+        const compDx = curCompPt[0] - startCompPt[0];
+        const compDy = curCompPt[1] - startCompPt[1];
+        // Project onto rotated layer axes
+        const localDx = compDx * cosR + compDy * sinR;
+        const localDy = -compDx * sinR + compDy * cosR;
+        const deltaSx = (localDx * dirX) / Math.max(12, selectedLayer.width / 200);
+        const deltaSy = (localDy * dirY) / Math.max(12, selectedLayer.height / 200);
         if (me.shiftKey || selectedLayer.transform.scaleConstrain) {
           const uniformDelta = Math.abs(deltaSx) > Math.abs(deltaSy) ? deltaSx : deltaSy;
           setPropertyValue(selectedLayer.id, 'transform.scale', [
@@ -597,6 +639,44 @@ export const ViewportPanel: React.FC = () => {
                 strokeWidth={1.5 * invZoom}
               />
             )}
+
+            {/* Null Object Helper Wireframes */}
+            {comp.layers
+              .filter(
+                (l) =>
+                  l.type === 'null' &&
+                  l.visible &&
+                  currentTime >= l.inPoint &&
+                  currentTime <= l.outPoint
+              )
+              .map((nullLayer) => {
+                const m = computeLayerWorldMatrix(nullLayer, comp, currentTime);
+                const p0 = applyMatrixToPoint(m, [0, 0]);
+                const p1 = applyMatrixToPoint(m, [nullLayer.width, 0]);
+                const p2 = applyMatrixToPoint(m, [nullLayer.width, nullLayer.height]);
+                const p3 = applyMatrixToPoint(m, [0, nullLayer.height]);
+                return (
+                  <g key={`null_helper_${nullLayer.id}`}>
+                    <polygon
+                      points={`${p0[0]},${p0[1]} ${p1[0]},${p1[1]} ${p2[0]},${p2[1]} ${p3[0]},${p3[1]}`}
+                      fill="rgba(244, 63, 94, 0.08)"
+                      stroke="#f43f5e"
+                      strokeWidth={1.5 * invZoom}
+                      strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
+                    />
+                    <text
+                      x={p0[0] + 4 * invZoom}
+                      y={p0[1] - 5 * invZoom}
+                      fill="#f43f5e"
+                      fontSize={10 * invZoom}
+                      fontFamily="JetBrains Mono"
+                      fontWeight="bold"
+                    >
+                      {nullLayer.name}
+                    </text>
+                  </g>
+                );
+              })}
 
             {/* Spatial Bezier Motion Path Trajectory & Handles */}
             {motionPathData && selectedLayer && (
