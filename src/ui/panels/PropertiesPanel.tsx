@@ -53,7 +53,9 @@ const BLEND_MODES: { value: BlendMode; label: string }[] = [
 
 export const PropertiesPanel: React.FC = () => {
   const comp = useProjectStore((s) => s.getActiveComp());
-  const currentTime = useProjectStore((s) => s.currentTime);
+  const currentTime = useProjectStore((s) =>
+    s.isPlaying ? Math.round(s.currentTime * 8) / 8 : s.currentTime
+  );
   const selectedLayerIds = useProjectStore((s) => s.selectedLayerIds);
 
   const updateLayerMeta = useProjectStore((s) => s.updateLayerMeta);

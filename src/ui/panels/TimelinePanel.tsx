@@ -48,7 +48,9 @@ const PROP_ROW_HEIGHT = 24;
 export const TimelinePanel: React.FC = () => {
   const project = useProjectStore((s) => s.project);
   const comp = useProjectStore((s) => s.getActiveComp());
-  const currentTime = useProjectStore((s) => s.currentTime);
+  const currentTime = useProjectStore((s) =>
+    s.isPlaying ? Math.round(s.currentTime * 15) / 15 : s.currentTime
+  );
   const isPlaying = useProjectStore((s) => s.isPlaying);
   const loopMode = useProjectStore((s) => s.loopMode);
   const measuredFps = useProjectStore((s) => s.measuredFps);

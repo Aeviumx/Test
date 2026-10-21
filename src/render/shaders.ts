@@ -56,12 +56,12 @@ float fbm(vec2 p, float evo) {
   float v = 0.0;
   float a = 0.5;
   mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 3; i++) {
     v += a * valueNoise(p + vec2(evo * 0.13, -evo * 0.09));
     p = rot * p * 2.02 + vec2(17.1, 31.7);
     a *= 0.5;
   }
-  return v;
+  return v / 0.875;
 }
 
 vec3 rgb2hsl(vec3 c) {
@@ -116,11 +116,11 @@ void main() {
     vec2 scaleDir = vec2(u_p1 / 100.0, u_p2 / 100.0);
     vec4 acc = vec4(0.0);
     float totalW = 0.0;
-    for (int x = -4; x <= 4; x++) {
-      for (int y = -4; y <= 4; y++) {
-        vec2 offset = vec2(float(x), float(y)) * texel * (radius * 0.35) * scaleDir;
+    for (int x = -2; x <= 2; x++) {
+      for (int y = -2; y <= 2; y++) {
+        vec2 offset = vec2(float(x), float(y)) * texel * (radius * 0.65) * scaleDir;
         float dist2 = float(x * x + y * y);
-        float w = exp(-dist2 / 8.0);
+        float w = exp(-dist2 / 4.0);
         acc += texture(u_tex, clamp(v_uv + offset, 0.0, 1.0)) * w;
         totalW += w;
       }
@@ -135,9 +135,9 @@ void main() {
     float len = u_p1;
     vec2 dir = vec2(cos(angleRad), sin(angleRad)) * texel * len;
     vec4 acc = vec4(0.0);
-    const int SAMPLES = 13;
-    for (int i = -6; i <= 6; i++) {
-      float t = float(i) / 6.0;
+    const int SAMPLES = 9;
+    for (int i = -4; i <= 4; i++) {
+      float t = float(i) / 4.0;
       acc += texture(u_tex, clamp(v_uv + dir * t, 0.0, 1.0));
     }
     outColor = acc / float(SAMPLES);
@@ -153,13 +153,13 @@ void main() {
 
     vec4 bloom = vec4(0.0);
     float totalW = 0.0;
-    for (int x = -3; x <= 3; x++) {
-      for (int y = -3; y <= 3; y++) {
-        vec2 off = vec2(float(x), float(y)) * texel * (radius * 0.45);
+    for (int x = -2; x <= 2; x++) {
+      for (int y = -2; y <= 2; y++) {
+        vec2 off = vec2(float(x), float(y)) * texel * (radius * 0.65);
         vec4 samp = texture(u_tex, clamp(v_uv + off, 0.0, 1.0));
         float luma = dot(samp.rgb, vec3(0.299, 0.587, 0.114)) * samp.a;
         float bright = max(0.0, luma - threshold) / max(0.01, 1.0 - threshold);
-        float w = exp(-float(x * x + y * y) / 6.0);
+        float w = exp(-float(x * x + y * y) / 3.5);
         bloom += vec4(glowColor * bright, samp.a * bright) * w;
         totalW += w;
       }
@@ -182,11 +182,11 @@ void main() {
     vec2 shift = vec2(cos(angleRad), -sin(angleRad)) * texel * distancePx;
     float shadowAlpha = 0.0;
     float totalW = 0.0;
-    for (int x = -2; x <= 2; x++) {
-      for (int y = -2; y <= 2; y++) {
-        vec2 blurOff = vec2(float(x), float(y)) * texel * (softness * 0.35);
+    for (int x = -1; x <= 1; x++) {
+      for (int y = -1; y <= 1; y++) {
+        vec2 blurOff = vec2(float(x), float(y)) * texel * (softness * 0.55);
         float a = texture(u_tex, clamp(v_uv - shift + blurOff, 0.0, 1.0)).a;
-        float w = exp(-float(x * x + y * y) / 4.0);
+        float w = exp(-float(x * x + y * y) / 2.5);
         shadowAlpha += a * w;
         totalW += w;
       }

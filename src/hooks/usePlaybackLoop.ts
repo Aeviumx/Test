@@ -91,7 +91,7 @@ export function usePlaybackLoop(): void {
       fpsAccumulator += dt;
       if (fpsAccumulator >= 0.4) {
         const measured = Math.round(frameCount / fpsAccumulator);
-        useProjectStore.getState().setMeasuredFps(Math.min(120, Math.max(1, measured)));
+        useProjectStore.getState().setMeasuredFps(Math.min(60, Math.max(1, measured)));
         frameCount = 0;
         fpsAccumulator = 0;
       }

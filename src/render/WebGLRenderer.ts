@@ -332,34 +332,67 @@ export class WebGLCompositionRenderer {
         continue;
       }
 
-      // Rasterize the layer into rasterCanvas in composition space, then upload to layerFboA
-      this.rasterizeLayerToCanvas(
-        this.rasterCtx,
-        layer,
-        comp,
-        time,
-        idx,
-        project,
-        resolutionScale
-      );
-      this.uploadCanvasToFbo(this.rasterCanvas, this.layerFboA, renderW, renderH);
+      // Fast path for unmasked full-comp Solid layers: clear layerFboA directly on GPU without 2D Canvas upload
+      const hasEnabledMasks = layer.masks.some((m) => m.enabled);
+      const hasEnabledEffects = layer.effects.some((fx) => fx.enabled);
+      let layerTexForComposite: WebGLTexture = this.layerFboA.tex;
 
-      // Run GPU Shader Effects stack for this layer
-      const afterEffectsFbo = this.runEffectStack(
-        layer,
-        comp,
-        time,
-        idx,
-        this.layerFboA,
-        this.layerFboB,
-        renderW,
-        renderH,
-        resolutionScale
-      );
+      if (
+        layer.type === 'solid' &&
+        !hasEnabledMasks &&
+        !layer.parentId &&
+        layer.width === comp.width &&
+        layer.height === comp.height &&
+        layerTr.scale[0] === 100 &&
+        layerTr.scale[1] === 100 &&
+        layerTr.rotation === 0
+      ) {
+        const solidRgba = hexToRgba(layer.solidColor ?? '#2c2c54', 1);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.layerFboA.fbo);
+        gl.viewport(0, 0, renderW, renderH);
+        gl.clearColor(solidRgba[0], solidRgba[1], solidRgba[2], solidRgba[3]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+      } else {
+        // Rasterize the layer into rasterCanvas in composition space
+        this.rasterizeLayerToCanvas(
+          this.rasterCtx,
+          layer,
+          comp,
+          time,
+          idx,
+          project,
+          resolutionScale
+        );
+        if (!hasEnabledEffects && this.uploadTex) {
+          gl.bindTexture(gl.TEXTURE_2D, this.uploadTex);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.rasterCanvas);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+          layerTexForComposite = this.uploadTex;
+        } else {
+          this.uploadCanvasToFbo(this.rasterCanvas, this.layerFboA, renderW, renderH);
+        }
+      }
+
+      // Run GPU Shader Effects stack for this layer if any are enabled
+      if (hasEnabledEffects) {
+        const afterEffectsFbo = this.runEffectStack(
+          layer,
+          comp,
+          time,
+          idx,
+          this.layerFboA,
+          this.layerFboB,
+          renderW,
+          renderH,
+          resolutionScale
+        );
+        layerTexForComposite = afterEffectsFbo.tex;
+      }
 
       // Check Track Matte
       let matteMode: TrackMatteType = layer.trackMatteType;
-      let matteTex = afterEffectsFbo.tex;
+      let matteTex = layerTexForComposite;
       if (matteMode !== 'none') {
         const matteLayer = layer.trackMatteLayerId
           ? comp.layers.find((l) => l.id === layer.trackMatteLayerId)
@@ -385,7 +418,7 @@ export class WebGLCompositionRenderer {
       // Composite layer onto scene
       this.compositeLayerPass(
         currentScene.tex,
-        afterEffectsFbo.tex,
+        layerTexForComposite,
         matteTex,
         layer.blendMode,
         matteMode,
@@ -1068,16 +1101,25 @@ export class WebGLCompositionRenderer {
     worldMat: [number, number, number, number, number, number],
     resolutionScale: number
   ): void {
-    const rw = this.maskCanvas.width;
-    const rh = this.maskCanvas.height;
+    const anyFeathered = layer.masks.some(
+      (m) => m.enabled && evaluateProperty(m.feather, time, comp, layer, layerIndex) > 0.5
+    );
+    const maskDownscale = anyFeathered ? 0.25 : 1;
+    const rw = Math.max(16, Math.round(ctx.canvas.width * maskDownscale));
+    const rh = Math.max(16, Math.round(ctx.canvas.height * maskDownscale));
+    if (this.maskCanvas.width !== rw || this.maskCanvas.height !== rh) {
+      this.maskCanvas.width = rw;
+      this.maskCanvas.height = rh;
+    }
     const mCtx = this.maskCtx;
     mCtx.clearRect(0, 0, rw, rh);
+    const effectiveScale = resolutionScale * maskDownscale;
 
     for (let i = 0; i < layer.masks.length; i++) {
       const mask = layer.masks[i];
       if (!mask.enabled) continue;
 
-      const feather = evaluateProperty(mask.feather, time, comp, layer, layerIndex) * resolutionScale;
+      const feather = evaluateProperty(mask.feather, time, comp, layer, layerIndex) * effectiveScale;
       const maskOpacity = evaluateProperty(mask.opacity, time, comp, layer, layerIndex) / 100;
       const expansion = evaluateProperty(mask.expansion, time, comp, layer, layerIndex);
 
@@ -1089,7 +1131,7 @@ export class WebGLCompositionRenderer {
       }
 
       mCtx.save();
-      mCtx.scale(resolutionScale, resolutionScale);
+      mCtx.scale(effectiveScale, effectiveScale);
       mCtx.transform(worldMat[0], worldMat[1], worldMat[2], worldMat[3], worldMat[4], worldMat[5]);
 
       if (mask.mode === 'subtract' || (mask.inverted && mask.mode === 'add')) {
@@ -1150,7 +1192,7 @@ export class WebGLCompositionRenderer {
 
     ctx.save();
     ctx.globalCompositeOperation = 'destination-in';
-    ctx.drawImage(this.maskCanvas, 0, 0);
+    ctx.drawImage(this.maskCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.restore();
   }
 

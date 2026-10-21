@@ -392,7 +392,7 @@ export const GraphEditor: React.FC = () => {
                   : 0;
               const isVec2 = Array.isArray(kf.value) && typeof kf.value[0] === 'number';
               const scalarY = isVec2 ? (kf.value as number[])[1] : null;
-              const ky = graphEditorMode === 'value' ? valToY(scalar) : plotTop + plotH * 0.5;
+              const ky = graphEditorMode === 'value' ? valToY(scalar) : padT + plotH * 0.5;
               const ky2 =
                 graphEditorMode === 'value' && scalarY !== null ? valToY(scalarY) : null;
               const isSelected = selectedKeyframes.some((s) => s.keyframeId === kf.id);

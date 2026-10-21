@@ -28,7 +28,11 @@ import { timeToFrame } from '../../utils/timecode';
 export const ViewportPanel: React.FC = () => {
   const project = useProjectStore((s) => s.project);
   const comp = useProjectStore((s) => s.getActiveComp());
-  const currentTime = useProjectStore((s) => s.currentTime);
+  const currentTime = useProjectStore((s) => {
+    const c = s.getActiveComp();
+    return s.isPlaying ? Math.round(s.currentTime * c.fps) / c.fps : s.currentTime;
+  });
+  const isPlaying = useProjectStore((s) => s.isPlaying);
   const selectedLayerIds = useProjectStore((s) => s.selectedLayerIds);
   const activeTool = useProjectStore((s) => s.activeTool);
   const activeShapeType = useProjectStore((s) => s.activeShapeType);
@@ -57,6 +61,7 @@ export const ViewportPanel: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const glCanvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<WebGLCompositionRenderer | null>(null);
+  const lastRenderedFrameRef = useRef<string>('');
 
   const [renderTrigger, setRenderTrigger] = useState(0);
   const [cursorCompPos, setCursorCompPos] = useState<Vec2>([0, 0]);
@@ -65,6 +70,7 @@ export const ViewportPanel: React.FC = () => {
 
   const resScale =
     previewResolution === 'full' ? 1 : previewResolution === 'half' ? 0.5 : 0.25;
+  const effectiveResScale = isPlaying ? Math.min(resScale, 0.35) : resScale;
 
   // Initialize WebGL2 Renderer
   useEffect(() => {
@@ -86,15 +92,22 @@ export const ViewportPanel: React.FC = () => {
   // Render active frame on WebGL2 Canvas whenever state or time changes
   useEffect(() => {
     if (!rendererRef.current) return;
+    const frameIndex = timeToFrame(currentTime, comp.fps);
+    const frameKey = `${comp.id}:${globalFrameCache.getRevision()}:${effectiveResScale}:${showCheckerboard}:${renderTrigger}:${frameIndex}`;
+    if (isPlaying && lastRenderedFrameRef.current === frameKey) {
+      return;
+    }
+    lastRenderedFrameRef.current = frameKey;
+    const snappedTime = isPlaying ? frameIndex / comp.fps : currentTime;
     rendererRef.current.renderComposition(
       comp,
-      currentTime,
+      snappedTime,
       project,
-      resScale,
+      effectiveResScale,
       showCheckerboard
     );
-    globalFrameCache.markFrameCached(comp.id, timeToFrame(currentTime, comp.fps));
-  }, [comp, currentTime, project, resScale, showCheckerboard, renderTrigger]);
+    globalFrameCache.markFrameCached(comp.id, frameIndex);
+  }, [comp, currentTime, isPlaying, project, effectiveResScale, showCheckerboard, renderTrigger]);
 
   // Convert client mouse coordinates to Composition coordinates (0..comp.width, 0..comp.height)
   const clientToCompCoords = (clientX: number, clientY: number): Vec2 => {

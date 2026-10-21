@@ -2,11 +2,13 @@ export class FrameCacheManager {
   private revision = 0;
   private cachedFramesByComp = new Map<string, Set<number>>();
   private listeners = new Set<() => void>();
+  private lastNotifyTime = 0;
+  private pendingNotifyTimer: number | null = null;
 
   public invalidateAll(): void {
     this.revision += 1;
     this.cachedFramesByComp.clear();
-    this.notify();
+    this.notify(true);
   }
 
   public getRevision(): number {
@@ -21,7 +23,7 @@ export class FrameCacheManager {
     }
     if (!set.has(frameIndex)) {
       set.add(frameIndex);
-      this.notify();
+      this.notify(false);
     }
   }
 
@@ -40,8 +42,22 @@ export class FrameCacheManager {
     };
   }
 
-  private notify(): void {
-    this.listeners.forEach((fn) => fn());
+  private notify(immediate = false): void {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (immediate || now - this.lastNotifyTime >= 250) {
+      if (this.pendingNotifyTimer !== null && typeof window !== 'undefined') {
+        window.clearTimeout(this.pendingNotifyTimer);
+        this.pendingNotifyTimer = null;
+      }
+      this.lastNotifyTime = now;
+      this.listeners.forEach((fn) => fn());
+    } else if (this.pendingNotifyTimer === null && typeof window !== 'undefined') {
+      this.pendingNotifyTimer = window.setTimeout(() => {
+        this.pendingNotifyTimer = null;
+        this.lastNotifyTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        this.listeners.forEach((fn) => fn());
+      }, 250);
+    }
   }
 }
 
