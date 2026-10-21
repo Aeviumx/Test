@@ -10,6 +10,7 @@ import {
   Vec2,
 } from '../types';
 import { hexToRgba } from '../utils/color';
+import { sampleBezierPath } from '../utils/geometry';
 import {
   applyTrimPathsToPolyline,
   computeLayerWorldMatrix,
@@ -264,11 +265,27 @@ export class WebGLCompositionRenderer {
 
     const anySolo = comp.layers.some((l) => l.solo);
 
-    // Determine which layers are used solely as Track Mattes so we don't double-render them unless explicitly visible
+    // Collect layers consumed as Track Matte sources so they act solely as masks and aren't rendered on top
+    const trackMatteSourceIds = new Set<string>();
+    for (let i = 0; i < comp.layers.length; i++) {
+      const l = comp.layers[i];
+      if (l.trackMatteType !== 'none' && (anySolo ? l.solo : l.visible)) {
+        const matteLayer = l.trackMatteLayerId
+          ? comp.layers.find((m) => m.id === l.trackMatteLayerId)
+          : comp.layers[i - 1];
+        if (matteLayer) {
+          trackMatteSourceIds.add(matteLayer.id);
+        }
+      }
+    }
+
     // Render bottom-to-top (in AE, index 0 is top of stack, so we iterate from layers.length - 1 down to 0)
     for (let idx = comp.layers.length - 1; idx >= 0; idx--) {
       const layer = comp.layers[idx];
       if (layer.type === 'audio' || layer.type === 'null' || layer.type === 'camera') {
+        continue;
+      }
+      if (trackMatteSourceIds.has(layer.id)) {
         continue;
       }
       if (anySolo ? !layer.solo : !layer.visible) {
@@ -1064,11 +1081,18 @@ export class WebGLCompositionRenderer {
       const maskOpacity = evaluateProperty(mask.opacity, time, comp, layer, layerIndex) / 100;
       const expansion = evaluateProperty(mask.expansion, time, comp, layer, layerIndex);
 
+      if (mask.inverted && mask.mode === 'add' && i === 0) {
+        mCtx.save();
+        mCtx.fillStyle = '#ffffff';
+        mCtx.fillRect(0, 0, rw, rh);
+        mCtx.restore();
+      }
+
       mCtx.save();
       mCtx.scale(resolutionScale, resolutionScale);
       mCtx.transform(worldMat[0], worldMat[1], worldMat[2], worldMat[3], worldMat[4], worldMat[5]);
 
-      if (mask.mode === 'subtract') {
+      if (mask.mode === 'subtract' || (mask.inverted && mask.mode === 'add')) {
         mCtx.globalCompositeOperation = 'destination-out';
       } else if (mask.mode === 'intersect' && i > 0) {
         mCtx.globalCompositeOperation = 'destination-in';
@@ -1088,12 +1112,39 @@ export class WebGLCompositionRenderer {
       const mh = Math.max(1, mask.rect.height + expansion * 2);
 
       mCtx.beginPath();
-      if (mask.shapeType === 'ellipse') {
+      if (mask.shapeType === 'path' && mask.vertices.length >= 2) {
+        const pts = sampleBezierPath(
+          mask.vertices,
+          mask.closed || mask.vertices.length >= 3,
+          16
+        );
+        if (pts.length > 0) {
+          mCtx.moveTo(pts[0][0], pts[0][1]);
+          for (let p = 1; p < pts.length; p++) {
+            mCtx.lineTo(pts[p][0], pts[p][1]);
+          }
+          if (mask.closed || mask.vertices.length >= 3) {
+            mCtx.closePath();
+          }
+        }
+      } else if (mask.shapeType === 'ellipse') {
         mCtx.ellipse(rx + mw / 2, ry + mh / 2, mw / 2, mh / 2, 0, 0, Math.PI * 2);
       } else {
         mCtx.rect(rx, ry, mw, mh);
       }
       mCtx.fill();
+      if (mask.shapeType === 'path' && Math.abs(expansion) > 0.5) {
+        mCtx.lineWidth = Math.abs(expansion) * 2;
+        mCtx.lineJoin = 'round';
+        mCtx.strokeStyle = '#ffffff';
+        if (expansion < 0) {
+          mCtx.globalCompositeOperation =
+            mCtx.globalCompositeOperation === 'destination-out'
+              ? 'source-over'
+              : 'destination-out';
+        }
+        mCtx.stroke();
+      }
       mCtx.restore();
     }
 

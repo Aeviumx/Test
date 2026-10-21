@@ -869,7 +869,13 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         const layer = comp?.layers.find((l) => l.id === layerId);
         if (!layer) return;
         const groups = layer.expandedGroups ?? [];
-        if (groups.includes(groupName)) {
+        if (groupName === 'all') {
+          if (groups.length > 0) {
+            layer.expandedGroups = [];
+          } else {
+            layer.expandedGroups = ['transform', 'contents', 'text', 'masks', 'effects'];
+          }
+        } else if (groups.includes(groupName)) {
           layer.expandedGroups = groups.filter((g) => g !== groupName);
         } else {
           layer.expandedGroups = [...groups, groupName];
@@ -940,9 +946,49 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       const comp = draft.compositions.find((c) => c.id === compId);
       const layer = comp?.layers.find((l) => l.id === layerId);
       if (!layer) return;
-      if (layer.shapeContents) {
-        layer.shapeContents.shapeType = 'path';
-        layer.shapeContents.vertices.push(vertex);
+      if (
+        layer.type === 'shape' &&
+        layer.shapeContents?.shapeType === 'path' &&
+        layer.masks.length === 0
+      ) {
+        const verts = layer.shapeContents.vertices;
+        if (verts.length >= 3) {
+          const d0 = Math.hypot(vertex.x - verts[0].x, vertex.y - verts[0].y);
+          if (d0 < 20) {
+            layer.shapeContents.closed = true;
+            return;
+          }
+        }
+        verts.push(vertex);
+      } else {
+        let pathMask = layer.masks.find((m) => m.shapeType === 'path');
+        if (!pathMask) {
+          pathMask = createDefaultMask(
+            layer.width,
+            layer.height,
+            'path',
+            layer.masks.length + 1
+          );
+          pathMask.vertices = [];
+          pathMask.closed = true;
+          layer.masks.push(pathMask);
+        } else if (pathMask.vertices.length >= 3) {
+          const d0 = Math.hypot(
+            vertex.x - pathMask.vertices[0].x,
+            vertex.y - pathMask.vertices[0].y
+          );
+          if (d0 < 20) {
+            pathMask.closed = true;
+            return;
+          }
+        }
+        pathMask.vertices.push(vertex);
+        if (pathMask.vertices.length >= 3) {
+          pathMask.closed = true;
+        }
+        if (!layer.expandedGroups?.includes('masks')) {
+          layer.expandedGroups = [...(layer.expandedGroups ?? []), 'masks'];
+        }
       }
     });
   },

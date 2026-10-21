@@ -325,6 +325,7 @@ export const TimelinePanel: React.FC = () => {
       return all.filter((p) => p.property.animated || p.property.expressionEnabled);
     }
     return all.filter((p) => {
+      if (p.property.animated || p.property.expressionEnabled) return true;
       if (p.groupName === 'Transform' && groups.includes('transform')) return true;
       if (p.groupName === 'Contents' && groups.includes('contents')) return true;
       if ((p.groupName === 'Text' || p.groupName === 'Text Animator') && groups.includes('text'))
@@ -352,10 +353,13 @@ export const TimelinePanel: React.FC = () => {
 
   // Start marquee selection box on empty track background
   const handleTrackAreaMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || e.target !== e.currentTarget) return;
+    if (e.button !== 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x0 = e.clientX - rect.left;
     const y0 = e.clientY - rect.top;
+    if (!e.shiftKey) {
+      setSelectedKeyframes([]);
+    }
     setMarquee({ x0, y0, x1: x0, y1: y0 });
 
     const onMove = (me: MouseEvent) => {
@@ -742,7 +746,7 @@ export const TimelinePanel: React.FC = () => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleLayerGroupExpanded(layer.id, 'transform');
+                          toggleLayerGroupExpanded(layer.id, 'all');
                         }}
                         className="p-0.5 text-[#9b9ba6] hover:text-white"
                       >

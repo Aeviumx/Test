@@ -205,9 +205,9 @@ export const ViewportPanel: React.FC = () => {
       return;
     }
 
-    // Pen tool (G): Add Bezier Vertex to selected shape path or create a new path shape layer
+    // Pen tool (G): Add Bezier Vertex to selected layer's mask/shape path, or create a new path shape layer if no layer selected
     if (activeTool === 'pen') {
-      if (selectedLayer && selectedLayer.type === 'shape') {
+      if (selectedLayer && !selectedLayer.locked) {
         const worldMat = computeLayerWorldMatrix(selectedLayer, comp, currentTime);
         const invMat = invertMatrix(worldMat);
         const localPt = applyMatrixToPoint(invMat, compPt);
@@ -801,6 +801,77 @@ export const ViewportPanel: React.FC = () => {
             {/* Selected Layer Bounding Box, Resize Handles, Rotation Stem, and Anchor Point */}
             {selectedLayerGizmo && selectedLayer && (
               <g>
+                {/* Layer Masks Overlay (Yellow Path / Rect / Ellipse + Bezier Vertices) */}
+                {selectedLayer.masks.map((mask) => {
+                  if (!mask.enabled) return null;
+                  if (mask.shapeType === 'path' && mask.vertices.length >= 1) {
+                    const worldVerts = mask.vertices.map((v) =>
+                      applyMatrixToPoint(selectedLayerGizmo.worldMat, [v.x, v.y])
+                    );
+                    const polyPts = worldVerts.map((p) => `${p[0]},${p[1]}`).join(' ');
+                    return (
+                      <g key={mask.id} data-testid={`viewport-mask-${mask.id}`}>
+                        {worldVerts.length >= 3 || mask.closed ? (
+                          <polygon
+                            points={polyPts}
+                            fill="rgba(245, 158, 11, 0.08)"
+                            stroke="#f59e0b"
+                            strokeWidth={1.8 * invZoom}
+                            strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
+                          />
+                        ) : (
+                          <polyline
+                            points={polyPts}
+                            fill="none"
+                            stroke="#f59e0b"
+                            strokeWidth={1.8 * invZoom}
+                            strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
+                          />
+                        )}
+                        {worldVerts.map((pt, vi) => (
+                          <rect
+                            key={vi}
+                            x={pt[0] - 4.5 * invZoom}
+                            y={pt[1] - 4.5 * invZoom}
+                            width={9 * invZoom}
+                            height={9 * invZoom}
+                            fill={vi === 0 ? '#f59e0b' : '#ffffff'}
+                            stroke="#92400e"
+                            strokeWidth={1.5 * invZoom}
+                          />
+                        ))}
+                      </g>
+                    );
+                  }
+                  const mTl = applyMatrixToPoint(selectedLayerGizmo.worldMat, [
+                    mask.rect.x,
+                    mask.rect.y,
+                  ]);
+                  const mTr = applyMatrixToPoint(selectedLayerGizmo.worldMat, [
+                    mask.rect.x + mask.rect.width,
+                    mask.rect.y,
+                  ]);
+                  const mBr = applyMatrixToPoint(selectedLayerGizmo.worldMat, [
+                    mask.rect.x + mask.rect.width,
+                    mask.rect.y + mask.rect.height,
+                  ]);
+                  const mBl = applyMatrixToPoint(selectedLayerGizmo.worldMat, [
+                    mask.rect.x,
+                    mask.rect.y + mask.rect.height,
+                  ]);
+                  return (
+                    <polygon
+                      key={mask.id}
+                      data-testid={`viewport-mask-${mask.id}`}
+                      points={`${mTl[0]},${mTl[1]} ${mTr[0]},${mTr[1]} ${mBr[0]},${mBr[1]} ${mBl[0]},${mBl[1]}`}
+                      fill="none"
+                      stroke="#f59e0b"
+                      strokeWidth={1.6 * invZoom}
+                      strokeDasharray={`${5 * invZoom} ${3 * invZoom}`}
+                    />
+                  );
+                })}
+
                 <polygon
                   points={`${selectedLayerGizmo.tl[0]},${selectedLayerGizmo.tl[1]} ${selectedLayerGizmo.trPt[0]},${selectedLayerGizmo.trPt[1]} ${selectedLayerGizmo.br[0]},${selectedLayerGizmo.br[1]} ${selectedLayerGizmo.bl[0]},${selectedLayerGizmo.bl[1]}`}
                   fill="none"
@@ -824,7 +895,11 @@ export const ViewportPanel: React.FC = () => {
                   fill="#00d1b2"
                   stroke="#161619"
                   strokeWidth={1.5 * invZoom}
-                  className="pointer-events-auto cursor-grab"
+                  className={
+                    activeTool === 'select' || activeTool === 'rotate'
+                      ? 'pointer-events-auto cursor-grab'
+                      : 'pointer-events-none'
+                  }
                   onMouseDown={(e) => startGizmoHandleDrag(e, 'rotate')}
                 />
 
@@ -848,14 +923,22 @@ export const ViewportPanel: React.FC = () => {
                     fill="#ffffff"
                     stroke="#6c5ce7"
                     strokeWidth={1.8 * invZoom}
-                    className="pointer-events-auto cursor-nwse-resize"
+                    className={
+                      activeTool === 'select'
+                        ? 'pointer-events-auto cursor-nwse-resize'
+                        : 'pointer-events-none'
+                    }
                     onMouseDown={(e) => startGizmoHandleDrag(e, 'scale', h.dx, h.dy)}
                   />
                 ))}
 
                 {/* Anchor Point Reticle */}
                 <g
-                  className="pointer-events-auto cursor-move"
+                  className={
+                    activeTool === 'select' || activeTool === 'anchor'
+                      ? 'pointer-events-auto cursor-move'
+                      : 'pointer-events-none'
+                  }
                   onMouseDown={(e) => startGizmoHandleDrag(e, 'anchor')}
                 >
                   <circle
