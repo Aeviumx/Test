@@ -1,6 +1,6 @@
-# Motionforge — WebGL2 Motion Design & Compositing Studio
+# Kōri (氷) — WebGL2 Motion Design & Compositing Studio
 
-**Motionforge** is a browser-based motion design, animation, and GPU compositing application inspired by Adobe After Effects. It runs 100% client-side with zero backend dependencies.
+**Kōri (氷)** is a browser-based motion design, animation, and GPU compositing application inspired by Adobe After Effects. It runs 100% client-side with zero backend dependencies.
 
 ## Quick Start
 

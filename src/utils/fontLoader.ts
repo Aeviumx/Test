@@ -105,7 +105,7 @@ export async function ensureGoogleFontLoaded(
       if (typeof document !== 'undefined' && 'fonts' in document) {
         const cssFontSpec = `${fontStyle} ${fontWeight} 48px "${cleanFamily}"`;
         await Promise.race([
-          document.fonts.load(cssFontSpec, 'MOTIONFORGE 0123456789'),
+          document.fonts.load(cssFontSpec, 'KŌRI 氷 0123456789'),
           new Promise((resolve) => setTimeout(resolve, 1800)),
         ]);
       }

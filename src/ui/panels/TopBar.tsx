@@ -306,7 +306,7 @@ export const TopBar: React.FC = () => {
         onClick: () => setActiveModal('shortcuts'),
       },
       {
-        label: 'Reload Motionforge Demo Project',
+        label: 'Reload Kōri Demo Project',
         dividerAbove: true,
         onClick: () => loadDemoProject(),
       },
@@ -359,12 +359,20 @@ export const TopBar: React.FC = () => {
       {/* Left: Brand + Application Menus */}
       <div ref={menuBarRef} className="flex items-center gap-1">
         <div className="flex items-center gap-2 pr-2.5 mr-1 border-r border-[var(--border)]">
-          <div className="w-5 h-5 rounded bg-gradient-to-br from-[var(--accent)] to-[var(--accent-deep)] flex items-center justify-center shadow-sm font-black text-[#0b0d11] text-[11px] leading-none select-none">
-            M
+          <div
+            className="w-5 h-5 rounded bg-gradient-to-br from-[var(--accent)] to-[var(--accent-deep)] flex items-center justify-center shadow-sm font-black text-[#0b0d11] text-[12px] leading-none select-none font-sans"
+            title="Kōri (氷)"
+          >
+            氷
           </div>
-          <span className="font-bold tracking-wider text-[11px] text-[var(--text-primary)] select-none">
-            MOTIONFORGE
-          </span>
+          <div className="flex items-baseline gap-1 select-none">
+            <span className="font-bold tracking-wider text-[11px] text-[var(--text-primary)]">
+              Kōri
+            </span>
+            <span className="text-[10px] font-semibold text-[var(--steel-light)]">
+              (氷)
+            </span>
+          </div>
         </div>
 
         {Object.entries(menus).map(([menuName, items]) => (

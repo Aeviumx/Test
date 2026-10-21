@@ -10,7 +10,7 @@ import {
 
 export function createDemoProject(): Project {
   const mainComp: Composition = createDefaultComposition({
-    name: '01_Motionforge_Main_Intro',
+    name: '01_Kōri_Main_Intro',
     width: 1920,
     height: 1080,
     fps: 30,
@@ -43,9 +43,9 @@ export function createDemoProject(): Project {
   chromaFx.params.radial.value = 70;
   adjLayer.effects = [chromaFx, vignetteFx];
 
-  // 2. Main Hero Title ("MOTIONFORGE") with Text Animator + Glow + Drop Shadow
-  const titleLayer = createDefaultLayer(mainComp, 'text', 'MOTIONFORGE Title', {
-    text: 'MOTIONFORGE',
+  // 2. Main Hero Title ("KŌRI 氷") with Text Animator + Glow + Drop Shadow
+  const titleLayer = createDefaultLayer(mainComp, 'text', 'KŌRI (氷) Title', {
+    text: 'KŌRI (氷)',
     width: 1400,
     height: 200,
   });
@@ -358,7 +358,7 @@ export function createDemoProject(): Project {
 
   return {
     id: createId('proj'),
-    name: 'Motionforge Showcase.mfproj',
+    name: 'Kōri Showcase.mfproj',
     version: '1.0.0',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

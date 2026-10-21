@@ -152,7 +152,7 @@ export function createDefaultShapeContents(shapeType: ShapeGeometryType = 'recta
   };
 }
 
-export function createDefaultTextContents(text = 'MOTIONFORGE'): TextContents {
+export function createDefaultTextContents(text = 'KŌRI'): TextContents {
   return {
     text,
     fontFamily: 'Inter',
@@ -504,7 +504,7 @@ export function createDefaultLayer(
   if (type === 'shape') {
     layer.shapeContents = createDefaultShapeContents(options?.shapeType ?? 'rectangle', w, h);
   } else if (type === 'text') {
-    layer.textContents = createDefaultTextContents(options?.text ?? 'MOTIONFORGE');
+    layer.textContents = createDefaultTextContents(options?.text ?? 'KŌRI');
   } else if (type === 'camera') {
     layer.cameraOptions = {
       zoom: createProperty<number>('Zoom', 1200, { min: 200, max: 5000, step: 10, unit: 'px' }),
