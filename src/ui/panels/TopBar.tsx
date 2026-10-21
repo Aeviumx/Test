@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Check,
   Circle,
   Crosshair,
   Download,
@@ -26,6 +27,7 @@ import { Project, ShapeGeometryType, ToolType } from '../../types';
 
 interface MenuItem {
   label: string;
+  checked?: boolean;
   shortcut?: string;
   disabled?: boolean;
   dividerAbove?: boolean;
@@ -114,31 +116,51 @@ export const TopBar: React.FC = () => {
 
   const selectedLayerId = selectedLayerIds[0] ?? null;
 
+  const saveProject = () => {
+    void saveProjectToIndexedDB(project);
+    downloadProjectFile(project);
+  };
+
+  // Global hotkeys (Ctrl+S / Ctrl+O / Ctrl+I) are dispatched from useKeyboardShortcuts
+  const saveProjectRef = useRef(saveProject);
+  saveProjectRef.current = saveProject;
+  useEffect(() => {
+    const onSave = () => saveProjectRef.current();
+    const onOpen = () => projectFileInputRef.current?.click();
+    const onImport = () => mediaInputRef.current?.click();
+    window.addEventListener('mf:save-project', onSave);
+    window.addEventListener('mf:open-project', onOpen);
+    window.addEventListener('mf:import-media', onImport);
+    return () => {
+      window.removeEventListener('mf:save-project', onSave);
+      window.removeEventListener('mf:open-project', onOpen);
+      window.removeEventListener('mf:import-media', onImport);
+    };
+  }, []);
+
   const menus: Record<string, MenuItem[]> = {
     File: [
       { label: 'New Empty Project', onClick: () => createNewEmptyProject() },
-      { label: 'Open Demo Showcase Project', onClick: () => loadDemoProject() },
+      { label: 'Open Demo Project', onClick: () => loadDemoProject() },
       {
-        label: 'Open Project (.mfproj)...',
+        label: 'Open Project...',
+        shortcut: 'Ctrl+O',
         dividerAbove: true,
         onClick: () => projectFileInputRef.current?.click(),
       },
       {
-        label: 'Save Project (.mfproj)',
+        label: 'Save Project',
         shortcut: 'Ctrl+S',
-        onClick: () => {
-          void saveProjectToIndexedDB(project);
-          downloadProjectFile(project);
-        },
+        onClick: () => saveProject(),
       },
       {
-        label: 'Import Media (PNG/JPG/SVG/MP4/MP3)...',
+        label: 'Import Media...',
         shortcut: 'Ctrl+I',
         dividerAbove: true,
         onClick: () => mediaInputRef.current?.click(),
       },
       {
-        label: 'Export / Render Queue...',
+        label: 'Export...',
         shortcut: 'Ctrl+M',
         dividerAbove: true,
         onClick: () => setActiveModal('export'),
@@ -240,27 +262,33 @@ export const TopBar: React.FC = () => {
     })),
     View: [
       {
-        label: `${showGrid ? '✓ ' : ''}Show Proportional Grid`,
+        label: 'Proportional Grid',
+        checked: showGrid,
         onClick: () => toggleViewportFlag('showGrid'),
       },
       {
-        label: `${showSafeZones ? '✓ ' : ''}Show Title/Action Safe Zones`,
+        label: 'Title / Action Safe Zones',
+        checked: showSafeZones,
         onClick: () => toggleViewportFlag('showSafeZones'),
       },
       {
-        label: `${showRulers ? '✓ ' : ''}Show Rulers & Guides`,
+        label: 'Rulers & Guides',
+        checked: showRulers,
         onClick: () => toggleViewportFlag('showRulers'),
       },
       {
-        label: `${showMotionPaths ? '✓ ' : ''}Show Spatial Motion Trajectories`,
+        label: 'Motion Paths',
+        checked: showMotionPaths,
         onClick: () => toggleViewportFlag('showMotionPaths'),
       },
       {
-        label: `${snapEnabled ? '✓ ' : ''}Enable Smart Snapping`,
+        label: 'Smart Snapping',
+        checked: snapEnabled,
         onClick: () => toggleViewportFlag('snapEnabled'),
       },
       {
-        label: `${graphEditorOpen ? '✓ ' : ''}Toggle Graph Editor`,
+        label: 'Graph Editor',
+        checked: graphEditorOpen,
         dividerAbove: true,
         onClick: () => setGraphEditorOpen(!graphEditorOpen),
       },
@@ -311,7 +339,7 @@ export const TopBar: React.FC = () => {
   ];
 
   return (
-    <header className="h-10 bg-[#232327] border-b border-[#2e2e33] px-2.5 flex items-center justify-between select-none shrink-0 z-40">
+    <header className="h-[36px] bg-[#232327] border-b border-[#2e2e33] px-2.5 flex items-center justify-between select-none shrink-0 z-40">
       <input
         ref={projectFileInputRef}
         type="file"
@@ -345,9 +373,9 @@ export const TopBar: React.FC = () => {
               onMouseEnter={() => {
                 if (openMenu) setOpenMenu(menuName);
               }}
-              className={`px-2 py-1 rounded text-[12px] transition-colors ${
+              className={`h-[22px] px-2 rounded text-[12px] leading-none transition-colors duration-150 ${
                 openMenu === menuName
-                  ? 'bg-[#6c5ce7] text-white'
+                  ? 'bg-[#34343e] text-white'
                   : 'text-[#d4d4dc] hover:bg-[#2e2e36] hover:text-white'
               }`}
             >
@@ -355,10 +383,10 @@ export const TopBar: React.FC = () => {
             </button>
 
             {openMenu === menuName && (
-              <div className="absolute left-0 top-7 z-50 min-w-[235px] max-h-[75vh] overflow-y-auto py-1 bg-[#232327] border border-[#3a3a44] rounded-md shadow-2xl">
+              <div className="absolute left-0 top-[26px] z-50 min-w-[240px] max-h-[75vh] overflow-y-auto py-1 bg-[#26262b] border border-[#3a3a44] rounded-md shadow-2xl">
                 {items.map((item) => (
                   <React.Fragment key={item.label}>
-                    {item.dividerAbove && <div className="my-1 border-t border-[#2e2e33]" />}
+                    {item.dividerAbove && <div className="my-1 mx-2 border-t border-[#34343c]" />}
                     <button
                       type="button"
                       disabled={item.disabled}
@@ -366,15 +394,18 @@ export const TopBar: React.FC = () => {
                         setOpenMenu(null);
                         item.onClick();
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-1.5 text-left text-[12px] transition-colors ${
+                      className={`w-full h-[24px] flex items-center gap-2 pl-2 pr-3 text-left text-[12px] whitespace-nowrap transition-colors duration-150 ${
                         item.disabled
                           ? 'opacity-40 cursor-not-allowed text-[#787885]'
                           : 'text-[#e4e4e8] hover:bg-[#6c5ce7] hover:text-white'
                       }`}
                     >
-                      <span>{item.label}</span>
+                      <span className="w-3.5 shrink-0 flex items-center justify-center">
+                        {item.checked && <Check className="w-3 h-3" />}
+                      </span>
+                      <span className="flex-1">{item.label}</span>
                       {item.shortcut && (
-                        <span className="ml-4 font-mono text-[10px] opacity-70">
+                        <span className="ml-6 font-mono text-[10px] opacity-60">
                           {item.shortcut}
                         </span>
                       )}
@@ -388,14 +419,14 @@ export const TopBar: React.FC = () => {
       </div>
 
       {/* Center: Tool Bar */}
-      <div className="flex items-center gap-1 bg-[#1a1a1d] px-1.5 py-1 rounded-md border border-[#2e2e33]">
+      <div className="flex items-center gap-0.5 bg-[#1a1a1d] p-[2px] rounded-md border border-[#2e2e33]">
         {tools.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setActiveTool(t.id)}
             title={`${t.label} (${t.shortcut})`}
-            className={`h-6 px-2 rounded flex items-center gap-1 text-[11px] transition-all duration-150 ${
+            className={`h-[24px] w-[28px] rounded flex items-center justify-center transition-colors duration-150 ${
               activeTool === t.id
                 ? 'bg-[#6c5ce7] text-white shadow-sm'
                 : 'text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]'
@@ -409,7 +440,7 @@ export const TopBar: React.FC = () => {
           <select
             value={activeShapeType}
             onChange={(e) => setActiveShapeType(e.target.value as ShapeGeometryType)}
-            className="h-6 ml-1 px-1.5 bg-[#232327] border border-[#383842] rounded text-[11px] text-white outline-none"
+            className="h-[24px] ml-1 px-1.5 bg-[#232327] border border-[#383842] rounded text-[11px] text-white outline-none"
             title="Active Shape Geometry (press Q to cycle)"
           >
             <option value="rectangle">Rectangle</option>
@@ -428,9 +459,9 @@ export const TopBar: React.FC = () => {
           title={
             undoStack.length > 0
               ? `Undo: ${undoStack[undoStack.length - 1].label} (Ctrl+Z)`
-              : 'Nothing to Undo'
+              : 'Undo (Ctrl+Z)'
           }
-          className="h-6 px-1.5 rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32] disabled:opacity-30"
+          className="h-[24px] w-[28px] flex items-center justify-center rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32] disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
         >
           <Undo2 className="w-3.5 h-3.5" />
         </button>
@@ -441,9 +472,9 @@ export const TopBar: React.FC = () => {
           title={
             redoStack.length > 0
               ? `Redo: ${redoStack[redoStack.length - 1].label} (Ctrl+Shift+Z)`
-              : 'Nothing to Redo'
+              : 'Redo (Ctrl+Shift+Z)'
           }
-          className="h-6 px-1.5 rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32] disabled:opacity-30"
+          className="h-[24px] w-[28px] flex items-center justify-center rounded text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32] disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
         >
           <Redo2 className="w-3.5 h-3.5" />
         </button>
@@ -454,20 +485,17 @@ export const TopBar: React.FC = () => {
         <button
           type="button"
           onClick={() => projectFileInputRef.current?.click()}
-          title="Open Project (.mfproj)"
-          className="h-7 px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1 text-[11px]"
+          title="Open Project (Ctrl+O)"
+          className="h-[24px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
         >
           <FolderOpen className="w-3.5 h-3.5 text-[#9b9ba6]" />
           <span className="hidden xl:inline">Open</span>
         </button>
         <button
           type="button"
-          onClick={() => {
-            void saveProjectToIndexedDB(project);
-            downloadProjectFile(project);
-          }}
-          title="Save Project (.mfproj)"
-          className="h-7 px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1 text-[11px]"
+          onClick={saveProject}
+          title="Save Project (Ctrl+S)"
+          className="h-[24px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
         >
           <Save className="w-3.5 h-3.5 text-[#00d1b2]" />
           <span className="hidden xl:inline">Save</span>
@@ -476,7 +504,7 @@ export const TopBar: React.FC = () => {
           type="button"
           onClick={() => setActiveModal('shortcuts')}
           title="Keyboard Shortcuts (?)"
-          className="h-7 w-7 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white flex items-center justify-center"
+          className="h-[24px] w-[24px] rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white flex items-center justify-center"
         >
           <HelpCircle className="w-3.5 h-3.5" />
         </button>
@@ -484,7 +512,7 @@ export const TopBar: React.FC = () => {
           type="button"
           onClick={() => setActiveModal('export')}
           title="Export Video / GIF / PNG Sequence (Ctrl+M)"
-          className="h-7 px-3 rounded bg-[#6c5ce7] hover:bg-[#5b4bc4] text-white font-medium text-[11px] flex items-center gap-1.5 shadow-sm transition-colors"
+          className="h-[24px] px-3 rounded bg-[#6c5ce7] hover:bg-[#5b4bc4] text-white font-medium text-[11px] flex items-center gap-1.5 shadow-sm transition-colors"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export</span>

@@ -22,3 +22,4 @@ Thumbs.db
 .shots/
 verify_*.mjs
 shots.mjs
+zones.mjs

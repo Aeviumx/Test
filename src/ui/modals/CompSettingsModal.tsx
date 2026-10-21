@@ -10,6 +10,7 @@ const COMP_PRESETS = [
   { id: 'reels', label: 'Reels / Shorts / TikTok (9:16)', width: 1080, height: 1920, fps: 30 },
   { id: 'square', label: 'Instagram Square (1:1)', width: 1080, height: 1080, fps: 30 },
   { id: '720p', label: 'HD 720p Web (16:9)', width: 1280, height: 720, fps: 30 },
+  { id: 'cinematic', label: 'Cinematic Ultrawide (2.39:1)', width: 2560, height: 1080, fps: 24 },
 ];
 
 export const CompSettingsModal: React.FC<{ mode: 'new' | 'edit' }> = ({ mode }) => {

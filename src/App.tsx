@@ -63,31 +63,33 @@ export const App: React.FC = () => {
               <Panel defaultSize={26} minSize={18} maxSize={42}>
                 <div className="h-full flex flex-col bg-[#232327] border-l border-[#2e2e33]">
                   {/* Tab Switcher */}
-                  <div className="h-8 bg-[#1e1e22] border-b border-[#2e2e33] flex items-center px-1.5 gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setRightTab('properties')}
-                      className={`flex-1 h-6 rounded text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors ${
-                        rightTab === 'properties'
-                          ? 'bg-[#6c5ce7] text-white'
-                          : 'text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]'
-                      }`}
-                    >
-                      <Sliders className="w-3 h-3" />
-                      <span>Properties & FX</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRightTab('effects')}
-                      className={`flex-1 h-6 rounded text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors ${
-                        rightTab === 'effects'
-                          ? 'bg-[#6c5ce7] text-white'
-                          : 'text-[#9b9ba6] hover:text-white hover:bg-[#2a2a32]'
-                      }`}
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span>Effects & Presets</span>
-                    </button>
+                  <div className="h-[28px] bg-[#1e1e22] border-b border-[#2e2e33] flex items-stretch px-1 gap-0.5 shrink-0">
+                    {(
+                      [
+                        { id: 'properties', label: 'Properties', icon: <Sliders className="w-3 h-3" />, hint: 'Layer Transform, Masks, Text & Effect Controls' },
+                        { id: 'effects', label: 'Effects & Presets', icon: <Sparkles className="w-3 h-3" />, hint: 'Browse and apply GPU effects & animation presets' },
+                      ] as const
+                    ).map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        title={tab.hint}
+                        onClick={() => setRightTab(tab.id)}
+                        className={`relative px-3 text-[11px] font-medium flex items-center gap-1.5 transition-colors duration-150 ${
+                          rightTab === tab.id
+                            ? 'text-white'
+                            : 'text-[#8b8b96] hover:text-[#d4d4dc]'
+                        }`}
+                      >
+                        {tab.icon}
+                        <span className="whitespace-nowrap">{tab.label}</span>
+                        <span
+                          className={`absolute left-2 right-2 bottom-0 h-[2px] rounded-full transition-colors duration-150 ${
+                            rightTab === tab.id ? 'bg-[#6c5ce7]' : 'bg-transparent'
+                          }`}
+                        />
+                      </button>
+                    ))}
                   </div>
 
                   {/* Active Right Panel Body */}

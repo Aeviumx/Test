@@ -76,11 +76,18 @@ export const PropertiesPanel: React.FC = () => {
   if (!layer) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-[#232327] text-[#8c8c98] select-none">
-        <Sliders className="w-8 h-8 text-[#6c5ce7] mb-2 opacity-60" />
-        <div className="text-[12px] font-medium text-[#d4d4dc]">No Layer Selected</div>
-        <p className="text-[11px] text-[#787885] mt-1 max-w-[210px]">
-          Select any layer in the Timeline or Viewport to inspect its Transform, Masks, Text Animator, and GPU Effect Controls.
+        <div className="w-12 h-12 rounded-xl bg-[#1e1e24] border border-[#2e2e36] flex items-center justify-center shadow-inner mb-3">
+          <Sliders className="w-6 h-6 text-[#6c5ce7] opacity-80" />
+        </div>
+        <div className="text-[12px] font-semibold text-[#e4e4e8]">No Layer Selected</div>
+        <p className="text-[11px] text-[#888894] mt-1 max-w-[220px] leading-relaxed">
+          Select a layer in the Timeline or Viewport to inspect its Transform, Masks, Text, and GPU Effects.
         </p>
+        <div className="mt-4 flex items-center gap-1.5 text-[10px] text-[#686873]">
+          <span>Tip: Click with</span>
+          <kbd className="px-1.5 py-0.5 rounded border border-[#383842] bg-[#1a1a1e] font-mono text-white text-[9px]">V</kbd>
+          <span>Selection tool</span>
+        </div>
       </div>
     );
   }
@@ -218,7 +225,7 @@ export const PropertiesPanel: React.FC = () => {
                   max={prop.max}
                   step={prop.step ?? 1}
                   unit={prop.unit ?? ''}
-                  className="w-[68px]"
+                  className="w-[74px]"
                 />
                 <ScrubbyInput
                   prefix="Y"
@@ -235,7 +242,7 @@ export const PropertiesPanel: React.FC = () => {
                   max={prop.max}
                   step={prop.step ?? 1}
                   unit={prop.unit ?? ''}
-                  className="w-[68px]"
+                  className="w-[74px]"
                 />
               </>
             )}
@@ -631,10 +638,11 @@ export const PropertiesPanel: React.FC = () => {
                       key={align}
                       type="button"
                       onClick={() => updateTextSource(layer.id, { textAlign: align })}
-                      className={`flex-1 h-6 rounded text-[10px] uppercase ${
+                      title={`Align Text: ${align.toUpperCase()}`}
+                      className={`flex-1 h-6 rounded text-[10px] font-medium uppercase transition-colors duration-150 ${
                         layer.textContents?.textAlign === align
-                          ? 'bg-[#6c5ce7] text-white'
-                          : 'bg-[#1a1a1d] text-[#9b9ba6]'
+                          ? 'bg-[#6c5ce7] text-white shadow-sm'
+                          : 'bg-[#1a1a1d] hover:bg-[#282830] text-[#9b9ba6] hover:text-white border border-[#2e2e33]'
                       }`}
                     >
                       {align}

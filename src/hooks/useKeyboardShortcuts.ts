@@ -75,6 +75,31 @@ export function useKeyboardShortcuts(): void {
         return;
       }
 
+      // Project file commands: Save (Ctrl+S), Open (Ctrl+O), Import (Ctrl+I), New Comp (Ctrl+Alt+N).
+      // Ctrl+N is reserved by the browser, so New Composition uses Ctrl+Alt+N.
+      // Open/Import need the hidden <input type="file"> elements owned by TopBar,
+      // so they are routed through window CustomEvents.
+      if (isCtrl && !e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('mf:save-project'));
+        return;
+      }
+      if (isCtrl && !e.shiftKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('mf:open-project'));
+        return;
+      }
+      if (isCtrl && !e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('mf:import-media'));
+        return;
+      }
+      if (isCtrl && e.altKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        state.setActiveModal('new-comp');
+        return;
+      }
+
       // Export Modal (Ctrl+M) or Comp Settings (Ctrl+K)
       if (isCtrl && e.key.toLowerCase() === 'm') {
         e.preventDefault();

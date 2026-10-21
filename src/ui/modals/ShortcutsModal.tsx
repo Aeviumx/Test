@@ -8,12 +8,13 @@ const SHORTCUT_GROUPS = [
     items: [
       { key: 'V', desc: 'Selection Tool' },
       { key: 'H', desc: 'Hand / Pan Tool (or Space+Drag)' },
-      { key: 'Z', desc: 'Zoom Tool (Alt+Click to zoom out)' },
+      { key: 'Z', desc: 'Zoom Tool (Alt+Click zoom out)' },
       { key: 'W', desc: 'Rotation Tool' },
-      { key: 'Y', desc: 'Pan Behind / Anchor Point Tool' },
-      { key: 'Q', desc: 'Shape Tool (cycle Rect / Ellipse / Poly / Star)' },
+      { key: 'Y', desc: 'Pan Behind (Anchor Point)' },
+      { key: 'Q', desc: 'Shape Tool (cycle shapes)' },
       { key: 'G', desc: 'Pen / Bezier Tool' },
       { key: 'Shift + T', desc: 'Text Tool' },
+      { key: 'Shift + /', desc: 'Fit Viewport to Composition' },
     ],
   },
   {
@@ -31,16 +32,21 @@ const SHORTCUT_GROUPS = [
   {
     title: 'Timeline & Layer Editing',
     items: [
-      { key: 'Space', desc: 'Play / Pause real-time preview' },
-      { key: 'PageUp / PageDown', desc: 'Step 1 frame backward / forward' },
+      { key: 'Space', desc: 'Play / Pause Preview' },
+      { key: 'PageUp / PageDn', desc: 'Step 1 frame backward / forward' },
       { key: 'Home / End', desc: 'Jump to Work Area start / end' },
-      { key: 'B / N', desc: 'Set Work Area start / end to playhead' },
-      { key: '[ / ]', desc: 'Align layer In / Out point to playhead' },
-      { key: 'Alt + [ / Alt + ]', desc: 'Trim layer In / Out point to playhead' },
-      { key: 'Ctrl + D', desc: 'Duplicate selected layer(s)' },
-      { key: 'Ctrl + Shift + D', desc: 'Split selected layer(s) at playhead' },
-      { key: 'Ctrl + Shift + C', desc: 'Pre-compose selected layer(s)' },
-      { key: 'Ctrl + Z / Ctrl + Shift + Z', desc: 'Undo / Redo (Immer patch history)' },
+      { key: 'B / N', desc: 'Set Work Area start / end' },
+      { key: '[ / ]', desc: 'Align layer In / Out to playhead' },
+      { key: 'Alt + [ / ]', desc: 'Trim layer In / Out to playhead' },
+      { key: 'Ctrl + D', desc: 'Duplicate selected layer' },
+      { key: 'Ctrl + Shift + D', desc: 'Split layer at playhead' },
+      { key: 'Ctrl + Shift + C', desc: 'Pre-compose selected layers' },
+      { key: 'Ctrl + S', desc: 'Save Project (.mfproj)' },
+      { key: 'Ctrl + O', desc: 'Open Project' },
+      { key: 'Ctrl + I', desc: 'Import Media' },
+      { key: 'Ctrl + Alt + N', desc: 'New Composition' },
+      { key: 'Ctrl + M', desc: 'Export / Render Queue' },
+      { key: 'Ctrl + Z / Shift+Z', desc: 'Undo / Redo (Immer History)' },
     ],
   },
 ];
@@ -53,7 +59,7 @@ export const ShortcutsModal: React.FC = () => {
       title="Keyboard Shortcuts Reference"
       subtitle="Adobe After Effects compatible workflow hotkeys"
       onClose={() => setActiveModal('none')}
-      widthClass="max-w-3xl"
+      widthClass="max-w-4xl"
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[70vh] overflow-y-auto">
         {SHORTCUT_GROUPS.map((group) => (

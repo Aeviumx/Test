@@ -1000,13 +1000,14 @@ export const ViewportPanel: React.FC = () => {
       </div>
 
       {/* Bottom Viewport Status & Overlay Controls Bar */}
-      <div className="h-8 bg-[#232327] border-t border-[#2e2e33] px-3 flex items-center justify-between text-[11px] shrink-0 z-20">
+      <div className="h-[28px] bg-[#1e1e22] border-t border-[#2e2e33] px-2.5 flex items-center justify-between text-[11px] shrink-0 z-20">
         {/* Left: Zoom & Fit Controls */}
         <div className="flex items-center gap-1.5">
           <select
             value={Math.round(viewportZoom * 100)}
             onChange={(e) => setViewportZoom(Number(e.target.value) / 100)}
-            className="h-6 px-1.5 bg-[#1a1a1d] border border-[#2e2e33] rounded font-mono text-[11px] text-white outline-none"
+            title="Zoom Level (Alt+Scroll or Z)"
+            className="h-[22px] px-1.5 bg-[#1a1a1d] border border-[#2e2e33] hover:border-[#3d3d46] rounded font-mono text-[11px] text-white outline-none cursor-pointer transition-colors"
           >
             {[15, 25, 33, 50, 75, 100, 150, 200, 400].map((pct) => (
               <option key={pct} value={pct}>
@@ -1031,7 +1032,7 @@ export const ViewportPanel: React.FC = () => {
               }
             }}
             title="Fit Composition to Viewport (Shift+/)"
-            className="h-6 px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1 text-[11px]"
+            className="h-[22px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#d4d4dc] flex items-center gap-1 text-[11px] transition-colors"
           >
             <Maximize2 className="w-3 h-3 text-[#6c5ce7]" />
             <span>Fit</span>
@@ -1044,7 +1045,7 @@ export const ViewportPanel: React.FC = () => {
             value={previewResolution}
             onChange={(e) => setPreviewResolution(e.target.value as PreviewResolution)}
             title="WebGL2 Render Resolution"
-            className="h-6 px-1.5 bg-[#1a1a1d] border border-[#2e2e33] rounded text-[11px] text-[#00d1b2] font-medium outline-none"
+            className="h-[22px] px-1.5 bg-[#1a1a1d] border border-[#2e2e33] hover:border-[#3d3d46] rounded text-[11px] text-[#00d1b2] font-medium outline-none cursor-pointer transition-colors"
           >
             <option value="full">Full (1:1)</option>
             <option value="half">Half (1:2)</option>
@@ -1058,7 +1059,7 @@ export const ViewportPanel: React.FC = () => {
             type="button"
             onClick={() => toggleViewportFlag('showGrid')}
             title="Toggle Proportional Grid"
-            className={`h-6 px-2 rounded flex items-center gap-1 border transition-colors ${
+            className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showGrid
                 ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
                 : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
@@ -1072,7 +1073,7 @@ export const ViewportPanel: React.FC = () => {
             type="button"
             onClick={() => toggleViewportFlag('showSafeZones')}
             title="Toggle Title/Action Safe Zones"
-            className={`h-6 px-2 rounded flex items-center gap-1 border transition-colors ${
+            className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showSafeZones
                 ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
                 : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
@@ -1086,7 +1087,7 @@ export const ViewportPanel: React.FC = () => {
             type="button"
             onClick={() => toggleViewportFlag('showMotionPaths')}
             title="Toggle Spatial Motion Trajectory & Handles"
-            className={`h-6 px-2 rounded flex items-center gap-1 border transition-colors ${
+            className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showMotionPaths
                 ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
                 : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
@@ -1100,7 +1101,7 @@ export const ViewportPanel: React.FC = () => {
             type="button"
             onClick={() => toggleViewportFlag('snapEnabled')}
             title="Toggle Smart Snapping"
-            className={`h-6 px-2 rounded flex items-center gap-1 border transition-colors ${
+            className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               snapEnabled
                 ? 'bg-[#00d1b2]/20 border-[#00d1b2] text-[#00d1b2]'
                 : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
@@ -1114,7 +1115,7 @@ export const ViewportPanel: React.FC = () => {
             type="button"
             onClick={() => toggleViewportFlag('showCheckerboard')}
             title="Toggle Transparency Grid"
-            className={`h-6 px-2 rounded flex items-center gap-1 border transition-colors ${
+            className={`h-[22px] px-2 rounded flex items-center gap-1 border transition-colors text-[11px] ${
               showCheckerboard
                 ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
                 : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
@@ -1128,7 +1129,9 @@ export const ViewportPanel: React.FC = () => {
         <div className="flex items-center gap-3 font-mono text-[10px] text-[#9b9ba6]">
           <span className="flex items-center gap-1">
             <Crosshair className="w-3 h-3 text-[#6c5ce7]" />
-            X:{cursorCompPos[0]} Y:{cursorCompPos[1]}
+            <span>X:{cursorCompPos[0]}</span>
+            <span className="text-[#555562]">·</span>
+            <span>Y:{cursorCompPos[1]}</span>
           </span>
           <span className="text-[#00d1b2] hidden sm:inline">WebGL2 GPU</span>
         </div>

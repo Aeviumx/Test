@@ -192,7 +192,7 @@ export const GraphEditor: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-[#16161a] select-none overflow-hidden">
       {/* Graph Editor Toolbar */}
-      <div className="h-7 px-3 bg-[#1e1e23] border-b border-[#2e2e33] flex items-center justify-between gap-2 text-[11px] shrink-0">
+      <div className="h-[28px] px-2.5 bg-[#19191d] border-b border-[#2e2e33] flex items-center justify-between gap-2 text-[11px] shrink-0">
         {/* Left: Property Selector Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00d1b2] shrink-0">
@@ -201,7 +201,7 @@ export const GraphEditor: React.FC = () => {
           <select
             value={activePath}
             onChange={(e) => setInspectedPropertyPath(e.target.value)}
-            className="h-5 px-1.5 bg-[#141418] border border-[#34343e] rounded text-[11px] text-white outline-none"
+            className="h-[22px] px-1.5 bg-[#141418] border border-[#34343e] hover:border-[#6c5ce7] rounded text-[11px] text-white outline-none cursor-pointer transition-colors"
           >
             {allProps.map((p) => (
               <option key={p.path} value={p.path}>
@@ -216,7 +216,7 @@ export const GraphEditor: React.FC = () => {
           <button
             type="button"
             onClick={() => setGraphEditorMode('value')}
-            className={`px-2 py-0.5 rounded text-[10px] flex items-center gap-1 ${
+            className={`h-[20px] px-2 rounded text-[10px] font-medium flex items-center gap-1 transition-colors ${
               graphEditorMode === 'value'
                 ? 'bg-[#6c5ce7] text-white'
                 : 'text-[#9b9ba6] hover:text-white'
@@ -227,7 +227,7 @@ export const GraphEditor: React.FC = () => {
           <button
             type="button"
             onClick={() => setGraphEditorMode('speed')}
-            className={`px-2 py-0.5 rounded text-[10px] flex items-center gap-1 ${
+            className={`h-[20px] px-2 rounded text-[10px] font-medium flex items-center gap-1 transition-colors ${
               graphEditorMode === 'speed'
                 ? 'bg-[#00d1b2] text-[#141418] font-semibold'
                 : 'text-[#9b9ba6] hover:text-white'
@@ -243,7 +243,7 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('easy-ease')}
             title="Easy Ease (F9)"
-            className="h-5 px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] text-[#e4e4e8]"
+            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
           >
             Easy Ease (F9)
           </button>
@@ -251,7 +251,7 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('ease-in')}
             title="Ease In (Shift+F9)"
-            className="h-5 px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] text-[#e4e4e8]"
+            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
           >
             Ease In
           </button>
@@ -259,21 +259,23 @@ export const GraphEditor: React.FC = () => {
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('ease-out')}
             title="Ease Out (Ctrl+Shift+F9)"
-            className="h-5 px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] text-[#e4e4e8]"
+            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
           >
             Ease Out
           </button>
           <button
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('linear')}
-            className="h-5 px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] text-[#e4e4e8]"
+            title="Linear Keyframe Interpolation"
+            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
           >
             Linear
           </button>
           <button
             type="button"
             onClick={() => applyEasingToSelectedKeyframes('hold')}
-            className="h-5 px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] text-[#e4e4e8]"
+            title="Toggle Hold (Square) Keyframe"
+            className="h-[22px] px-2 rounded bg-[#26262e] hover:bg-[#6c5ce7] text-[10px] font-medium text-[#e4e4e8] transition-colors"
           >
             Hold
           </button>

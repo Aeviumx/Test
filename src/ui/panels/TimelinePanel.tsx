@@ -9,6 +9,7 @@ import {
   Eye,
   EyeOff,
   Ghost,
+  Layers,
   Link,
   Lock,
   Pause,
@@ -473,7 +474,7 @@ export const TimelinePanel: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-[#1d1d21] border-t border-[#2e2e33] select-none overflow-hidden">
       {/* Top Transport & Timeline Controls Bar */}
-      <div className="h-9 px-3 bg-[#232327] border-b border-[#2e2e33] flex items-center justify-between gap-3 shrink-0">
+      <div className="h-[32px] px-2.5 bg-[#1e1e22] border-b border-[#2e2e33] flex items-center justify-between gap-3 shrink-0">
         {/* Left: Timecode & Frame Counter + Transport Buttons */}
         <div className="flex items-center gap-2">
           {editingTimecode ? (
@@ -495,7 +496,7 @@ export const TimelinePanel: React.FC = () => {
                 }
                 if (e.key === 'Escape') setEditingTimecode(false);
               }}
-              className="w-28 h-6 px-2 bg-[#141418] border border-[#6c5ce7] rounded font-mono text-[12px] text-[#00d1b2] outline-none"
+              className="w-28 h-[22px] px-2 bg-[#141418] border border-[#6c5ce7] rounded font-mono text-[11px] text-[#00d1b2] outline-none"
             />
           ) : (
             <button
@@ -505,9 +506,9 @@ export const TimelinePanel: React.FC = () => {
                 setEditingTimecode(true);
               }}
               title="Click to enter exact SMPTE timecode (HH:MM:SS:FF)"
-              className="h-6 px-2 bg-[#161619] hover:bg-[#2a2a32] border border-[#2e2e33] rounded flex items-center gap-2 font-mono"
+              className="h-[22px] px-2 bg-[#161619] hover:bg-[#2a2a32] border border-[#2e2e33] rounded flex items-center gap-1.5 font-mono cursor-pointer transition-colors"
             >
-              <span className="text-[12px] font-semibold text-[#6c5ce7]">
+              <span className="text-[11px] font-semibold text-[#6c5ce7]">
                 {formatTimecode(currentTime, comp.fps)}
               </span>
               <span className="text-[10px] text-[#787885]">
@@ -610,7 +611,7 @@ export const TimelinePanel: React.FC = () => {
             type="button"
             onClick={() => updateActiveComposition({ hideShyLayers: !comp.hideShyLayers })}
             title="Hide All Shy Layers in Timeline"
-            className={`h-6 px-2 rounded flex items-center gap-1 text-[11px] border transition-colors ${
+            className={`h-[22px] px-2 rounded flex items-center gap-1 text-[11px] border transition-colors ${
               comp.hideShyLayers
                 ? 'bg-[#6c5ce7]/25 border-[#6c5ce7] text-white'
                 : 'bg-[#1a1a1d] border-[#2e2e33] text-[#9b9ba6] hover:text-white'
@@ -624,7 +625,7 @@ export const TimelinePanel: React.FC = () => {
             type="button"
             onClick={() => addCompMarker(currentTime, `Marker ${comp.markers.length + 1}`)}
             title="Add Composition Marker at Playhead"
-            className="h-6 px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white flex items-center gap-1 text-[11px]"
+            className="h-[22px] px-2 rounded bg-[#1a1a1d] hover:bg-[#2a2a32] border border-[#2e2e33] text-[#9b9ba6] hover:text-white flex items-center gap-1 text-[11px] transition-colors"
           >
             <BookmarkPlus className="w-3.5 h-3.5 text-[#00d1b2]" />
             <span className="hidden lg:inline">Marker</span>
@@ -634,7 +635,7 @@ export const TimelinePanel: React.FC = () => {
             type="button"
             onClick={() => setGraphEditorOpen(!graphEditorOpen)}
             title="Toggle Value / Speed Graph Editor"
-            className={`h-6 px-2.5 rounded flex items-center gap-1.5 text-[11px] font-medium border transition-colors ${
+            className={`h-[22px] px-2.5 rounded flex items-center gap-1.5 text-[11px] font-medium border transition-colors ${
               graphEditorOpen
                 ? 'bg-[#00d1b2] border-[#00d1b2] text-[#141418]'
                 : 'bg-[#1a1a1d] border-[#2e2e33] text-[#d4d4dc] hover:border-[#6c5ce7]'
@@ -680,12 +681,12 @@ export const TimelinePanel: React.FC = () => {
         {/* LEFT COLUMN: Layer Stack & Expandable Property Tree */}
         <div className="w-[410px] shrink-0 flex flex-col border-r border-[#2e2e33] bg-[#202025]">
           {/* Column Headers */}
-          <div className="h-9 px-2 bg-[#19191d] border-b border-[#2e2e33] flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-[#787885] shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="w-16 text-center">Switches</span>
+          <div className="h-[28px] px-2 bg-[#19191d] border-b border-[#2e2e33] flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-[#787885] shrink-0">
+            <div className="flex items-center">
+              <span className="w-[126px] pl-1 text-left">Switches</span>
               <span># / Layer Name</span>
             </div>
-            <div className="flex items-center gap-3 pr-1">
+            <div className="flex items-center pr-2">
               <span>Parent (@)</span>
             </div>
           </div>
@@ -704,6 +705,17 @@ export const TimelinePanel: React.FC = () => {
           >
             {topSpacerHeight > 0 && (
               <div style={{ height: topSpacerHeight }} aria-hidden="true" />
+            )}
+            {flatRows.length === 0 && (
+              <div className="p-8 text-center text-[#787885] select-none">
+                <div className="w-10 h-10 rounded-lg bg-[#18181c] border border-[#2e2e33] flex items-center justify-center mx-auto mb-2.5">
+                  <Layers className="w-5 h-5 text-[#6c5ce7] opacity-60" />
+                </div>
+                <div className="text-[12px] font-medium text-[#d4d4dc]">No Layers in Composition</div>
+                <div className="text-[11px] text-[#787885] mt-1 max-w-[240px] mx-auto leading-relaxed">
+                  Press <kbd className="px-1 py-0.5 bg-[#141418] border border-[#2e2e33] rounded font-mono text-[9px] text-[#00d1b2]">Q</kbd> for Shape, <kbd className="px-1 py-0.5 bg-[#141418] border border-[#2e2e33] rounded font-mono text-[9px] text-[#6c5ce7]">Shift+T</kbd> for Text, or import media.
+                </div>
+              </div>
             )}
             {virtualRows.map((row) => {
               if (row.kind === 'layer') {
@@ -786,7 +798,8 @@ export const TimelinePanel: React.FC = () => {
                           e.stopPropagation();
                           toggleLayerGroupExpanded(layer.id, 'all');
                         }}
-                        className="p-0.5 text-[#9b9ba6] hover:text-white"
+                        title={isExpanded ? "Collapse Layer Properties" : "Expand Layer Properties"}
+                        className="p-0.5 text-[#9b9ba6] hover:text-white rounded hover:bg-[#34343e] transition-colors"
                       >
                         {isExpanded ? (
                           <ChevronDown className="w-3.5 h-3.5" />
@@ -1028,7 +1041,7 @@ export const TimelinePanel: React.FC = () => {
                         max={prop.max}
                         step={prop.step ?? 1}
                         unit={prop.unit ?? ''}
-                        className="w-16 h-5"
+                        className="w-[68px] h-5"
                       />
                     )}
                     {Array.isArray(val) && (
@@ -1037,13 +1050,13 @@ export const TimelinePanel: React.FC = () => {
                           value={val[0]}
                           onChange={(nx) => setPropertyValue(layer.id, entry.path, [nx, val[1]])}
                           step={prop.step ?? 1}
-                          className="w-14 h-5"
+                          className="w-[64px] h-5"
                         />
                         <ScrubbyInput
                           value={val[1]}
                           onChange={(ny) => setPropertyValue(layer.id, entry.path, [val[0], ny])}
                           step={prop.step ?? 1}
-                          className="w-14 h-5"
+                          className="w-[64px] h-5"
                         />
                       </>
                     )}
@@ -1083,7 +1096,7 @@ export const TimelinePanel: React.FC = () => {
                 {/* Sticky Time Ruler + Green RAM Cache Bar + Work Area Bar */}
                 <div
                   onMouseDown={handleRulerMouseDown}
-                  className="sticky top-0 z-30 h-9 bg-[#19191d] border-b border-[#2e2e33] cursor-ew-resize select-none"
+                  className="sticky top-0 z-30 h-[28px] bg-[#19191d] border-b border-[#2e2e33] cursor-ew-resize select-none"
                 >
                   {/* AE Green RAM Frame Cache Indicator Bar */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-[#121215] flex">
