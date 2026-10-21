@@ -26,6 +26,11 @@ zones.mjs
 
 public/assets/edit_segments/
 public/assets/raw_clips/
+public/assets/mmd_frames/
+public/assets/raw_frames_*/
+public/assets/twixtor_vault/
+*.wav
+*.aac
 acheron_cuts.txt
 *.mp4
 test_cuts.mjs
