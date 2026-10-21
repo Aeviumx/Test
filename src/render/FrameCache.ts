@@ -175,9 +175,9 @@ export class FrameCacheManager {
     }
     set.add(frameIndex);
 
-    // Upgrade to hardware ImageBitmap asynchronously
+    // Upgrade to hardware ImageBitmap asynchronously with flipY for WebGL compatibility
     if (typeof createImageBitmap === 'function') {
-      void createImageBitmap(snapCanvas)
+      void createImageBitmap(snapCanvas, { imageOrientation: 'flipY' })
         .then((bmp) => {
           if (this.revision !== capturedRev || !this.lruEntries.has(key)) {
             bmp.close();

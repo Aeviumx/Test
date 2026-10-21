@@ -56,6 +56,7 @@ export const TopBar: React.FC = () => {
   const setActiveShapeType = useProjectStore((s) => s.setActiveShapeType);
   const setActiveModal = useProjectStore((s) => s.setActiveModal);
   const loadDemoProject = useProjectStore((s) => s.loadDemoProject);
+  const loadTrendingAnimeEdit = useProjectStore((s) => s.loadTrendingAnimeEdit);
   const createNewEmptyProject = useProjectStore((s) => s.createNewEmptyProject);
   const setProject = useProjectStore((s) => s.setProject);
   const addMediaAsset = useProjectStore((s) => s.addMediaAsset);
@@ -144,6 +145,10 @@ export const TopBar: React.FC = () => {
     File: [
       { label: 'New Empty Project', onClick: () => createNewEmptyProject() },
       { label: 'Open Demo Project', onClick: () => loadDemoProject() },
+      {
+        label: 'Trending Edit: Makima 氷 (Midnight Phonk 9:16)',
+        onClick: () => loadTrendingAnimeEdit(),
+      },
       {
         label: 'Open Project...',
         shortcut: 'Ctrl+O',
@@ -311,6 +316,10 @@ export const TopBar: React.FC = () => {
         label: 'Reload Kōri Demo Project',
         dividerAbove: true,
         onClick: () => loadDemoProject(),
+      },
+      {
+        label: 'Load Makima Phonk Edit (9:16)',
+        onClick: () => loadTrendingAnimeEdit(),
       },
     ],
   };
@@ -496,6 +505,15 @@ export const TopBar: React.FC = () => {
 
       {/* Right: Project Save/Open & Export Actions */}
       <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => loadTrendingAnimeEdit()}
+          title="Load Trending Anime Edit: Makima 氷 (Midnight Phonk 9:16)"
+          className="h-[24px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--accent)] hover:text-[var(--accent-hover)] flex items-center gap-1.5 text-[11px] font-medium transition-colors duration-150"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+          <span className="hidden xl:inline">Makima Edit (9:16)</span>
+        </button>
         <button
           type="button"
           onClick={() => projectFileInputRef.current?.click()}

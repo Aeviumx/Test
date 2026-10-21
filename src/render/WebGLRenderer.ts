@@ -364,15 +364,8 @@ export class WebGLCompositionRenderer {
           project,
           resolutionScale
         );
-        if (!hasEnabledEffects && this.uploadTex) {
-          gl.bindTexture(gl.TEXTURE_2D, this.uploadTex);
-          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.rasterCanvas);
-          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-          layerTexForComposite = this.uploadTex;
-        } else {
-          this.uploadCanvasToFbo(this.rasterCanvas, this.layerFboA, renderW, renderH);
-        }
+        this.uploadCanvasToFbo(this.rasterCanvas, this.layerFboA, renderW, renderH);
+        layerTexForComposite = this.layerFboA.tex;
       }
 
       // Run GPU Shader Effects stack for this layer if any are enabled
@@ -459,9 +452,14 @@ export class WebGLCompositionRenderer {
     gl.bindVertexArray(this.quadVao);
     gl.disable(gl.BLEND);
     gl.bindTexture(gl.TEXTURE_2D, this.uploadTex);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    const isImageBitmap = typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap;
+    if (!isImageBitmap) {
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    }
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    if (!isImageBitmap) {
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    }
 
     this.blitToScreen(this.uploadTex, width, height);
     gl.bindVertexArray(null);
@@ -1340,6 +1338,9 @@ export class WebGLCompositionRenderer {
       vid.preload = 'auto';
       vid.src = asset.url;
       vid.onloadeddata = () => {
+        this.onAssetLoadedCallback?.();
+      };
+      vid.onseeked = () => {
         this.onAssetLoadedCallback?.();
       };
       this.videoCache.set(asset.id, vid);

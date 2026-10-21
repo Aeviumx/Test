@@ -10,6 +10,7 @@ import {
   recomputeSpatialTangents,
 } from '../core/defaults';
 import { createDemoProject } from '../core/demoProject';
+import { createTrendingAnimeEditProject } from '../core/trendingEdit';
 import {
   computeLayerWorldMatrix,
   evaluateLayerTransform,
@@ -129,6 +130,7 @@ export interface ProjectStoreState {
   // Project & Composition Actions
   setProject: (project: Project) => void;
   loadDemoProject: () => void;
+  loadTrendingAnimeEdit: () => void;
   createNewEmptyProject: () => void;
   setActiveCompId: (compId: string) => void;
   createComposition: (params: {
@@ -435,10 +437,27 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       redoStack: [],
       currentTime: 1.5,
       isPlaying: false,
+      viewportMode: 'program',
       selectedLayerIds: demo.compositions[0]?.layers[1] ? [demo.compositions[0].layers[1].id] : [],
       selectedKeyframes: [],
     });
     void saveProjectToIndexedDB(demo);
+  },
+
+  loadTrendingAnimeEdit: () => {
+    const editProj = createTrendingAnimeEditProject();
+    globalFrameCache.invalidateAll();
+    set({
+      project: editProj,
+      undoStack: [],
+      redoStack: [],
+      currentTime: 3.65,
+      isPlaying: false,
+      viewportMode: 'program',
+      selectedLayerIds: editProj.compositions[0]?.layers[1] ? [editProj.compositions[0].layers[1].id] : [],
+      selectedKeyframes: [],
+    });
+    void saveProjectToIndexedDB(editProj);
   },
 
   createNewEmptyProject: () => {

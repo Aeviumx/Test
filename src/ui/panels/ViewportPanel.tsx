@@ -81,8 +81,10 @@ export const ViewportPanel: React.FC = () => {
   useEffect(() => {
     if (!glCanvasRef.current) return;
     rendererRef.current = new WebGLCompositionRenderer(glCanvasRef.current, () => {
+      globalFrameCache.invalidateAll();
       setRenderTrigger((n) => n + 1);
     });
+    (window as any).__MF_RENDERER__ = rendererRef.current;
   }, []);
 
   // Auto-fit on initial mount or comp dimension change
