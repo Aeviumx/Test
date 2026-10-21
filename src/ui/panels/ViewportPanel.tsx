@@ -89,15 +89,29 @@ export const ViewportPanel: React.FC = () => {
     }
   }, [comp.id, comp.width, comp.height, fitViewportToComp]);
 
-  // Render active frame on WebGL2 Canvas whenever state or time changes
+  // Render active frame on WebGL2 Canvas whenever state or time changes (with real LRU ImageBitmap FrameCache)
   useEffect(() => {
-    if (!rendererRef.current) return;
+    if (!rendererRef.current || !glCanvasRef.current) return;
     const frameIndex = timeToFrame(currentTime, comp.fps);
     const frameKey = `${comp.id}:${globalFrameCache.getRevision()}:${effectiveResScale}:${showCheckerboard}:${renderTrigger}:${frameIndex}`;
     if (isPlaying && lastRenderedFrameRef.current === frameKey) {
       return;
     }
     lastRenderedFrameRef.current = frameKey;
+
+    const renderW = Math.max(16, Math.round(comp.width * effectiveResScale));
+    const renderH = Math.max(16, Math.round(comp.height * effectiveResScale));
+    const cachedFrame = globalFrameCache.getFrame(
+      comp.id,
+      frameIndex,
+      renderW,
+      renderH,
+      showCheckerboard
+    );
+    if (cachedFrame && rendererRef.current.drawCachedFrame(cachedFrame, renderW, renderH)) {
+      return;
+    }
+
     const snappedTime = isPlaying ? frameIndex / comp.fps : currentTime;
     rendererRef.current.renderComposition(
       comp,
@@ -106,7 +120,7 @@ export const ViewportPanel: React.FC = () => {
       effectiveResScale,
       showCheckerboard
     );
-    globalFrameCache.markFrameCached(comp.id, frameIndex);
+    globalFrameCache.storeFrame(comp.id, frameIndex, glCanvasRef.current, showCheckerboard);
   }, [comp, currentTime, isPlaying, project, effectiveResScale, showCheckerboard, renderTrigger]);
 
   // Convert client mouse coordinates to Composition coordinates (0..comp.width, 0..comp.height)

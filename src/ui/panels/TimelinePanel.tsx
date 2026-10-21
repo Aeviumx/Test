@@ -94,6 +94,7 @@ export const TimelinePanel: React.FC = () => {
   const [renameText, setRenameText] = useState('');
   const [dragReorderIdx, setDragReorderIdx] = useState<number | null>(null);
   const [pickWhipFromId, setPickWhipFromId] = useState<string | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
   const [, setCacheTick] = useState(0);
 
   // Marquee selection box state on keyframe tracks
@@ -352,6 +353,36 @@ export const TimelinePanel: React.FC = () => {
       flatRows.push({ kind: 'prop', layer, layerIndex: idx, entry });
     }
   });
+
+  // Virtualize rows when timeline has > 35 rows so 100+ layers × 10 keyframes scroll at 60 FPS
+  const shouldVirtualize = flatRows.length > 35;
+  let topSpacerHeight = 0;
+  let bottomSpacerHeight = 0;
+  let virtualRows = flatRows;
+
+  if (shouldVirtualize) {
+    const winMinY = Math.max(0, scrollTop - 220);
+    const winMaxY = scrollTop + 680;
+    const sliced: typeof flatRows = [];
+    let yCursor = 0;
+    let foundFirst = false;
+
+    for (let i = 0; i < flatRows.length; i++) {
+      const r = flatRows[i];
+      const rh = r.kind === 'layer' ? ROW_HEIGHT : PROP_ROW_HEIGHT;
+      const rowBottom = yCursor + rh;
+      if (rowBottom < winMinY) {
+        topSpacerHeight += rh;
+      } else if (yCursor <= winMaxY) {
+        foundFirst = true;
+        sliced.push(r);
+      } else if (foundFirst) {
+        bottomSpacerHeight += rh;
+      }
+      yCursor = rowBottom;
+    }
+    virtualRows = sliced;
+  }
 
   // Start marquee selection box on empty track background
   const handleTrackAreaMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -663,13 +694,18 @@ export const TimelinePanel: React.FC = () => {
           <div
             ref={leftScrollRef}
             onScroll={(e) => {
-              if (rightScrollRef.current) {
-                rightScrollRef.current.scrollTop = e.currentTarget.scrollTop;
+              const st = e.currentTarget.scrollTop;
+              setScrollTop(st);
+              if (rightScrollRef.current && rightScrollRef.current.scrollTop !== st) {
+                rightScrollRef.current.scrollTop = st;
               }
             }}
             className="flex-1 overflow-y-auto overflow-x-hidden divide-y divide-[#28282e]"
           >
-            {flatRows.map((row) => {
+            {topSpacerHeight > 0 && (
+              <div style={{ height: topSpacerHeight }} aria-hidden="true" />
+            )}
+            {virtualRows.map((row) => {
               if (row.kind === 'layer') {
                 const { layer, layerIndex } = row;
                 const isSelected = selectedLayerIds.includes(layer.id);
@@ -1015,6 +1051,9 @@ export const TimelinePanel: React.FC = () => {
                 </div>
               );
             })}
+            {bottomSpacerHeight > 0 && (
+              <div style={{ height: bottomSpacerHeight }} aria-hidden="true" />
+            )}
           </div>
         </div>
 
@@ -1026,8 +1065,10 @@ export const TimelinePanel: React.FC = () => {
             <div
               ref={rightScrollRef}
               onScroll={(e) => {
-                if (leftScrollRef.current) {
-                  leftScrollRef.current.scrollTop = e.currentTarget.scrollTop;
+                const st = e.currentTarget.scrollTop;
+                setScrollTop(st);
+                if (leftScrollRef.current && leftScrollRef.current.scrollTop !== st) {
+                  leftScrollRef.current.scrollTop = st;
                 }
               }}
               onWheel={(e) => {
@@ -1153,7 +1194,10 @@ export const TimelinePanel: React.FC = () => {
                     />
                   )}
 
-                  {flatRows.map((row) => {
+                  {topSpacerHeight > 0 && (
+                    <div style={{ height: topSpacerHeight }} aria-hidden="true" />
+                  )}
+                  {virtualRows.map((row) => {
                     if (row.kind === 'layer') {
                       const { layer } = row;
                       const isSelected = selectedLayerIds.includes(layer.id);
@@ -1324,6 +1368,9 @@ export const TimelinePanel: React.FC = () => {
                       </div>
                     );
                   })}
+                  {bottomSpacerHeight > 0 && (
+                    <div style={{ height: bottomSpacerHeight }} aria-hidden="true" />
+                  )}
 
                   {/* Marquee Selection Box */}
                   {marquee && (

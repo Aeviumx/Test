@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { globalFrameCache } from '../render/FrameCache';
 import { saveProjectToIndexedDB } from '../store/persistence';
 import { useProjectStore } from '../store/useProjectStore';
-import { timeToFrame } from '../utils/timecode';
 
 export function usePlaybackLoop(): void {
   const isPlaying = useProjectStore((s) => s.isPlaying);
@@ -129,7 +127,6 @@ export function usePlaybackLoop(): void {
 
       state.setCurrentTime(nextTime);
       syncAudioAtTime(nextTime);
-      globalFrameCache.markFrameCached(comp.id, timeToFrame(nextTime, comp.fps));
 
       rafId = requestAnimationFrame(tick);
     };

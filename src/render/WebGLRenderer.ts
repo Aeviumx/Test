@@ -10,6 +10,7 @@ import {
   Vec2,
 } from '../types';
 import { hexToRgba } from '../utils/color';
+import { ensureGoogleFontLoaded, isGoogleFontReady } from '../utils/fontLoader';
 import { sampleBezierPath } from '../utils/geometry';
 import {
   applyTrimPathsToPolyline,
@@ -436,6 +437,35 @@ export class WebGLCompositionRenderer {
     // Final blit from currentScene to default screen framebuffer (0)
     this.blitToScreen(currentScene.tex, renderW, renderH);
     gl.bindVertexArray(null);
+  }
+
+  /**
+   * Fast-path blit of a cached ImageBitmap or HTMLCanvasElement directly to the WebGL2 screen framebuffer
+   */
+  public drawCachedFrame(
+    source: ImageBitmap | HTMLCanvasElement,
+    width: number,
+    height: number
+  ): boolean {
+    if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+    }
+    const gl = this.gl;
+    if (!gl || !this.uploadTex || !this.effectProgram || !this.quadVao) {
+      return false;
+    }
+
+    gl.bindVertexArray(this.quadVao);
+    gl.disable(gl.BLEND);
+    gl.bindTexture(gl.TEXTURE_2D, this.uploadTex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+    this.blitToScreen(this.uploadTex, width, height);
+    gl.bindVertexArray(null);
+    return true;
   }
 
   private uploadCanvasToFbo(
@@ -998,6 +1028,12 @@ export class WebGLCompositionRenderer {
     const tc = layer.textContents;
     if (!tc || !tc.text) return;
 
+    if (!isGoogleFontReady(tc.fontFamily, tc.fontWeight, tc.fontStyle)) {
+      void ensureGoogleFontLoaded(tc.fontFamily, tc.fontWeight, tc.fontStyle, () => {
+        this.onAssetLoadedCallback?.();
+      });
+    }
+
     const fontSize = evaluateProperty(tc.fontSize, time, comp, layer, layerIndex);
     const fillColor = evaluateProperty(tc.fillColor, time, comp, layer, layerIndex);
     const strokeColor = evaluateProperty(tc.strokeColor, time, comp, layer, layerIndex);
@@ -1214,10 +1250,33 @@ export class WebGLCompositionRenderer {
     time: number,
     project: Project
   ): Promise<void> {
-    const tasks: Promise<void>[] = [];
+    const tasks: Promise<unknown>[] = [];
     for (const layer of comp.layers) {
       if (!layer.visible || time < layer.inPoint || time > layer.outPoint) continue;
-      if (layer.type === 'image' && layer.assetId) {
+      if (layer.type === 'text' && layer.textContents) {
+        tasks.push(
+          ensureGoogleFontLoaded(
+            layer.textContents.fontFamily,
+            layer.textContents.fontWeight,
+            layer.textContents.fontStyle
+          )
+        );
+      } else if (layer.type === 'precomp' && layer.compId) {
+        const subComp = project.compositions.find((c) => c.id === layer.compId);
+        if (subComp && subComp.id !== comp.id) {
+          for (const subLayer of subComp.layers) {
+            if (subLayer.type === 'text' && subLayer.textContents) {
+              tasks.push(
+                ensureGoogleFontLoaded(
+                  subLayer.textContents.fontFamily,
+                  subLayer.textContents.fontWeight,
+                  subLayer.textContents.fontStyle
+                )
+              );
+            }
+          }
+        }
+      } else if (layer.type === 'image' && layer.assetId) {
         const asset = project.assets.find((a) => a.id === layer.assetId);
         if (asset) {
           const img = this.getOrLoadImage(asset);

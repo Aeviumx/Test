@@ -26,18 +26,10 @@ import {
   Vec2,
 } from '../../types';
 import { LABEL_COLOR_MAP } from '../../utils/color';
+import { ensureGoogleFontLoaded, GOOGLE_FONTS_CATALOG } from '../../utils/fontLoader';
 import { snapToFrame } from '../../utils/timecode';
 import { ColorPicker } from '../components/ColorPicker';
 import { ScrubbyInput } from '../components/ScrubbyInput';
-
-const GOOGLE_FONTS = [
-  'Inter',
-  'Orbitron',
-  'Montserrat',
-  'Space Grotesk',
-  'Playfair Display',
-  'JetBrains Mono',
-];
 
 const BLEND_MODES: { value: BlendMode; label: string }[] = [
   { value: 'normal', label: 'Normal' },
@@ -75,6 +67,8 @@ export const PropertiesPanel: React.FC = () => {
   const setInspectedPropertyPath = useProjectStore((s) => s.setInspectedPropertyPath);
 
   const [openExprPaths, setOpenExprPaths] = useState<Record<string, boolean>>({});
+  const [fontSearch, setFontSearch] = useState('');
+  const [isLoadingFont, setIsLoadingFont] = useState(false);
 
   const layer = comp.layers.find((l) => l.id === selectedLayerIds[0]) ?? null;
   const layerIndex = layer ? comp.layers.indexOf(layer) : 0;
@@ -564,34 +558,89 @@ export const PropertiesPanel: React.FC = () => {
               onChange={(e) => updateTextSource(layer.id, { text: e.target.value })}
               className="w-full p-1.5 bg-[#141418] border border-[#2e2e33] focus:border-[#6c5ce7] rounded text-[12px] text-white outline-none resize-none"
             />
-            <div className="grid grid-cols-2 gap-1.5">
-              <select
-                value={layer.textContents.fontFamily}
-                onChange={(e) => updateTextSource(layer.id, { fontFamily: e.target.value })}
-                className="h-6 px-1.5 bg-[#161619] border border-[#2e2e33] rounded text-[11px] text-white outline-none"
-              >
-                {GOOGLE_FONTS.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1">
+                <input
+                  type="text"
+                  value={fontSearch}
+                  onChange={(e) => setFontSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && fontSearch.trim() && layer.textContents) {
+                      const customFont = fontSearch.trim();
+                      setIsLoadingFont(true);
+                      void ensureGoogleFontLoaded(
+                        customFont,
+                        layer.textContents.fontWeight,
+                        layer.textContents.fontStyle
+                      ).finally(() => setIsLoadingFont(false));
+                      updateTextSource(layer.id, { fontFamily: customFont });
+                    }
+                  }}
+                  placeholder="Search Google Fonts (or press Enter)..."
+                  data-testid="google-font-search"
+                  className="flex-1 h-6 px-2 bg-[#141418] border border-[#2e2e33] focus:border-[#6c5ce7] rounded text-[11px] text-white outline-none"
+                />
+                {isLoadingFont && (
+                  <span className="text-[10px] text-[#00d1b2] animate-pulse shrink-0">
+                    Loading...
+                  </span>
+                )}
+              </div>
 
-              <div className="flex gap-1">
-                {(['left', 'center', 'right'] as const).map((align) => (
-                  <button
-                    key={align}
-                    type="button"
-                    onClick={() => updateTextSource(layer.id, { textAlign: align })}
-                    className={`flex-1 h-6 rounded text-[10px] uppercase ${
-                      layer.textContents?.textAlign === align
-                        ? 'bg-[#6c5ce7] text-white'
-                        : 'bg-[#1a1a1d] text-[#9b9ba6]'
-                    }`}
-                  >
-                    {align}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-1.5">
+                <select
+                  value={layer.textContents.fontFamily}
+                  data-testid="google-font-select"
+                  onChange={(e) => {
+                    const nextFont = e.target.value;
+                    if (layer.textContents) {
+                      setIsLoadingFont(true);
+                      void ensureGoogleFontLoaded(
+                        nextFont,
+                        layer.textContents.fontWeight,
+                        layer.textContents.fontStyle
+                      ).finally(() => setIsLoadingFont(false));
+                    }
+                    updateTextSource(layer.id, { fontFamily: nextFont });
+                  }}
+                  className="h-6 px-1.5 bg-[#161619] border border-[#2e2e33] rounded text-[11px] text-white outline-none"
+                >
+                  {!GOOGLE_FONTS_CATALOG.some(
+                    (f) => f.family === layer.textContents?.fontFamily
+                  ) && (
+                    <option value={layer.textContents.fontFamily}>
+                      {layer.textContents.fontFamily} (Custom)
+                    </option>
+                  )}
+                  {GOOGLE_FONTS_CATALOG.filter(
+                    (f) =>
+                      !fontSearch.trim() ||
+                      f.family.toLowerCase().includes(fontSearch.trim().toLowerCase()) ||
+                      f.category.toLowerCase().includes(fontSearch.trim().toLowerCase()) ||
+                      f.family === layer.textContents?.fontFamily
+                  ).map((f) => (
+                    <option key={f.family} value={f.family}>
+                      {f.family} ({f.category})
+                    </option>
+                  ))}
+                </select>
+
+                <div className="flex gap-1">
+                  {(['left', 'center', 'right'] as const).map((align) => (
+                    <button
+                      key={align}
+                      type="button"
+                      onClick={() => updateTextSource(layer.id, { textAlign: align })}
+                      className={`flex-1 h-6 rounded text-[10px] uppercase ${
+                        layer.textContents?.textAlign === align
+                          ? 'bg-[#6c5ce7] text-white'
+                          : 'bg-[#1a1a1d] text-[#9b9ba6]'
+                      }`}
+                    >
+                      {align}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

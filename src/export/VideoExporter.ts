@@ -279,10 +279,32 @@ export async function exportComposition(
     }
   }
 
-  // 2. WebM (or MP4 fallback) via MediaRecorder
+  // 2. WebM (or MP4 fallback) via MediaRecorder + Opus Audio Track
   if (format === 'webm' || format === 'mp4') {
     const stream = offscreenCanvas.captureStream(0);
+    let audioCtx: AudioContext | null = null;
+
+    try {
+      const mixedBuf = await mixCompositionAudio(comp, project, startTime, duration, 48000);
+      if (mixedBuf && typeof AudioContext !== 'undefined') {
+        audioCtx = new AudioContext({ sampleRate: 48000 });
+        const dest = audioCtx.createMediaStreamDestination();
+        const srcNode = audioCtx.createBufferSource();
+        srcNode.buffer = mixedBuf;
+        srcNode.connect(dest);
+        const audioTrack = dest.stream.getAudioTracks()[0];
+        if (audioTrack) {
+          stream.addTrack(audioTrack);
+        }
+        srcNode.start(0);
+      }
+    } catch {
+      // Proceed with video-only WebM if AudioContext fails
+    }
+
     const mimeCandidates = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
       'video/webm;codecs=vp9',
       'video/webm;codecs=vp8',
       'video/webm',
@@ -300,6 +322,9 @@ export async function exportComposition(
 
     const stopPromise = new Promise<Blob>((resolve) => {
       recorder.onstop = () => {
+        if (audioCtx) {
+          void audioCtx.close().catch(() => {});
+        }
         resolve(new Blob(chunks, { type: 'video/webm' }));
       };
     });
@@ -315,6 +340,7 @@ export async function exportComposition(
         throw new Error('Export cancelled');
       }
       const t = startTime + f / fps;
+      await renderer.prepareMediaAtTime(comp, t, project);
       renderer.renderComposition(comp, t, project, effectiveScale);
       if (typeof track.requestFrame === 'function') {
         track.requestFrame();
