@@ -34,10 +34,32 @@ import { saveProjectToIndexedDB } from './persistence';
 
 enablePatches();
 
+let currentPointerSessionId: number | null = null;
+let pointerSessionCounter = 0;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'mousedown',
+    () => {
+      pointerSessionCounter += 1;
+      currentPointerSessionId = pointerSessionCounter;
+    },
+    true
+  );
+  window.addEventListener(
+    'mouseup',
+    () => {
+      currentPointerSessionId = null;
+    },
+    true
+  );
+}
+
 export interface HistoryEntry {
   id: string;
   label: string;
   timestamp: number;
+  dragSessionId?: number | null;
   patches: Patch[];
   inversePatches: Patch[];
 }
@@ -285,20 +307,42 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
 
     globalFrameCache.invalidateAll();
 
-    set((state) => ({
-      project: nextProject,
-      undoStack: [
-        ...state.undoStack.slice(-79),
-        {
-          id: createId('cmd'),
-          label,
+    set((state) => {
+      const lastEntry = state.undoStack[state.undoStack.length - 1];
+      if (
+        currentPointerSessionId !== null &&
+        lastEntry &&
+        lastEntry.dragSessionId === currentPointerSessionId
+      ) {
+        const merged: HistoryEntry = {
+          ...lastEntry,
           timestamp: Date.now(),
-          patches,
-          inversePatches,
-        },
-      ],
-      redoStack: [],
-    }));
+          patches: [...lastEntry.patches, ...patches],
+          inversePatches: [...inversePatches, ...lastEntry.inversePatches],
+        };
+        return {
+          project: nextProject,
+          undoStack: [...state.undoStack.slice(0, -1), merged],
+          redoStack: [],
+        };
+      }
+
+      return {
+        project: nextProject,
+        undoStack: [
+          ...state.undoStack.slice(-79),
+          {
+            id: createId('cmd'),
+            label,
+            timestamp: Date.now(),
+            dragSessionId: currentPointerSessionId,
+            patches,
+            inversePatches,
+          },
+        ],
+        redoStack: [],
+      };
+    });
   },
 
   undo: () => {
