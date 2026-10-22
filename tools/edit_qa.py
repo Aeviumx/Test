@@ -193,8 +193,8 @@ def contact_sheet(ffmpeg, path, out_png, duration):
 def main():
     ap = argparse.ArgumentParser(description="Независимая проверка эдита")
     ap.add_argument("video")
-    ap.add_argument("--ffmpeg", default=shutil.which("ffmpeg") or "ffmpeg")
-    ap.add_argument("--ffprobe", default=None)
+    ap.add_argument("--ffmpeg", default=os.environ.get("KORI_FFMPEG") or shutil.which("ffmpeg") or "ffmpeg")
+    ap.add_argument("--ffprobe", default=os.environ.get("KORI_FFPROBE"))
     ap.add_argument("--out", default=None, help="папка для отчёта (по умолчанию рядом с видео)")
     args = ap.parse_args()
 

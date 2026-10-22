@@ -31,7 +31,8 @@ EXTS = (".png", ".jpg", ".jpeg", ".webp")
 
 
 def load_rgba(path):
-    im = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    # imdecode вместо imread: на Windows imread не открывает пути с кириллицей
+    im = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
     if im is None:
         raise RuntimeError(f"не удалось прочитать {path}")
     if im.ndim == 2:
@@ -181,14 +182,16 @@ def main():
         print(f'{name}: {info["kind"]}, лицо {info["face"]}, цвет {info["palette"]["main"]}')
         if args.preview:
             os.makedirs(args.preview, exist_ok=True)
-            im = cv2.imread(path)
+            im = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
             for f in info["faces"]:
                 cv2.rectangle(im, (f[0], f[1]), (f[0] + f[2], f[1] + f[3]), (0, 200, 255), 4)
             if info["face"]:
                 f = info["face"]
                 cv2.rectangle(im, (f[0], f[1]), (f[0] + f[2], f[1] + f[3]), (0, 255, 0), 8)
             s = 900 / max(im.shape[:2])
-            cv2.imwrite(os.path.join(args.preview, name + ".jpg"), cv2.resize(im, None, fx=s, fy=s))
+            ok, enc = cv2.imencode(".jpg", cv2.resize(im, None, fx=s, fy=s))
+            if ok:
+                enc.tofile(os.path.join(args.preview, name + ".jpg"))
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
     print(f"Разметка сохранена: {meta_path}")

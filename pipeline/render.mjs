@@ -269,13 +269,21 @@ class Renderer {
     return this.vblend;
   }
 
-  drawVideoShot(ctx, t, shot) {
+  /** Доля «зум-прохода» перед ближайшей склейкой (0 — нет, 1 — момент склейки). */
+  transitionAt(t) {
+    for (const tr of this.plan.transitions || []) {
+      if (t < tr.t && tr.t - t <= tr.duration) return 1 - (tr.t - t) / tr.duration;
+    }
+    return 0;
+  }
+
+  drawVideoShot(ctx, t, shot, extraZoom = 1) {
     const { W, H, plan } = this;
     const img = this.videoImage(shot, t);
     const p = clamp01((t - shot.start) / Math.max(1e-6, shot.end - shot.start));
     const punch = envelope(plan.events, 'punch', t);
     const shake = envelope(plan.events, 'shake', t);
-    const zoom = 1.04 * (1 + 0.05 * p) * (1 + 0.09 * punch);
+    const zoom = 1.04 * (1 + 0.05 * p) * (1 + 0.09 * punch) * extraZoom;
     const sx = 18 * shake * Math.sin(t * 83 + 1.3);
     const sy = 13 * shake * Math.cos(t * 71 + 0.4);
     const rot = 0.02 * shake * Math.sin(t * 57);
@@ -404,8 +412,12 @@ class Renderer {
     ctx.fillRect(0, 0, this.W, this.H);
     if (this.plan.cards && t < this.plan.cards.end) return this.drawCards(ctx, t);
     const shot = this.shotAt(mainT);
-    if (shot.type === 'video') this.drawVideoShot(ctx, Math.max(t, shot.start), shot);
-    else this.drawShot(ctx, t);
+    if (shot.type === 'video') {
+      const k = this.transitionAt(mainT);
+      this.drawVideoShot(ctx, Math.max(t, shot.start), shot, 1 + 0.35 * k * k);
+      return k > 0 ? { z: k, anchor: [this.W / 2, shot.anchorY * this.H] } : null;
+    }
+    this.drawShot(ctx, t);
     return null;
   }
 
@@ -415,7 +427,7 @@ class Renderer {
       const { items, z } = this.cardState(t);
       return items.some((i) => i.k > 0 && i.k < 1) || z > 0.02;
     }
-    return lastEventAge(plan.events, ['punch', 'shake'], t) < 0.14;
+    return lastEventAge(plan.events, ['punch', 'shake'], t) < 0.14 || this.transitionAt(t) > 0;
   }
 
   renderFrame(t) {
@@ -446,6 +458,8 @@ class Renderer {
     // радиальный смаз при зуме в дроп
     if (info && info.z > 0.04) this.radialBlur(acc, info.anchor, 0.16 * info.z);
 
+    this.bloom(acc, plan.style === 'velocity' ? 0.22 : 0.16);
+
     acc.globalCompositeOperation = 'source-over';
     acc.drawImage(this.vignette, 0, 0);
     acc.globalCompositeOperation = 'overlay';
@@ -474,6 +488,21 @@ class Renderer {
       acc.fillText(plan.signature, 64, H - 360);
     }
     return this.acc;
+  }
+
+  /** Мягкое свечение светлых участков: уменьшенная копия с контрастом и размытием, наложение «экраном». */
+  bloom(ctx, amount) {
+    if (!this.glow) this.glow = createCanvas(Math.round(this.W / 4), Math.round(this.H / 4));
+    const g = this.glow.getContext('2d');
+    g.globalCompositeOperation = 'source-over';
+    g.filter = 'brightness(0.85) contrast(1.9) blur(6px)';
+    g.drawImage(this.acc, 0, 0, this.glow.width, this.glow.height);
+    g.filter = 'none';
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = amount;
+    ctx.drawImage(this.glow, 0, 0, this.W, this.H);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   rgbSplit(ctx, off) {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import * as path from 'path';
 import * as fs from 'fs';
 import { FfmpegService } from '../electron/ffmpegService';
@@ -6,11 +6,17 @@ import { RifeService } from '../electron/rifeService';
 import { analyzeSceneFromFrames, FrameSampleData } from '../src/ai/videoAnalysis';
 import { analyzeAudioBuffer } from '../src/ai/audioAnalysis';
 import { EditEngine } from '../src/engine/editEngine';
+import { generateTestAssets } from '../scripts/prepareTestAssets';
 
 const assetsDir = path.join(__dirname, '../test-assets');
 const cacheDir = path.join(__dirname, '../test-assets/test_cache');
 
 describe('Kōri Desktop Studio Native & AI Pipeline', () => {
+  // синтетические файлы не хранятся в git (*.mp4, *.wav в .gitignore) — создаём их перед тестами
+  beforeAll(async () => {
+    await generateTestAssets(path.join(__dirname, '..'));
+  }, 120000);
+
   // 1. Native FFmpeg Media Probe
   it('should probe native MP4 video container and streams using ffprobe', async () => {
     const videoPath = path.join(assetsDir, 'test_scene_cuts.mp4');

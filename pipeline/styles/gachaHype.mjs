@@ -20,7 +20,7 @@ export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080
   }
 
   const r = buildRhythm({ audioFile, introBars: 2, targetDuration, fps, leadFrames });
-  const { analysis, drop, dropBars, rel, lead, beatsEdit, dropAt, accents } = r;
+  const { analysis, drop, dropBars, rel, lead, onFrame, beatsEdit, dropAt, accents } = r;
   const duration = r.duration;
 
   // ---------- интро: карточки ----------
@@ -44,7 +44,7 @@ export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080
   for (const it of cards.items) events.push({ t: it.enter, type: 'punch', strength: 0.6 });
   const preDrop = snapToOnset(analysis, drop.time - analysis.beatInterval / 2);  // восьмая перед дропом
   const preColor = characters.find((c) => c.id === cardChars[0]).palette.main;
-  events.push({ t: Math.max(0, rel(preDrop.t) - lead), type: 'colorflash', strength: 0.7, color: preColor });
+  events.push({ t: onFrame(rel(preDrop.t) - lead), type: 'colorflash', strength: 0.7, color: preColor });
 
   // ---------- кадры ----------
   const shots = [];

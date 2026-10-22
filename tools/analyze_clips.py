@@ -15,6 +15,8 @@
 import argparse
 import json
 import os
+import shutil
+import subprocess
 import sys
 
 import cv2
@@ -25,19 +27,35 @@ CASCADE = os.path.join(HERE, "lbpcascade_animeface.xml")
 EXTS = (".mp4", ".mov", ".webm", ".mkv", ".m4v")
 
 
+FFMPEG = os.environ.get("KORI_FFMPEG") or shutil.which("ffmpeg") or "ffmpeg"
+FFPROBE = os.environ.get("KORI_FFPROBE") or shutil.which("ffprobe") or "ffprobe"
+
+
+def probe(path):
+    r = subprocess.run([FFPROBE, "-v", "error", "-select_streams", "v:0", "-show_entries",
+                        "stream=width,height,r_frame_rate", "-of", "json", path], capture_output=True)
+    st = json.loads(r.stdout or b"{}").get("streams", [{}])[0]
+    num, den = (st.get("r_frame_rate", "30/1").split("/") + ["1"])[:2]
+    return float(num) / float(den or 1), int(st.get("width", 0)), int(st.get("height", 0))
+
+
 def read_small(path):
-    cap = cv2.VideoCapture(path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    small = []
-    while True:
-        ok, fr = cap.read()
-        if not ok:
-            break
-        small.append(cv2.cvtColor(cv2.resize(fr, (128, 72), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2GRAY).astype(np.float32))
-    cap.release()
+    """Все кадры клипа в миниатюре 128×72 (серые) — через ffmpeg, он понимает любые пути и форматы."""
+    fps, w, h = probe(path)
+    r = subprocess.run([FFMPEG, "-v", "error", "-i", path, "-vf", "scale=128:72,format=gray",
+                        "-f", "rawvideo", "-"], capture_output=True)
+    raw = np.frombuffer(r.stdout, dtype=np.uint8)
+    n = len(raw) // (128 * 72)
+    small = list(raw[: n * 128 * 72].reshape(n, 72, 128).astype(np.float32))
     return fps, w, h, small
+
+
+def grab_frame(path, t):
+    r = subprocess.run([FFMPEG, "-v", "error", "-ss", f"{t:.3f}", "-i", path, "-frames:v", "1",
+                        "-f", "image2pipe", "-vcodec", "png", "-"], capture_output=True)
+    if not r.stdout:
+        return None
+    return cv2.imdecode(np.frombuffer(r.stdout, dtype=np.uint8), cv2.IMREAD_COLOR)
 
 
 def find_cuts(small, fps):
@@ -61,11 +79,8 @@ def find_cuts(small, fps):
 
 
 def detect_face(path, t, cas):
-    cap = cv2.VideoCapture(path)
-    cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
-    ok, fr = cap.read()
-    cap.release()
-    if not ok:
+    fr = grab_frame(path, t)
+    if fr is None:
         return None
     h, w = fr.shape[:2]
     s = 720.0 / h

@@ -5,8 +5,11 @@ import { analyzeTrack, findDrop, accentPattern, snapToOnset, gridTime } from './
 export function buildRhythm({ audioFile, introBars = 2, targetDuration = 15, fps = 60, accentsPerBar = 3, leadFrames = 2 }) {
   const analysis = analyzeTrack(audioFile);
   const barDur = analysis.beatInterval * 4;
-  const dropBars = Math.max(3, Math.round((targetDuration - introBars * barDur) / barDur));
-  const drop = findDrop(analysis, introBars, dropBars + 1);
+  // короткий трек: эдит сокращается до доступного числа целых тактов, а не падает
+  const availBars = analysis.downbeats.length - 1 - introBars;
+  const dropBars = Math.min(Math.max(3, Math.round((targetDuration - introBars * barDur) / barDur)), availBars);
+  if (dropBars < 2) throw new Error('Трек слишком короткий: нужно минимум 3–4 такта с выраженным ритмом.');
+  const drop = findDrop(analysis, introBars, dropBars + 1) || findDrop(analysis, introBars, dropBars);
   if (!drop) throw new Error('Не удалось найти дроп в треке: трек слишком короткий или без выраженной структуры.');
 
   const db = analysis.downbeats;
@@ -15,13 +18,15 @@ export function buildRhythm({ audioFile, introBars = 2, targetDuration = 15, fps
   const duration = end - start;
   const rel = (t) => Number((t - start).toFixed(4));
   // визуальное событие ставится на leadFrames кадров раньше атаки удара (как делают монтажёры:
-  // у референса профи ~2.5 кадра); +0.5 кадра — чтобы попасть в ближайший кадр, а не в следующий
-  const lead = (leadFrames + 0.5) / fps;
+  // у референса профи ~2.5 кадра) и выравнивается ровно по кадру — иначе вспышка, попавшая между
+  // кадрами, к первому показанному кадру уже теряет до половины силы
+  const lead = leadFrames / fps;
+  const onFrame = (t) => Math.max(0, Math.round(t * fps) / fps);
   const pattern = accentPattern(analysis, drop.bar, drop.bar + dropBars, accentsPerBar);
 
   const accent = (bar, pos, t0) => {
     const sn = snapToOnset(analysis, pos === 0 ? t0 : gridTime(analysis, t0, pos));
-    return { bar, pos, audioT: rel(sn.t), t: Math.max(0, rel(sn.t) - lead), snapped: sn.snapped, flash: pos === 0 };
+    return { bar, pos, audioT: rel(sn.t), t: onFrame(rel(sn.t) - lead), snapped: sn.snapped, flash: pos === 0 };
   };
 
   // акценты после дропа — по ритмическому рисунку трека
@@ -46,6 +51,7 @@ export function buildRhythm({ audioFile, introBars = 2, targetDuration = 15, fps
     duration,
     rel,
     lead,
+    onFrame,
     pattern,
     dropAt: rel(drop.time),
     beatsEdit: analysis.beats.filter((t) => t >= start - 1e-3 && t < end).map(rel),

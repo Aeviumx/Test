@@ -45,3 +45,4 @@ models/
 test-assets/results/audit/
 test-assets/results/audit_v4/
 
+__pycache__/

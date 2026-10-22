@@ -266,7 +266,6 @@ export function findDrop(analysis, minStartBar = 2, needBars = 6) {
   const cands = [];
   let fallback = null;
   for (let b = Math.max(2, minStartBar); b + needBars <= E.length; b++) {
-    if (analysis.downbeats[b] < 6) continue;
     const after = (E[b] + E[b + 1]) / 2;
     const before = (E[b - 1] + E[b - 2]) / 2;
     const rise = after - before;

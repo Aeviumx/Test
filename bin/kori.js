@@ -56,7 +56,7 @@ function python() {
   return null;
 }
 
-function runPython(script, scriptArgs) {
+async function runPython(script, scriptArgs) {
   const py = python();
   if (!py) {
     console.error('[kori] Не найден Python. Установи Python 3 с numpy и opencv-python или укажи KORI_PYTHON.');
@@ -64,6 +64,10 @@ function runPython(script, scriptArgs) {
   }
   const env = { ...process.env };
   if (!env.PYTHONIOENCODING) env.PYTHONIOENCODING = 'utf-8';
+  // Python-инструменты используют тот же ffmpeg, что и Kōri (ffmpeg-static), даже если его нет в PATH
+  const { ffmpegPath, ffprobePath } = await import('../pipeline/ffmpeg.mjs');
+  env.KORI_FFMPEG = env.KORI_FFMPEG || ffmpegPath();
+  env.KORI_FFPROBE = env.KORI_FFPROBE || ffprobePath();
   const r = spawnSync(py, [path.join(rootDir, 'tools', script), ...scriptArgs], { stdio: 'inherit', env });
   return r.status ?? 1;
 }
@@ -128,7 +132,7 @@ async function exportPlan(plan, out) {
     },
   });
   console.log(`[kori] Готово: ${out}`);
-  const code = runPython('edit_qa.py', [out]);
+  const code = await runPython('edit_qa.py', [out]);
   if (code !== 0) console.log('[kori] edit_qa.py: проверка НЕ пройдена (см. отчёт выше)');
   return code;
 }
