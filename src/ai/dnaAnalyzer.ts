@@ -20,6 +20,7 @@ export interface EditStyleDNA {
   rhythmPattern: {
     cadence: 'syncopated-3hit' | 'straight-4' | 'lyric-flow';
     accentsPerMeasure: number;
+    normalizedMeasureOffsets: number[]; // relative position 0.0..1.0 within measure (e.g. [0.0, 0.254, 0.728])
     reframeAlternation: boolean; // Alternates wide <-> close <-> eyes on accents
     effectsOnAccent: Array<'white-flash' | 'color-flash' | 'prism-rgb-split' | 'zoom-punch' | 'directional-blur' | 'impact-shake'>;
   };
@@ -57,6 +58,7 @@ export const GACHA_HYPE_DNA: EditStyleDNA = {
   rhythmPattern: {
     cadence: 'syncopated-3hit',
     accentsPerMeasure: 3,
+    normalizedMeasureOffsets: [0.0, 0.254, 0.728], // Beat 1, Beat 2, Syncopation before Beat 4
     reframeAlternation: true,
     effectsOnAccent: [
       'white-flash',
@@ -98,6 +100,7 @@ export const AESTHETIC_LYRIC_DNA: EditStyleDNA = {
   rhythmPattern: {
     cadence: 'lyric-flow',
     accentsPerMeasure: 2,
+    normalizedMeasureOffsets: [0.0, 0.5],
     reframeAlternation: false,
     effectsOnAccent: ['zoom-punch'],
   },
@@ -165,4 +168,72 @@ export function extractEditDNA(options: {
     flashCount: flashTimestamps.length,
     dominantColorGrade: 'Anime Vivid',
   };
+}
+
+import { RhythmicAccent } from './rhythmPattern';
+import { createId } from '../utils/id';
+
+/**
+ * Computes concrete cut and accent timestamps dynamically for ANY audio track
+ * based on the DNA pattern definition and the audio's detected BPM/transients.
+ * ZERO hardcoded timestamps!
+ */
+export function generateTrackAccentsFromDna(
+  dna: EditStyleDNA,
+  audio: {
+    bpm: number;
+    duration: number;
+    beats?: Array<{ time: number; strength?: number; isDownbeat?: boolean }>;
+    startOffset?: number; // e.g. after intro (e.g. 4.0s)
+    fps?: number;
+  }
+): RhythmicAccent[] {
+  const bpm = Math.max(40, audio.bpm || 120);
+  const measureDur = (60 / bpm) * 4;
+  const startT = audio.startOffset ?? dna.introPattern.durationSec;
+  const fps = audio.fps ?? 60;
+  const offsets = dna.rhythmPattern.normalizedMeasureOffsets;
+  const beats = audio.beats || [];
+
+  const accents: RhythmicAccent[] = [];
+  const numMeasures = Math.ceil((audio.duration - startT) / measureDur);
+
+  for (let m = 0; m < numMeasures; m++) {
+    const mStart = startT + m * measureDur;
+
+    offsets.forEach((relOff, idx) => {
+      let hitTime = mStart + relOff * measureDur;
+      if (hitTime >= audio.duration) return;
+
+      // Snap to closest transient within +/- 100ms if beats are available
+      if (beats.length > 0) {
+        let minDiff = 0.10;
+        let matchedTime = hitTime;
+        for (const b of beats) {
+          const diff = Math.abs(b.time - hitTime);
+          if (diff < minDiff) {
+            minDiff = diff;
+            matchedTime = b.time;
+          }
+        }
+        hitTime = matchedTime;
+      }
+
+      const strength: 'strong' | 'medium' | 'weak' =
+        idx === 0 ? 'strong' : idx === 1 ? 'medium' : 'strong';
+
+      accents.push({
+        id: createId('acc'),
+        time: Math.round(hitTime * 1000) / 1000,
+        frame: Math.round(hitTime * fps),
+        strength,
+        score: idx === 0 ? 1.0 : 0.85,
+        measureIndex: m,
+        offsetInMeasure: Math.round(relOff * 1000) / 1000,
+        band: idx === 0 ? 'kick' : idx === 1 ? 'snare' : 'kick',
+      });
+    });
+  }
+
+  return accents;
 }
