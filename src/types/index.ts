@@ -281,6 +281,18 @@ export interface Composition {
     beats: Array<{ time: number; frame: number; isDownbeat: boolean; strength: number; frequencyBand?: string }>;
     sections: Array<{ type: 'intro' | 'buildup' | 'drop' | 'break' | 'climax' | 'outro'; startTime: number; endTime: number; avgEnergy: number }>;
     energyCurve?: number[]; // normalized 0..1 per frame or sample
+    accentMap?: {
+      bpm: number;
+      patternType: string;
+      accents: Array<{
+        id: string;
+        time: number;
+        frame: number;
+        strength: 'strong' | 'medium' | 'weak';
+        score: number;
+        band?: string;
+      }>;
+    };
   };
 }
 

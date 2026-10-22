@@ -41,6 +41,7 @@ import { createId } from '../utils/id';
 import { detectScenesInVideo } from '../utils/sceneDetection';
 import { clamp, formatShortTimecode, snapToFrame } from '../utils/timecode';
 import { saveProjectToIndexedDB } from './persistence';
+import { detectRhythmAccents } from '../ai/rhythmPattern';
 
 enablePatches();
 
@@ -145,6 +146,9 @@ export interface ProjectStoreState {
   deleteComposition: (compId: string) => void;
   addCompMarker: (time: number, label?: string) => void;
   deleteCompMarker: (markerId: string) => void;
+  recordTapAccent: (time: number) => void;
+  autoDetectRhythmAccents: () => void;
+  clearAccentMap: () => void;
 
   // Assets
   addMediaAsset: (asset: MediaAsset, addToActiveComp?: boolean) => void;
@@ -560,6 +564,94 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       const comp = draft.compositions.find((c) => c.id === compId);
       if (!comp) return;
       comp.markers = comp.markers.filter((m) => m.id !== markerId);
+    });
+  },
+
+  recordTapAccent: (time: number) => {
+    const compId = get().project.activeCompId;
+    get().commitCommand('Record Tap Accent', (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (!comp) return;
+      if (!comp.audioTrackAnalysis) {
+        comp.audioTrackAnalysis = {
+          bpm: 120,
+          beats: [],
+          sections: [],
+        };
+      }
+      if (!comp.audioTrackAnalysis.accentMap) {
+        comp.audioTrackAnalysis.accentMap = {
+          bpm: comp.audioTrackAnalysis.bpm || 120,
+          patternType: 'tap-recorded',
+          accents: [],
+        };
+      }
+      const beats = comp.audioTrackAnalysis.beats || [];
+      // Quantize to closest transient within 120ms
+      let targetTime = time;
+      let minDiff = 0.12;
+      let matchedStrength: 'strong' | 'medium' | 'weak' = 'medium';
+      for (const b of beats) {
+        const diff = Math.abs(b.time - time);
+        if (diff < minDiff) {
+          minDiff = diff;
+          targetTime = b.time;
+          matchedStrength = b.isDownbeat ? 'strong' : 'medium';
+        }
+      }
+      comp.audioTrackAnalysis.accentMap.accents.push({
+        id: createId('acc_tap'),
+        time: Math.round(targetTime * 1000) / 1000,
+        frame: Math.round(targetTime * comp.fps),
+        strength: matchedStrength,
+        score: matchedStrength === 'strong' ? 1.0 : 0.85,
+        band: matchedStrength === 'strong' ? 'kick' : 'snare',
+      });
+      // Sort accents chronologically
+      comp.audioTrackAnalysis.accentMap.accents.sort((a, b) => a.time - b.time);
+    });
+  },
+
+  autoDetectRhythmAccents: () => {
+    const compId = get().project.activeCompId;
+    const comp = get().getActiveComp();
+    if (!comp) return;
+    const bpm = comp.audioTrackAnalysis?.bpm || 120;
+    const beats = comp.audioTrackAnalysis?.beats || [];
+    const rhythmResult = detectRhythmAccents({
+      bpm,
+      beats,
+      duration: comp.duration,
+      fps: comp.fps,
+    });
+    get().commitCommand('Auto-Detect Rhythmic Accents', (draft) => {
+      const c = draft.compositions.find((x) => x.id === compId);
+      if (!c) return;
+      if (!c.audioTrackAnalysis) {
+        c.audioTrackAnalysis = { bpm, beats, sections: [] };
+      }
+      c.audioTrackAnalysis.accentMap = {
+        bpm: rhythmResult.bpm,
+        patternType: rhythmResult.patternType,
+        accents: rhythmResult.accents.map((a) => ({
+          id: a.id,
+          time: a.time,
+          frame: a.frame,
+          strength: a.strength,
+          score: a.score,
+          band: a.band,
+        })),
+      };
+    });
+  },
+
+  clearAccentMap: () => {
+    const compId = get().project.activeCompId;
+    get().commitCommand('Clear Accent Map', (draft) => {
+      const comp = draft.compositions.find((c) => c.id === compId);
+      if (comp?.audioTrackAnalysis) {
+        comp.audioTrackAnalysis.accentMap = undefined;
+      }
     });
   },
 

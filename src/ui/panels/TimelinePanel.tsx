@@ -22,6 +22,7 @@ import {
   Unlock,
   Volume2,
   VolumeX,
+  Zap,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -85,6 +86,9 @@ export const TimelinePanel: React.FC = () => {
   const updateActiveComposition = useProjectStore((s) => s.updateActiveComposition);
   const addCompMarker = useProjectStore((s) => s.addCompMarker);
   const deleteCompMarker = useProjectStore((s) => s.deleteCompMarker);
+  const recordTapAccent = useProjectStore((s) => s.recordTapAccent);
+  const autoDetectRhythmAccents = useProjectStore((s) => s.autoDetectRhythmAccents);
+  const clearAccentMap = useProjectStore((s) => s.clearAccentMap);
   const setGraphEditorOpen = useProjectStore((s) => s.setGraphEditorOpen);
   const setInspectedPropertyPath = useProjectStore((s) => s.setInspectedPropertyPath);
   const setActiveModal = useProjectStore((s) => s.setActiveModal);
@@ -664,6 +668,25 @@ export const TimelinePanel: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => recordTapAccent(currentTime)}
+            title="Tap Accent (or press 'A' during playback) - Auto-quantizes to nearest audio transient"
+            className="h-[22px] px-2 rounded bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--steel-light)] hover:text-white flex items-center gap-1 text-[11px] transition-colors duration-150"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400/30" />
+            <span className="hidden lg:inline">Tap Accent [A]</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => autoDetectRhythmAccents()}
+            title="Auto-Detect Repeating Syncopated Accents (Reference 1 style 3-hit syncopation)"
+            className="h-[22px] px-2 rounded bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--steel-light)] hover:text-[var(--text-primary)] flex items-center gap-1 text-[11px] transition-colors duration-150"
+          >
+            <span className="text-[10px] font-mono font-semibold text-rose-400">Syncopate</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setGraphEditorOpen(!graphEditorOpen)}
             title="Toggle Value / Speed Graph Editor"
             className={`h-[22px] px-2.5 rounded flex items-center gap-1.5 text-[11px] font-medium border transition-colors duration-150 ${
@@ -1135,7 +1158,11 @@ export const TimelinePanel: React.FC = () => {
                 <div
                   onMouseDown={handleRulerMouseDown}
                   className={`sticky top-0 z-30 ${
-                    comp.audioTrackAnalysis ? 'h-[56px]' : 'h-[28px]'
+                    comp.audioTrackAnalysis?.accentMap
+                      ? 'h-[72px]'
+                      : comp.audioTrackAnalysis
+                      ? 'h-[56px]'
+                      : 'h-[28px]'
                   } bg-[var(--bg-elevated)] border-b border-[var(--border)] cursor-ew-resize select-none transition-[height] duration-150`}
                 >
                   {/* RAM Frame Cache Indicator Bar */}
@@ -1241,6 +1268,39 @@ export const TimelinePanel: React.FC = () => {
                       )}
                     </div>
                   ))}
+
+                  {/* Rhythmic Accent Map (Strong / Medium / Weak Syncopations) */}
+                  {comp.audioTrackAnalysis?.accentMap?.accents.map((acc) => {
+                    const color =
+                      acc.strength === 'strong'
+                        ? '#f43f5e'
+                        : acc.strength === 'medium'
+                        ? '#f59e0b'
+                        : '#38bdf8';
+                    return (
+                      <div
+                        key={acc.id}
+                        style={{ left: timeToPx(acc.time) }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentTime(acc.time);
+                        }}
+                        title={`Accent (${acc.strength.toUpperCase()} @ ${acc.time.toFixed(2)}s - ${acc.band || 'beat'})`}
+                        className="absolute top-5 h-7 -ml-[5px] flex flex-col items-center cursor-pointer group z-20"
+                      >
+                        <div
+                          style={{ backgroundColor: color, borderColor: color }}
+                          className={`w-2.5 h-2.5 rotate-45 border shadow-[0_0_6px_rgba(0,0,0,0.5)] transition-transform group-hover:scale-125 ${
+                            acc.strength === 'strong' ? 'shadow-[0_0_8px_#f43f5e]' : ''
+                          }`}
+                        />
+                        <div
+                          style={{ backgroundColor: color }}
+                          className="w-[1.5px] flex-1 opacity-60 group-hover:opacity-100"
+                        />
+                      </div>
+                    );
+                  })}
 
                   {/* Work Area Bar (B / N) */}
                   <div

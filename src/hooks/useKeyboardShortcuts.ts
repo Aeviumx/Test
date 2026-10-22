@@ -301,7 +301,14 @@ export function useKeyboardShortcuts(): void {
           state.revealLayerShortcutGroup('R');
           break;
         case 'A':
-          state.revealLayerShortcutGroup('A');
+          if (e.shiftKey || state.isPlaying) {
+            e.preventDefault();
+            state.recordTapAccent(state.currentTime);
+          } else if (state.selectedLayerIds.length > 0) {
+            state.revealLayerShortcutGroup('A');
+          } else {
+            state.recordTapAccent(state.currentTime);
+          }
           break;
         case 'U':
           state.revealLayerShortcutGroup('U');
