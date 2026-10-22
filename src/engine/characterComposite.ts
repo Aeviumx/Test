@@ -1,6 +1,6 @@
 /**
  * Character Compositing, Light Wrap & Color Match Engine
- * Seamlessly integrates isolated 2D anime cutouts (from MODNet) onto video/photo background scenes
+ * Seamlessly integrates isolated 2D anime cutouts (from SkyTNT IS-Net Anime Segmentation / ISNet-DIS) onto video/photo background scenes
  * (such as dark rainy streets, bokeh lights, or fantasy landscapes) with:
  * - Edge Light Wrap (bleeding ambient background luminance into character silhouette)
  * - Color Harmonization & Palette Match (adjusting tone, blacks, and highlights)
@@ -143,7 +143,7 @@ export function buildCharacterCompositeLayers(options: CharacterCompositeOptions
   const charLayer = createDefaultLayer(
     compInfo,
     'image',
-    'Character Foreground (MODNet Cutout)',
+    'Character Foreground (SkyTNT IS-Net Anime Cutout)',
     { assetId: characterAssetId, width: compWidth, height: compHeight }
   );
   charLayer.startTime = 0;
