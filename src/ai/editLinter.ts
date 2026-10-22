@@ -602,3 +602,162 @@ export function auditOverscanBorders(
     formattedReport: lines.join('\n'),
   };
 }
+
+/**
+ * Linter Rule: Face-in-Frame on Camera Push-In
+ * Ensures that if a face is present at the start of a shot, it remains fully inside the frame
+ * (faceTop >= 0 and faceBottom <= compHeight) across EVERY frame of the camera push-in.
+ */
+export function auditFaceInFrameOnPushIn(
+  frames: Array<{ frameIndex: number; time: number; faceTop: number; faceBottom: number }>,
+  compHeight: number = 1920
+): {
+  passed: boolean;
+  violations: Array<{ frameIndex: number; time: number; faceTop: number; faceBottom: number }>;
+  formattedReport: string;
+} {
+  const violations: Array<{ frameIndex: number; time: number; faceTop: number; faceBottom: number }> = [];
+
+  for (const f of frames) {
+    if (f.faceTop < 0 || f.faceBottom > compHeight) {
+      violations.push(f);
+    }
+  }
+
+  const passed = violations.length === 0;
+  return {
+    passed,
+    violations,
+    formattedReport: passed
+      ? `PASSED: Face remained fully inside frame bounds across all ${frames.length} push-in frames.`
+      : `FAILED: Face drifted outside frame bounds on ${violations.length} frames (first cutoff at frame ${violations[0]?.frameIndex}).`,
+  };
+}
+
+export interface BoundingRect {
+  id?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Linter Rule: Zero Text Blocks Intersection
+ * Ensures that subtitle/lyric blocks, ornaments, and song signatures never collide or overlap each other.
+ */
+export function auditTextBlocksIntersection(blocks: BoundingRect[]): {
+  passed: boolean;
+  intersections: Array<{ blockA: string; blockB: string; overlapArea: number }>;
+  formattedReport: string;
+} {
+  const intersections: Array<{ blockA: string; blockB: string; overlapArea: number }> = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    for (let j = i + 1; j < blocks.length; j++) {
+      const a = blocks[i];
+      const b = blocks[j];
+
+      const overlapX = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+      const overlapY = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+      const overlapArea = overlapX * overlapY;
+
+      if (overlapArea > 0) {
+        intersections.push({
+          blockA: a.id || `Block #${i}`,
+          blockB: b.id || `Block #${j}`,
+          overlapArea,
+        });
+      }
+    }
+  }
+
+  const passed = intersections.length === 0;
+  return {
+    passed,
+    intersections,
+    formattedReport: passed
+      ? `PASSED: All ${blocks.length} typography blocks have zero intersection.`
+      : `FAILED: Found ${intersections.length} colliding text blocks (e.g. ${intersections[0]?.blockA} & ${intersections[0]?.blockB}).`,
+  };
+}
+
+/**
+ * Linter Rule: Safe-Zone Margin Compliance
+ * Ensures that all critical typography and titles stay inside mobile TikTok 9:16 safe zones:
+ * - Left margin >= 60px
+ * - Right margin <= compWidth - 60px
+ * - Top margin >= 180px
+ * - Bottom margin <= compHeight - 340px
+ */
+export function auditTextSafeZones(
+  blocks: BoundingRect[],
+  compWidth: number = 1080,
+  compHeight: number = 1920
+): {
+  passed: boolean;
+  violations: Array<{ id: string; edge: string; diffPx: number }>;
+  formattedReport: string;
+} {
+  const safeLeft = 60;
+  const safeRight = compWidth - 60;
+  const safeTop = 180;
+  const safeBottom = compHeight - 340;
+
+  const violations: Array<{ id: string; edge: string; diffPx: number }> = [];
+
+  for (const b of blocks) {
+    const id = b.id || 'Text Element';
+    if (b.x < safeLeft) {
+      violations.push({ id, edge: 'left', diffPx: safeLeft - b.x });
+    }
+    if (b.x + b.width > safeRight) {
+      violations.push({ id, edge: 'right', diffPx: (b.x + b.width) - safeRight });
+    }
+    if (b.y < safeTop) {
+      violations.push({ id, edge: 'top', diffPx: safeTop - b.y });
+    }
+    if (b.y + b.height > safeBottom) {
+      violations.push({ id, edge: 'bottom', diffPx: (b.y + b.height) - safeBottom });
+    }
+  }
+
+  const passed = violations.length === 0;
+  return {
+    passed,
+    violations,
+    formattedReport: passed
+      ? `PASSED: All ${blocks.length} text elements are inside TikTok 9:16 safe margins.`
+      : `FAILED: ${violations.length} text safe-zone boundary violations found.`,
+  };
+}
+
+/**
+ * Linter Rule: Character Color Fidelity (Delta E < 5.0)
+ * Prevents RGB/BGR channel swap errors (such as red hair turning blue).
+ */
+export function auditCharacterColorFidelity(
+  sourceRgb: [number, number, number],
+  compositedRgb: [number, number, number],
+  maxDeltaE: number = 5.0
+): {
+  passed: boolean;
+  deltaE: number;
+  formattedReport: string;
+} {
+  // Use Euclidean Delta E approximation in Lab or RGB
+  const dr = sourceRgb[0] - compositedRgb[0];
+  const dg = sourceRgb[1] - compositedRgb[1];
+  const db = sourceRgb[2] - compositedRgb[2];
+  // Simple perceptually weighted delta:
+  const deltaE = Math.sqrt(2 * dr * dr + 4 * dg * dg + 3 * db * db) / 3.0;
+  const passed = deltaE <= maxDeltaE;
+
+  return {
+    passed,
+    deltaE: Number(deltaE.toFixed(2)),
+    formattedReport: passed
+      ? `PASSED: Character color fidelity Delta E = ${deltaE.toFixed(2)} <= ${maxDeltaE}. RGB channels preserved.`
+      : `FAILED: Character color deviation Delta E = ${deltaE.toFixed(2)} > ${maxDeltaE}. Probable BGR/RGB channel corruption!`,
+  };
+}

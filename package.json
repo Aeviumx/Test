@@ -5,7 +5,10 @@
   "description": "Professional AI-Powered Anime Video Editor & AMV Compositing Studio",
   "type": "module",
   "main": "dist-electron/main.js",
+  "bin": "./bin/kori.js",
   "scripts": {
+    "kori": "node bin/kori.js",
+    "cli": "node bin/kori.js",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "dist": "tsc -b && vite build && electron-builder --win nsis",

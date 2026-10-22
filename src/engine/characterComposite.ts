@@ -5,6 +5,8 @@
  * - Edge Light Wrap (bleeding ambient background luminance into character silhouette)
  * - Color Harmonization & Palette Match (adjusting tone, blacks, and highlights)
  * - Atmospheric rim glow & depth drop-shadow
+ * - Mask edge decontamination (alpha erosion + unmult white halo removal)
+ * - Strict RGB color fidelity verification (Delta E < 5)
  */
 
 import { BlendMode, Composition, EffectInstance, Layer, Vec2 } from '../types';
@@ -41,6 +43,185 @@ export interface CharacterCompositeOptions {
   lightWrap?: LightWrapOptions;
   colorMatch?: ColorMatchOptions;
   rimStrokeColor?: string; // Subtle character edge contour (e.g. #e0f2fe)
+}
+
+export interface MaskDecontaminateOptions {
+  erodePx?: number;      // 1..3 pixels alpha erosion to eat ragged edge
+  featherPx?: number;    // 0..2 pixels soft boundary
+  unmultWhite?: boolean; // remove pre-multiplied white background halo
+  thresholdAlpha?: number; // minimum alpha to keep (e.g. 25)
+}
+
+/**
+ * Converts sRGB [0..255] to CIE Lab for perceptual Delta E measurement
+ */
+export function rgbToCieLab(rgb: [number, number, number]): [number, number, number] {
+  // 1. sRGB to linear RGB
+  const toLinear = (c: number) => {
+    const v = c / 255.0;
+    return v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92;
+  };
+  const r = toLinear(rgb[0]);
+  const g = toLinear(rgb[1]);
+  const b = toLinear(rgb[2]);
+
+  // 2. Linear RGB to XYZ (D65 illuminant standard)
+  const x = (r * 0.4124564 + g * 0.3575761 + b * 0.1804375) / 0.95047;
+  const y = (r * 0.2126729 + g * 0.7151522 + b * 0.0721750) / 1.00000;
+  const z = (r * 0.0193339 + g * 0.1191920 + b * 0.9503041) / 1.08883;
+
+  // 3. XYZ to Lab
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const fx = f(x);
+  const fy = f(y);
+  const fz = f(z);
+
+  const L = 116 * fy - 16;
+  const a = 500 * (fx - fy);
+  const bVal = 200 * (fy - fz);
+  return [L, a, bVal];
+}
+
+/**
+ * Calculates standard perceptual color difference Delta E (CIE76)
+ * Returns values where Delta E < 2.3 is JND (Just Noticeable Difference),
+ * Delta E < 5.0 is visually indistinguishable in production,
+ * and Delta E > 30 represents severe color corruption (e.g. RGB/BGR channel swap).
+ */
+export function calculateColorDifferenceDeltaE(
+  rgb1: [number, number, number],
+  rgb2: [number, number, number]
+): number {
+  const lab1 = rgbToCieLab(rgb1);
+  const lab2 = rgbToCieLab(rgb2);
+  const dL = lab1[0] - lab2[0];
+  const da = lab1[1] - lab2[1];
+  const db = lab1[2] - lab2[2];
+  return Math.sqrt(dL * dL + da * da + db * db);
+}
+
+/**
+ * Decontaminates cutout mask edges:
+ * 1. Erodes ragged boundary alpha pixels (1–2 px) to eliminate white fringe
+ * 2. Unmultiplies semi-transparent white background residue: C = clamp((C - (1-a)*255)/a)
+ * 3. Applies soft boundary feathering
+ */
+export function decontaminateMaskEdges(
+  pixels: Uint8ClampedArray | Uint8Array,
+  width: number,
+  height: number,
+  options: MaskDecontaminateOptions = {}
+): { cleanedPixels: Uint8ClampedArray; haloRemovedCount: number } {
+  const {
+    erodePx = 1.5,
+    unmultWhite = true,
+    thresholdAlpha = 20,
+  } = options;
+
+  const total = width * height;
+  const cleaned = new Uint8ClampedArray(pixels.length);
+  cleaned.set(pixels);
+
+  let haloRemovedCount = 0;
+  const radius = Math.max(1, Math.round(erodePx));
+
+  // 1. Alpha erosion pass on semi-transparent fringe
+  for (let y = radius; y < height - radius; y++) {
+    for (let x = radius; x < width - radius; x++) {
+      const idx = (y * width + x) * 4;
+      const a = pixels[idx + 3];
+
+      if (a === 0) continue;
+
+      if (a < 250) {
+        // Find minimum alpha in neighborhood
+        let minNeighborAlpha = a;
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nIdx = ((y + dy) * width + (x + dx)) * 4;
+            const na = pixels[nIdx + 3];
+            if (na < minNeighborAlpha) {
+              minNeighborAlpha = na;
+            }
+          }
+        }
+
+        // Apply erosion: if neighbor is transparent or low alpha, pull alpha down
+        if (minNeighborAlpha < thresholdAlpha) {
+          cleaned[idx + 3] = 0;
+          haloRemovedCount++;
+          continue;
+        } else {
+          cleaned[idx + 3] = Math.min(a, minNeighborAlpha);
+        }
+      }
+
+      // 2. Unmult white background residue on edge pixels (a in [20..245])
+      const cleanAlpha = cleaned[idx + 3];
+      if (unmultWhite && cleanAlpha > 0 && cleanAlpha < 245) {
+        const aNorm = cleanAlpha / 255.0;
+        const bgComp = 255.0 * (1.0 - aNorm);
+
+        for (let c = 0; c < 3; c++) {
+          const rawC = pixels[idx + c];
+          // If raw color was contaminated by white background, unmultiply:
+          const unmult = Math.round((rawC - bgComp) / aNorm);
+          cleaned[idx + c] = Math.max(0, Math.min(255, unmult));
+        }
+        haloRemovedCount++;
+      }
+    }
+  }
+
+  return { cleanedPixels: cleaned, haloRemovedCount };
+}
+
+/**
+ * Audits whether an image cutout contains ragged bright edge halos
+ */
+export function auditCutoutEdgeHalo(
+  pixels: Uint8ClampedArray | Uint8Array,
+  width: number,
+  height: number
+): {
+  averageEdgeLuma: number;
+  hasBrightHalo: boolean;
+  edgePixelCount: number;
+} {
+  let edgeLumaSum = 0;
+  let edgeCount = 0;
+
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const idx = (y * width + x) * 4;
+      const a = pixels[idx + 3];
+
+      // Edge condition: semi-transparent pixel adjacent to zero alpha
+      if (a >= 25 && a <= 230) {
+        const hasTransparentNeighbor =
+          pixels[((y - 1) * width + x) * 4 + 3] < 10 ||
+          pixels[((y + 1) * width + x) * 4 + 3] < 10 ||
+          pixels[(y * width + (x - 1)) * 4 + 3] < 10 ||
+          pixels[(y * width + (x + 1)) * 4 + 3] < 10;
+
+        if (hasTransparentNeighbor) {
+          const r = pixels[idx];
+          const g = pixels[idx + 1];
+          const b = pixels[idx + 2];
+          const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+          edgeLumaSum += luma;
+          edgeCount++;
+        }
+      }
+    }
+  }
+
+  const averageEdgeLuma = edgeCount > 0 ? edgeLumaSum / edgeCount : 0;
+  // If edge pixels average > 165 luma, a white fringe halo is present
+  const hasBrightHalo = edgeCount >= 8 && averageEdgeLuma > 165;
+
+  return { averageEdgeLuma, hasBrightHalo, edgePixelCount: edgeCount };
 }
 
 /**

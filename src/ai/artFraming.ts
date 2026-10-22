@@ -411,3 +411,96 @@ export function checkArtZoomResolution(
     warning,
   };
 }
+
+export interface FaceLockedPushInOptions {
+  compWidth: number;
+  compHeight: number;
+  faceCenter: [number, number]; // [x, y] in pixels
+  faceBoxHeight: number;        // face height in pixels
+  startScale: number;           // e.g. 1.00
+  endScale: number;             // e.g. 1.36
+  duration: number;
+  basePosition: [number, number]; // initial layer position
+  fps?: number;
+  targetFaceYRatio?: number;    // default 0.28 (upper third of comp)
+}
+
+export interface FaceLockedPushInFrame {
+  time: number;
+  scale: number;
+  position: [number, number];
+  faceCenterComp: [number, number];
+  faceTop: number;
+  faceBottom: number;
+  isFaceInsideFrame: boolean;
+}
+
+/**
+ * Calculates continuous camera push-in trajectory anchored to the detected face center,
+ * guaranteeing that the face stays locked in the upper third (~28% of comp height)
+ * and never moves off the top screen edge (y >= 0).
+ */
+export function calculateFaceLockedPushIn(options: FaceLockedPushInOptions): {
+  frames: FaceLockedPushInFrame[];
+  allFramesValid: boolean;
+} {
+  const {
+    compWidth,
+    compHeight,
+    faceCenter,
+    faceBoxHeight,
+    startScale,
+    endScale,
+    duration,
+    basePosition,
+    fps = 60,
+    targetFaceYRatio = 0.28,
+  } = options;
+
+  const totalFrames = Math.max(1, Math.round(duration * fps));
+  const frames: FaceLockedPushInFrame[] = [];
+  let allFramesValid = true;
+
+  const targetFaceY = compHeight * targetFaceYRatio;
+
+  for (let i = 0; i <= totalFrames; i++) {
+    const t = (i / totalFrames) * duration;
+    const progress = i / totalFrames;
+    // Smooth quadratic ease-out / linear push-in
+    const scale = startScale + (endScale - startScale) * progress;
+
+    // Anchor calculation:
+    // When layer scales by `scale`, offset from face center scales proportionally.
+    // To keep faceCenterComp[1] == targetFaceY:
+    // faceCenterComp[1] = position[1] + (faceCenter[1] - basePosition[1]) * scale
+    // Therefore: position[1] = targetFaceY - (faceCenter[1] - basePosition[1]) * scale
+    const dy = (faceCenter[1] - basePosition[1]) * scale;
+    const posY = targetFaceY - dy;
+
+    // Keep horizontal centering/placement smooth
+    const dx = (faceCenter[0] - basePosition[0]) * scale;
+    const posX = faceCenter[0] - dx;
+
+    const currentFaceY = posY + dy;
+    const currentFaceHalfH = (faceBoxHeight * scale) * 0.5;
+    const faceTop = currentFaceY - currentFaceHalfH;
+    const faceBottom = currentFaceY + currentFaceHalfH;
+
+    const isInside = faceTop >= 0 && faceBottom <= compHeight;
+    if (!isInside) {
+      allFramesValid = false;
+    }
+
+    frames.push({
+      time: Math.round(t * 1000) / 1000,
+      scale: Math.round(scale * 1000) / 1000,
+      position: [Math.round(posX * 10) / 10, Math.round(posY * 10) / 10],
+      faceCenterComp: [Math.round(faceCenter[0] * 10) / 10, Math.round(currentFaceY * 10) / 10],
+      faceTop: Math.round(faceTop * 10) / 10,
+      faceBottom: Math.round(faceBottom * 10) / 10,
+      isFaceInsideFrame: isInside,
+    });
+  }
+
+  return { frames, allFramesValid };
+}

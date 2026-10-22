@@ -142,28 +142,31 @@ Located in `src/ai/viralAudio.ts`:
 
 ---
 
-## 5. CLI Rendering, Audit Suite & Contact Sheets
+## 5. Kōri CLI Rendering Pipeline & Audit Suite
 
-Render edits and audit suites directly via CLI:
+All final renders are generated **exclusively** through the official Kōri CLI (`bin/kori` / `npm run kori`):
 
 ```bash
-# Render Gacha Hype v3 (YOLOv8 face-tracking, -2f transient sync, controlled flashes, dark gradient matting)
-python scripts/render_gacha_hype_v3.py
+# 1. Render Gacha Hype v4 (Strict RGB Vera red hair, mask decontamination, face-locked punch-ins, -1.0 dBTP ceiling)
+node bin/kori.js render --style gacha-hype --audio test-assets/real/track_02_midnight_phonk.mp3 --out test-assets/results/output_gacha_hype_v4.mp4
 
-# Render Aesthetic Lyric v3 (Zero text collision, safe zone typography, graded rain bokeh, camera push-in)
-python scripts/render_aesthetic_lyric_v3.py
+# 2. Render Aesthetic Lyric v4 (100% intact Selena silhouette, face-locked push-in, dynamic safe-zone signature)
+node bin/kori.js render --style aesthetic-lyric --audio test-assets/real/ref2_audio.aac --out test-assets/results/output_aesthetic_lyric_v4.mp4
 
-# Generate Complete Visual Audit Suite & Side-by-Side Comparisons (Reference vs Kōri v3)
-python scripts/generate_all_audits_v3.py
+# 3. Step-by-Step Native Pipeline Commands:
+node bin/kori.js plan --style gacha-hype --audio test-assets/real/track_02_midnight_phonk.mp3 --out test-assets/results/plan_gacha-hype.json
+node bin/kori.js compile --plan test-assets/results/plan_gacha-hype.json --out test-assets/results/comp_gacha-hype.json
+node bin/kori.js lint --plan test-assets/results/plan_gacha-hype.json
+node bin/kori.js export --style gacha-hype --audio test-assets/real/track_02_midnight_phonk.mp3 --out test-assets/results/output_gacha_hype_v4.mp4
 ```
 
-Generated v3 outputs:
-- **Gacha Hype v3 MP4:** [`D:/motionforge/test-assets/results/output_gacha_hype_v3.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v3.mp4) (18.68 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipped samples)
-- **Gacha Hype v3 Contact Sheet:** [`D:/motionforge/test-assets/results/output_gacha_hype_v3_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v3_contact_sheet.jpg)
-- **Aesthetic Lyric v3 MP4:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v3.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v3.mp4) (19.80 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipped samples, 0 text collision)
-- **Aesthetic Lyric v3 Contact Sheet:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v3_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v3_contact_sheet.jpg)
-- **Side-by-Side Comparison 1 (Gacha Ref vs v3):** [`D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v3.jpg`](file:///D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v3.jpg)
-- **Side-by-Side Comparison 2 (Lyric Ref vs v3):** [`D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v3.jpg`](file:///D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v3.jpg)
+Master v4 CLI outputs:
+- **Gacha Hype v4 MP4:** [`D:/motionforge/test-assets/results/output_gacha_hype_v4.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v4.mp4) (9.35 MB, 1080×1920 60fps, 15.0s, True-Peak -1.3 dBFS, 0 clipped samples)
+- **Gacha Hype v4 Contact Sheet:** [`D:/motionforge/test-assets/results/output_gacha_hype_v4_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v4_contact_sheet.jpg)
+- **Aesthetic Lyric v4 MP4:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v4.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v4.mp4) (6.43 MB, 1080×1920 60fps, 15.0s, True-Peak -3.4 dBFS, -13.8 LUFS, 0 clipped samples)
+- **Aesthetic Lyric v4 Contact Sheet:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v4_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v4_contact_sheet.jpg)
+- **Side-by-Side Comparison 1 (Gacha Ref vs Kōri v4):** [`D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v4.jpg`](file:///D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v4.jpg)
+- **Side-by-Side Comparison 2 (Lyric Ref vs Kōri v4):** [`D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v4.jpg`](file:///D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v4.jpg)
 
 ### Dedicated Verification Frames for Every Feedback Point:
 - **Point 1 (Beat Sync & Kick Timing):** [`D:/motionforge/test-assets/results/audit/fix1_sync_waveform_comparison.jpg`](file:///D:/motionforge/test-assets/results/audit/fix1_sync_waveform_comparison.jpg)

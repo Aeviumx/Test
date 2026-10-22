@@ -66,6 +66,132 @@ export interface KaraokeLayerOptions {
   enableTypewriterCursor?: boolean;
 }
 
+export interface LyricLayoutBoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface TypographyLayoutPlan {
+  characterBox: LyricLayoutBoundingBox;
+  lyricBlockBox: LyricLayoutBoundingBox;
+  signatureBox: LyricLayoutBoundingBox;
+  hasCollision: boolean;
+  isInsideSafeZone: boolean;
+  warnings: string[];
+}
+
+/**
+ * Calculates collision-free layout for character cutout, lyrics block, and dynamic song signature.
+ * Enforces TikTok 9:16 safe margins:
+ * - Top >= 180px
+ * - Bottom <= 1580px (compHeight - 340px)
+ * - Left >= 60px
+ * - Right <= 1020px (compWidth - 60px)
+ */
+export function calculateAestheticLyricLayout(options: {
+  compWidth: number;
+  compHeight: number;
+  lineCount: number;
+  longestLineLength: number;
+  signatureText: string;
+  characterRightEdge?: number; // default 520px
+}): TypographyLayoutPlan {
+  const {
+    compWidth,
+    compHeight,
+    lineCount,
+    longestLineLength,
+    signatureText,
+    characterRightEdge = 520,
+  } = options;
+
+  const safeLeft = 60;
+  const safeRight = compWidth - 60; // 1020
+  const safeTop = 180;
+  const safeBottom = compHeight - 340; // 1580
+
+  const warnings: string[] = [];
+
+  // 1. Character bounding box on left
+  const characterBox: LyricLayoutBoundingBox = {
+    x: 0,
+    y: safeTop,
+    width: characterRightEdge,
+    height: safeBottom - safeTop,
+  };
+
+  // 2. Lyric block on right
+  const lyricStartX = Math.max(characterRightEdge + 40, 560);
+  const lyricWidth = Math.min(safeRight - lyricStartX, 460);
+  const lyricStartY = 820;
+  const lineHeight = 64; // ~52pt font + 1.25 line height
+  const lyricHeight = lineCount * lineHeight + 40; // includes ornament
+
+  const lyricBlockBox: LyricLayoutBoundingBox = {
+    x: lyricStartX,
+    y: lyricStartY,
+    width: lyricWidth,
+    height: lyricHeight,
+  };
+
+  // 3. Dynamic Song Signature strictly below the last lyric line with 48px padding
+  const signatureY = Math.min(lyricStartY + lyricHeight + 48, safeBottom - 50);
+  // Measure signature text width (approx 14px per character at 24pt)
+  const charWidth = 14;
+  const rawSigWidth = signatureText.length * charWidth;
+  const maxSigWidth = safeRight - lyricStartX;
+  const sigWidth = Math.min(rawSigWidth, maxSigWidth);
+  const sigHeight = rawSigWidth > maxSigWidth ? 56 : 28; // wrap to 2 lines if needed
+
+  const signatureBox: LyricLayoutBoundingBox = {
+    x: lyricStartX,
+    y: signatureY,
+    width: sigWidth,
+    height: sigHeight,
+  };
+
+  // 4. Overlap & Safe Zone Check
+  // Character vs Lyric intersection
+  const charLyricOverlapX = Math.max(0, Math.min(characterBox.x + characterBox.width, lyricBlockBox.x + lyricBlockBox.width) - Math.max(characterBox.x, lyricBlockBox.x));
+  const charLyricOverlapY = Math.max(0, Math.min(characterBox.y + characterBox.height, lyricBlockBox.y + lyricBlockBox.height) - Math.max(characterBox.y, lyricBlockBox.y));
+  const hasCharLyricCollision = (charLyricOverlapX > 0 && charLyricOverlapY > 0);
+
+  // Lyric vs Signature intersection
+  const lyricSigOverlapY = Math.max(0, Math.min(lyricBlockBox.y + lyricBlockBox.height, signatureBox.y + signatureBox.height) - Math.max(lyricBlockBox.y, signatureBox.y));
+  const hasLyricSigCollision = lyricSigOverlapY > 0;
+
+  const hasCollision = hasCharLyricCollision || hasLyricSigCollision;
+  if (hasCharLyricCollision) {
+    warnings.push(`Character silhouette overlaps lyric block horizontally by ${charLyricOverlapX}px`);
+  }
+  if (hasLyricSigCollision) {
+    warnings.push(`Song signature overlaps lyric lines vertically by ${lyricSigOverlapY}px`);
+  }
+
+  // Safe zones check
+  const isInsideSafeZone =
+    lyricBlockBox.x >= safeLeft &&
+    lyricBlockBox.x + lyricBlockBox.width <= safeRight &&
+    lyricBlockBox.y >= safeTop &&
+    signatureBox.y + signatureBox.height <= safeBottom &&
+    signatureBox.x + signatureBox.width <= safeRight;
+
+  if (!isInsideSafeZone) {
+    warnings.push('Text elements extend beyond mobile TikTok safe zones');
+  }
+
+  return {
+    characterBox,
+    lyricBlockBox,
+    signatureBox,
+    hasCollision,
+    isInsideSafeZone,
+    warnings,
+  };
+}
+
 /**
  * Creates an aesthetic typewriter watermark / author signature layer with blinking cursor
  * (e.g. "Song — Artist" or "@editor_handle _")
