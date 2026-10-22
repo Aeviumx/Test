@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   forcedAlignLyrics,
   validateWordTimings,
+  countSyllables,
   WordTimestamp,
 } from '../src/ai/whisperAlignment';
 
@@ -53,6 +54,58 @@ describe('Whisper Needleman-Wunsch Forced Alignment & WER Engine', () => {
     expect(result.alignedWords[1].alignmentType).toBe('DEL');
     expect(result.alignedWords[1].start).toBeGreaterThanOrEqual(5.3);
     expect(result.alignedWords[1].end).toBeLessThanOrEqual(6.2);
+    expect(result.alignedWords[1].end - result.alignedWords[1].start).toBeGreaterThanOrEqual(0.08);
+  });
+
+  it('prohibits zero-duration DEL words and distributes time by syllables with min 80ms', () => {
+    // Exact regression scenario from Shape of You:
+    // "start up a" where ASR produced "start" [0.96 -> 1.12] and "a" [1.12 -> 1.26], skipping "up"
+    const userLyrics = 'start up a';
+    const asrHypothesis: WordTimestamp[] = [
+      { word: 'start', start: 0.96, end: 1.12, confidence: 0.92 },
+      { word: 'a', start: 1.12, end: 1.26, confidence: 0.85 },
+    ];
+    const res1 = forcedAlignLyrics(userLyrics, asrHypothesis);
+    const upWord = res1.alignedWords.find(w => w.word === 'up');
+    expect(upWord).toBeDefined();
+    expect(upWord!.alignmentType).toBe('DEL');
+    expect(Math.round((upWord!.end - upWord!.start) * 1000) / 1000).toBeGreaterThanOrEqual(0.080);
+    expect(upWord!.start).not.toBe(upWord!.end);
+
+    // Multi-word missing run: "stop put Van The Man on"
+    // Where "stop" is at 5.56-5.70, and "on" is at 6.40-6.52, missing "put Van The Man"
+    const userLyricsRun = 'stop put Van The Man on';
+    const asrRun: WordTimestamp[] = [
+      { word: 'stop', start: 5.0, end: 5.2, confidence: 0.9 },
+      { word: 'on', start: 6.0, end: 6.2, confidence: 0.9 },
+    ];
+    const resRun = forcedAlignLyrics(userLyricsRun, asrRun);
+    const delWords = resRun.alignedWords.filter(w => ['put', 'Van', 'The', 'Man'].includes(w.word));
+    expect(delWords.length).toBe(4);
+    for (const w of delWords) {
+      expect(w.alignmentType).toBe('DEL');
+      expect(Math.round((w.end - w.start) * 1000) / 1000).toBeGreaterThanOrEqual(0.080);
+      expect(w.start).toBeLessThan(w.end);
+    }
+
+    // Verify proportional distribution: multi-syllable word gets more time than single syllable
+    const userSylTest = 'say conversation fast';
+    const asrSyl: WordTimestamp[] = [
+      { word: 'say', start: 1.0, end: 1.2, confidence: 0.9 },
+      { word: 'fast', start: 2.2, end: 2.4, confidence: 0.9 },
+    ];
+    const resSyl = forcedAlignLyrics(userSylTest, asrSyl);
+    const convWord = resSyl.alignedWords.find(w => w.word === 'conversation')!;
+    expect(convWord).toBeDefined();
+    expect(convWord.end - convWord.start).toBeGreaterThanOrEqual(0.40); // 4 syllables get lion's share
+  });
+
+  it('accurately counts syllables for English words', () => {
+    expect(countSyllables('up')).toBe(1);
+    expect(countSyllables('dance')).toBe(1); // trailing silent e
+    expect(countSyllables('chance')).toBe(1);
+    expect(countSyllables('jukebox')).toBe(2);
+    expect(countSyllables('conversation')).toBe(4);
   });
 
   it('validates word timing consistency and flags invalid sequences', () => {
