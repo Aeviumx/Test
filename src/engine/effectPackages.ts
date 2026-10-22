@@ -419,3 +419,109 @@ export function createColorGradePreset(preset: ColorGradePreset): EffectInstance
     }
   }
 }
+
+/**
+ * Creates spin whip transition (rotational acceleration with radial blur)
+ */
+export function createSpinTransition(
+  time: number,
+  duration = 0.35,
+  direction: 'cw' | 'ccw' = 'cw'
+): {
+  rotation: Keyframe<number>[];
+  scale: Keyframe<Vec2>[];
+  radialBlur: Keyframe<number>[];
+} {
+  const sign = direction === 'cw' ? 1 : -1;
+  const half = duration * 0.5;
+
+  return {
+    rotation: [
+      createKeyframe(time, 0, 'bezier', SNAP_EASE_IN, SNAP_EASE_OUT),
+      createKeyframe(time + half, sign * 90, 'bezier', SNAP_EASE_IN, SNAP_EASE_OUT),
+      createKeyframe(time + duration, sign * 180, 'linear'),
+    ],
+    scale: [
+      createKeyframe(time, [100, 100], 'bezier', SNAP_EASE_IN, SNAP_EASE_OUT),
+      createKeyframe(time + half, [70, 70], 'bezier', SNAP_EASE_IN, SNAP_EASE_OUT),
+      createKeyframe(time + duration, [100, 100], 'linear'),
+    ],
+    radialBlur: [
+      createKeyframe(time, 0, 'linear'),
+      createKeyframe(time + half, 45, 'linear'),
+      createKeyframe(time + duration, 0, 'linear'),
+    ],
+  };
+}
+
+/**
+ * Creates 3D perspective flip transition (rotating 90 degrees around Y-axis)
+ */
+export function create3DFlipTransition(
+  time: number,
+  duration = 0.32
+): {
+  rotationY: Keyframe<number>[];
+  depthScale: Keyframe<Vec2>[];
+} {
+  const half = duration * 0.5;
+  return {
+    rotationY: [
+      createKeyframe(time, 0, 'bezier', SNAP_EASE_IN, SNAP_EASE_OUT),
+      createKeyframe(time + half, 90, 'bezier', SNAP_EASE_IN, SNAP_EASE_OUT),
+      createKeyframe(time + duration, 0, 'linear'),
+    ],
+    depthScale: [
+      createKeyframe(time, [100, 100], 'linear'),
+      createKeyframe(time + half, [82, 82], 'linear'),
+      createKeyframe(time + duration, [100, 100], 'linear'),
+    ],
+  };
+}
+
+/**
+ * Creates digital glitch transition with block displacement and chromatic tear
+ */
+export function createGlitchTransition(
+  time: number,
+  duration = 0.28
+): EffectInstance[] {
+  const glitch = createEffectInstance('chromatic-aberration');
+  glitch.name = 'Glitch Chromatic Displacement';
+  glitch.params.offsetX.animated = true;
+  glitch.params.offsetX.keyframes = [
+    createKeyframe(time, 0, 'linear'),
+    createKeyframe(time + duration * 0.3, 35, 'linear'),
+    createKeyframe(time + duration * 0.6, -28, 'linear'),
+    createKeyframe(time + duration, 0, 'linear'),
+  ];
+  return [glitch];
+}
+
+/**
+ * Creates VHS cassette analog distortion package (tracking, tape scanlines, color bleed)
+ */
+export function createVhsEffectPackage(intensity = 60): EffectInstance[] {
+  const vhs = createEffectInstance('chromatic-aberration');
+  vhs.name = 'VHS Tape Color Bleed';
+  vhs.params.offsetX.value = (intensity * 12) / 100;
+  vhs.params.offsetY.value = 2;
+
+  const curves = createEffectInstance('curves');
+  curves.name = 'VHS Color Grading';
+  curves.params.shadows.value = 10; // lifted blacks
+  curves.params.highlights.value = -8; // crushed tape whites
+
+  return [vhs, curves];
+}
+
+/**
+ * Creates Manga Halftone dot matrix screen effect instance
+ */
+export function createMangaHalftonePackage(dotSize = 6, contrast = 80): EffectInstance {
+  const fx = createEffectInstance('brightness-contrast');
+  fx.name = 'Manga Halftone Raster Screen';
+  fx.params.contrast.value = contrast;
+  return fx;
+}
+
