@@ -1,157 +1,207 @@
 #!/usr/bin/env node
 /**
- * Kōri (氷) Master CLI Entrypoint
- * Usage:
- *   kori plan --style <gacha-hype|aesthetic-lyric> --audio <path> --art <paths...> --out <plan.json>
- *   kori compile --plan <plan.json> --audio <path> --out <comp.json>
- *   kori lint --plan <plan.json>
- *   kori export --style <gacha-hype|aesthetic-lyric> --audio <path> --out <output.mp4>
- *   kori render --style <gacha-hype|aesthetic-lyric> --audio <path> --out <output.mp4>
+ * Kōri (氷) CLI — сборка эдитов из трека и артов.
+ *
+ * Конвейер: faces (разметка артов) → plan (анализ трека + план) → lint → stills/export → qa.
+ * Всё время в эдите вычисляется из анализа трека, ничего не вписано руками.
  */
-
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
 const command = args[0];
 
-if (!command || command === '--help' || command === '-h') {
-  console.log(`
-Kōri (氷) CLI - Anime AMV & TikTok Video Editor Studio
+const HELP = `
+Kōri (氷) CLI
 
-Commands:
-  plan      Generate a semantic EditPlan
-  compile   Compile an EditPlan into an EditEngine Composition
-  lint      Run AI Edit Linter on plan and typography layout
-  export    Export a compiled Composition to MP4 via Kōri WebGL/Electron Engine
-  render    End-to-end generate plan, lint, and render master MP4
+Команды:
+  faces    <папка с артами>                 Разметить арты: лица, контур, цвет (Python + OpenCV)
+  analyze  --audio <трек>                   Темп, биты, дроп, ритмический рисунок
+  plan     --audio <трек> --art <папка|файлы...> --out plan.json
+           [--style gacha-hype] [--duration 15] [--signature "edit by ..."]
+  lint     --plan plan.json                 Проверить план (лица в кадре, вспышки, синхрон)
+  stills   --plan plan.json --times 1,4.5,8 --out <папка>   Отдельные кадры в PNG
+  export   --plan plan.json --out edit.mp4 [--force]        Рендер MP4 (+ проверка edit_qa.py)
+  render   --audio <трек> --art <папка|файлы...> --out edit.mp4 [...]  plan + lint + export + qa
+  qa       <edit.mp4>                       Независимая проверка готового эдита
 
-Options:
-  --style <gacha-hype|aesthetic-lyric>
-  --audio <path_to_audio_track>
-  --art <paths_to_art_assets...>
-  --plan <path_to_plan.json>
-  --comp <path_to_comp.json>
-  --out <path_to_output_file>
-  --duration <seconds> (default 15.0)
-  --fps <frames_per_second> (default 60)
-`);
-  process.exit(0);
+Переменные: KORI_FFMPEG, KORI_FFPROBE, KORI_PYTHON — пути к программам, если их нет в PATH.
+`;
+
+function getArg(flag, def) {
+  const i = args.indexOf(flag);
+  return i !== -1 && args[i + 1] !== undefined ? args[i + 1] : def;
 }
 
-const getArg = (flag, def) => {
-  const idx = args.indexOf(flag);
-  return idx !== -1 && args[idx + 1] ? args[idx + 1] : def;
-};
+function getList(flag) {
+  const i = args.indexOf(flag);
+  if (i === -1) return [];
+  const out = [];
+  for (let j = i + 1; j < args.length && !args[j].startsWith('--'); j++) out.push(args[j]);
+  return out;
+}
 
-const rootDir = path.resolve(__dirname, '..');
-const style = getArg('--style', 'gacha-hype');
-const audio = getArg('--audio', '');
-const planFile = getArg('--plan', path.join(rootDir, 'test-assets', 'results', `plan_${style}.json`));
-const compFile = getArg('--comp', path.join(rootDir, 'test-assets', 'results', `comp_${style}.json`));
-const outFile = getArg('--out', path.join(rootDir, 'test-assets', 'results', `output_${style}_v4.mp4`));
-const duration = parseFloat(getArg('--duration', '15.0'));
-const fps = parseInt(getArg('--fps', '60'), 10);
+function python() {
+  if (process.env.KORI_PYTHON) return process.env.KORI_PYTHON;
+  for (const p of process.platform === 'win32' ? ['python', 'py'] : ['python3', 'python']) {
+    if (spawnSync(p, ['--version']).status === 0) return p;
+  }
+  return null;
+}
+
+function runPython(script, scriptArgs) {
+  const py = python();
+  if (!py) {
+    console.error('[kori] Не найден Python. Установи Python 3 с numpy и opencv-python или укажи KORI_PYTHON.');
+    return 2;
+  }
+  const env = { ...process.env };
+  if (!env.PYTHONIOENCODING) env.PYTHONIOENCODING = 'utf-8';
+  const r = spawnSync(py, [path.join(rootDir, 'tools', script), ...scriptArgs], { stdio: 'inherit', env });
+  return r.status ?? 1;
+}
+
+async function loadStyle(style) {
+  if (style === 'gacha-hype') return import('../pipeline/styles/gachaHype.mjs');
+  throw new Error(`Стиль «${style}» пока не реализован в конвейере. Доступно: gacha-hype`);
+}
+
+async function makePlan() {
+  const audio = getArg('--audio');
+  const art = getList('--art');
+  if (!audio || !art.length) throw new Error('Нужны --audio <трек> и --art <папка или файлы>');
+  const { collectArt, loadArtMeta } = await import('../pipeline/art.mjs');
+  const style = await loadStyle(getArg('--style', 'gacha-hype'));
+  const assets = loadArtMeta(collectArt(art));
+  return style.buildPlan({
+    audioFile: path.resolve(audio),
+    assets,
+    targetDuration: parseFloat(getArg('--duration', '15')),
+    fps: parseInt(getArg('--fps', '60'), 10),
+    signature: getArg('--signature', ''),
+  });
+}
+
+function readPlan() {
+  const p = getArg('--plan');
+  if (!p) throw new Error('Нужен --plan plan.json');
+  return JSON.parse(fs.readFileSync(p, 'utf-8'));
+}
+
+async function lintOrExit(plan, force) {
+  const { lintPlan } = await import('../pipeline/lint.mjs');
+  const res = lintPlan(plan);
+  for (const w of res.warnings) console.log(`  [WARN] ${w}`);
+  for (const e of res.errors) console.log(`  [FAIL] ${e}`);
+  console.log(res.ok ? '[kori] Линтер: ошибок нет' : `[kori] Линтер: ошибок ${res.errors.length}`);
+  if (!res.ok && !force) {
+    console.error('[kori] Рендер остановлен: исправь план или запусти с --force');
+    process.exit(1);
+  }
+  return res;
+}
+
+async function exportPlan(plan, out) {
+  const { renderPlan } = await import('../pipeline/render.mjs');
+  console.log(`[kori] Рендер ${Math.round(plan.duration * plan.fps)} кадров → ${out}`);
+  await renderPlan(plan, out, {
+    onProgress: (i, n, sec) => {
+      if (i % 120 === 0 || i === n) console.log(`  ${i}/${n} кадров, ${sec.toFixed(0)} с`);
+    },
+  });
+  console.log(`[kori] Готово: ${out}`);
+  const code = runPython('edit_qa.py', [out]);
+  if (code !== 0) console.log('[kori] edit_qa.py: проверка НЕ пройдена (см. отчёт выше)');
+  return code;
+}
+
+function summary(plan) {
+  const a = plan.audio;
+  console.log(`[kori] Темп ${a.bpm} BPM, фрагмент ${a.start.toFixed(2)}–${(a.start + a.duration).toFixed(2)} с трека`);
+  console.log(`[kori] Дроп на ${a.dropAt.toFixed(2)} с эдита (+${a.dropRise} дБ), ритмический рисунок: восьмые ${a.pattern.join(', ')}`);
+  console.log(`[kori] Кадров: ${plan.shots.length}, акцентов: ${plan.accents.length}, вспышек: ${plan.events.filter((e) => e.type === 'flash').length}`);
+}
 
 async function main() {
-  if (command === 'plan' || command === 'render') {
-    console.log(`[Kōri CLI] Generating EditPlan for style '${style}'...`);
-    const plan = {
-      title: style === 'gacha-hype'
-        ? 'Kōri // Gacha Hype Live2D AMV (Reference 1 DNA)'
-        : 'Kōri // Aesthetic Lyric Edit (Reference 2 DNA)',
-      style: style === 'gacha-hype' ? 'gacha-game' : 'character-lyric',
-      bpm: style === 'gacha-hype' ? 122.0 : 116.0,
-      audioAssetId: audio,
-      targetDurationSeconds: duration,
-      totalDurationSeconds: duration,
-      width: 1080,
-      height: 1920,
-      fps,
-      pacing: style === 'gacha-hype' ? 'frenetic' : 'rhythmic',
-      colorGrade: style === 'gacha-hype' ? 'anime-vivid' : 'desaturated-mood',
-      sections: [
-        {
-          id: 'sec_01',
-          name: style === 'gacha-hype' ? 'Intro Cards Whip-Pan & Convergence' : 'Atmospheric Rainy City & Character Reveal',
-          type: 'buildup',
-          startBeat: 0,
-          endBeat: 8,
-          durationBeats: 8,
-          pacing: 'medium',
-          segments: []
-        }
-      ]
-    };
-    fs.mkdirSync(path.dirname(planFile), { recursive: true });
-    fs.writeFileSync(planFile, JSON.stringify(plan, null, 2), 'utf-8');
-    console.log(`[Kōri CLI] EditPlan saved to: ${planFile}`);
+  if (!command || command === '--help' || command === '-h') {
+    console.log(HELP);
+    return 0;
   }
-
-  if (command === 'compile' || command === 'render') {
-    console.log(`[Kōri CLI] Compiling EditPlan into EditEngine Composition...`);
-    const comp = {
-      id: `comp_${Date.now()}`,
-      name: `${style}_master_composition`,
-      width: 1080,
-      height: 1920,
-      fps,
-      duration,
-      layers: []
-    };
-    fs.mkdirSync(path.dirname(compFile), { recursive: true });
-    fs.writeFileSync(compFile, JSON.stringify(comp, null, 2), 'utf-8');
-    console.log(`[Kōri CLI] Composition saved to: ${compFile}`);
-  }
-
-  if (command === 'lint' || command === 'render') {
-    console.log(`[Kōri CLI] Executing AI Edit Linter rules...`);
-    console.log(`  - Checking mobile safe zones (top >= 180px, bottom <= 1580px, sides >= 60px): PASSED`);
-    console.log(`  - Checking typography collisions (lyrics vs signature): PASSED (0 intersections)`);
-    console.log(`  - Checking face-locked push-in anchor framing (faceTop >= 0): PASSED`);
-    console.log(`  - Checking character color fidelity (Delta E < 5.0, Vera red hair): PASSED`);
-    console.log(`  - Checking mask edge decontamination (halo luminance < 140): PASSED`);
-    console.log(`[Kōri CLI] All Linter rules PASSED with 0 warnings!`);
-  }
-
-  if (command === 'export' || command === 'render') {
-    console.log(`[Kōri CLI] Spawning Kōri Headless Engine via Electron...`);
-    const electronCli = path.join(rootDir, 'node_modules', 'electron', 'cli.js');
-    const exporterScript = path.join(rootDir, 'electron', 'cliExporter.cjs');
-
-    const child = spawn('node', [
-      electronCli,
-      exporterScript,
-      '--style', style,
-      '--audio', audio,
-      '--out', outFile,
-      '--duration', String(duration),
-      '--fps', String(fps)
-    ], {
-      stdio: 'inherit'
-    });
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        console.log(`\n=======================================================`);
-        console.log(`[Kōri CLI] SUCCESS: Master Edit Rendered via Kōri Engine!`);
-        console.log(`Output: ${outFile}`);
-        console.log(`=======================================================\n`);
-        process.exit(0);
-      } else {
-        console.error(`[Kōri CLI] Render failed with exit code ${code}`);
-        process.exit(code);
-      }
-    });
+  switch (command) {
+    case 'faces': {
+      const dir = args[1];
+      if (!dir) throw new Error('Укажи папку с артами: kori faces <папка>');
+      return runPython('detect_faces.py', [dir, ...args.slice(2)]);
+    }
+    case 'analyze': {
+      const { analyzeTrack, findDrop, accentPattern } = await import('../pipeline/audio.mjs');
+      const a = analyzeTrack(getArg('--audio'));
+      const drop = findDrop(a, 2, 6);
+      const pat = drop ? accentPattern(a, drop.bar, drop.bar + 6) : null;
+      const out = {
+        bpm: a.bpm,
+        tempoCandidates: a.tempoCandidates,
+        duration: a.duration,
+        firstBeats: a.beats.slice(0, 16).map((t) => Number(t.toFixed(3))),
+        downbeats: a.downbeats.slice(0, 16).map((t) => Number(t.toFixed(3))),
+        drop,
+        accentPattern: pat,
+      };
+      console.log(JSON.stringify(out, null, 2));
+      return 0;
+    }
+    case 'plan': {
+      const plan = await makePlan();
+      const out = getArg('--out', 'plan.json');
+      fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
+      fs.writeFileSync(out, JSON.stringify(plan, null, 2));
+      summary(plan);
+      await lintOrExit(plan, true);
+      console.log(`[kori] План сохранён: ${out}`);
+      return 0;
+    }
+    case 'lint': {
+      const res = await lintOrExit(readPlan(), true);
+      return res.ok ? 0 : 1;
+    }
+    case 'stills': {
+      const { renderStills } = await import('../pipeline/render.mjs');
+      const times = getArg('--times', '0').split(',').map(Number);
+      const files = await renderStills(readPlan(), times, getArg('--out', 'stills'));
+      files.forEach((f) => console.log(f));
+      return 0;
+    }
+    case 'export': {
+      const plan = readPlan();
+      await lintOrExit(plan, args.includes('--force'));
+      return exportPlan(plan, getArg('--out', 'edit.mp4'));
+    }
+    case 'render': {
+      const plan = await makePlan();
+      const out = getArg('--out', 'edit.mp4');
+      const planOut = out.replace(/\.mp4$/i, '') + '.plan.json';
+      fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
+      fs.writeFileSync(planOut, JSON.stringify(plan, null, 2));
+      summary(plan);
+      console.log(`[kori] План: ${planOut}`);
+      await lintOrExit(plan, args.includes('--force'));
+      return exportPlan(plan, out);
+    }
+    case 'qa':
+      return runPython('edit_qa.py', args.slice(1));
+    default:
+      console.log(HELP);
+      return 1;
   }
 }
 
-main().catch((err) => {
-  console.error('[Kōri CLI Error]', err);
-  process.exit(1);
-});
+main()
+  .then((code) => process.exit(code ?? 0))
+  .catch((err) => {
+    console.error(`[kori] Ошибка: ${err.message}`);
+    process.exit(1);
+  });

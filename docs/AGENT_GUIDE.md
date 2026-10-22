@@ -142,53 +142,57 @@ Located in `src/ai/viralAudio.ts`:
 
 ---
 
-## 5. Kōri CLI Rendering Pipeline & Audit Suite
+## 5. Kōri CLI: как на самом деле собирается эдит
 
-All final renders are generated **exclusively** through the official Kōri CLI (`bin/kori` / `npm run kori`):
+> Разделы 1–4 — творческие рецепты. В конвейере CLI сейчас реализован **только стиль `gacha-hype`**.
+> Стиль `aesthetic-lyric` через CLI пока не собирается — не выдавай его за готовый.
+
+Эдит собирается **только** через `npm run kori -- …` (или `node bin/kori.js …`). Отдельные Python/OpenCV-скрипты
+рендера эдитов запрещены: всё, что нужно эдиту, добавляется в `pipeline/`.
 
 ```bash
-# 1. Render Gacha Hype v4 (Strict RGB Vera red hair, mask decontamination, face-locked punch-ins, -1.0 dBTP ceiling)
-node bin/kori.js render --style gacha-hype --audio test-assets/real/track_02_midnight_phonk.mp3 --out test-assets/results/output_gacha_hype_v4.mp4
+# 0. Один раз для новой папки с артами: лица, контур персонажа, основной цвет
+npm run kori -- faces test-assets/real/art          # пишет test-assets/real/art/kori_art_meta.json
 
-# 2. Render Aesthetic Lyric v4 (100% intact Selena silhouette, face-locked push-in, dynamic safe-zone signature)
-node bin/kori.js render --style aesthetic-lyric --audio test-assets/real/ref2_audio.aac --out test-assets/results/output_aesthetic_lyric_v4.mp4
+# 1. Всё сразу: анализ трека → план → линтер → рендер → независимая проверка edit_qa.py
+npm run kori -- render --audio test-assets/real/track_02_midnight_phonk.mp3 \
+  --art test-assets/real/art/gacha_liv.png test-assets/real/art/gacha_lucia.png test-assets/real/art/gacha_vera.png \
+  --out out/gacha.mp4 [--duration 15] [--signature "edit by ник"]
 
-# 3. Step-by-Step Native Pipeline Commands:
-node bin/kori.js plan --style gacha-hype --audio test-assets/real/track_02_midnight_phonk.mp3 --out test-assets/results/plan_gacha-hype.json
-node bin/kori.js compile --plan test-assets/results/plan_gacha-hype.json --out test-assets/results/comp_gacha-hype.json
-node bin/kori.js lint --plan test-assets/results/plan_gacha-hype.json
-node bin/kori.js export --style gacha-hype --audio test-assets/real/track_02_midnight_phonk.mp3 --out test-assets/results/output_gacha_hype_v4.mp4
+# Или по шагам:
+npm run kori -- analyze --audio <трек>                       # темп, биты, дроп, ритмический рисунок
+npm run kori -- plan --audio <трек> --art <арты> --out out/plan.json
+npm run kori -- lint --plan out/plan.json
+npm run kori -- stills --plan out/plan.json --times 0.5,4,6.5 --out out/stills   # быстро посмотреть кадры
+npm run kori -- export --plan out/plan.json --out out/gacha.mp4
+npm run kori -- qa out/gacha.mp4
 ```
 
-Master v4 CLI outputs:
-- **Gacha Hype v4 MP4:** [`D:/motionforge/test-assets/results/output_gacha_hype_v4.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v4.mp4) (9.35 MB, 1080×1920 60fps, 15.0s, True-Peak -1.3 dBFS, 0 clipped samples)
-- **Gacha Hype v4 Contact Sheet:** [`D:/motionforge/test-assets/results/output_gacha_hype_v4_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v4_contact_sheet.jpg)
-- **Aesthetic Lyric v4 MP4:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v4.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v4.mp4) (6.43 MB, 1080×1920 60fps, 15.0s, True-Peak -3.4 dBFS, -13.8 LUFS, 0 clipped samples)
-- **Aesthetic Lyric v4 Contact Sheet:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v4_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v4_contact_sheet.jpg)
-- **Side-by-Side Comparison 1 (Gacha Ref vs Kōri v4):** [`D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v4.jpg`](file:///D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v4.jpg)
-- **Side-by-Side Comparison 2 (Lyric Ref vs Kōri v4):** [`D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v4.jpg`](file:///D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v4.jpg)
+### Как устроен конвейер (`pipeline/`)
 
-### Dedicated Verification Frames for Every Feedback Point:
-- **Point 1 (Beat Sync & Kick Timing):** [`D:/motionforge/test-assets/results/audit/fix1_sync_waveform_comparison.jpg`](file:///D:/motionforge/test-assets/results/audit/fix1_sync_waveform_comparison.jpg)
-- **Point 2 (Face & Eyes Centered Framing):** [`D:/motionforge/test-assets/results/audit/fix2_face_closeup_frame.jpg`](file:///D:/motionforge/test-assets/results/audit/fix2_face_closeup_frame.jpg)
-- **Point 3 (Dark Gradient Matte & Flash Decay):** [`D:/motionforge/test-assets/results/audit/fix3_dark_background_matte.jpg`](file:///D:/motionforge/test-assets/results/audit/fix3_dark_background_matte.jpg)
-- **Point 4 (Intro Cards Character Fill Ratio >= 80%):** [`D:/motionforge/test-assets/results/audit/fix4_intro_card_framing.jpg`](file:///D:/motionforge/test-assets/results/audit/fix4_intro_card_framing.jpg)
-- **Point 5 (Lyric Text vs Character Zero Collision):** [`D:/motionforge/test-assets/results/audit/fix5_lyric_mask_collision_check.jpg`](file:///D:/motionforge/test-assets/results/audit/fix5_lyric_mask_collision_check.jpg)
-- **Point 6 (Safe Zone Typography & Signature Position):** [`D:/motionforge/test-assets/results/audit/fix6_lyric_safe_zone.jpg`](file:///D:/motionforge/test-assets/results/audit/fix6_lyric_safe_zone.jpg)
-- **Point 7 (Moody Graded Raindrop Bokeh Background):** [`D:/motionforge/test-assets/results/audit/fix7_lyric_background_grade.jpg`](file:///D:/motionforge/test-assets/results/audit/fix7_lyric_background_grade.jpg)
-- **Point 8 (Dynamic Framing Transitions & 2.5D Parallax):** [`D:/motionforge/test-assets/results/audit/fix8_lyric_liveliness_parallax.jpg`](file:///D:/motionforge/test-assets/results/audit/fix8_lyric_liveliness_parallax.jpg)
+| Файл | Что делает |
+| :--- | :--- |
+| `audio.mjs` | Огибающая атак (весь спектр + бочка), темп, биты (DP по Эллису), сильные доли, поиск дропа, ритмический рисунок акцентов, привязка к реальным атакам |
+| `art.mjs` | Читает разметку артов `kori_art_meta.json` (её делает `tools/detect_faces.py`) |
+| `framing.mjs` | Кадрирование: `full` / `mid` / `close` / `wide`, кадр внутри карточки; общая функция для линтера и рендера |
+| `styles/gachaHype.mjs` | Строит план: 2 такта интро с карточками → дроп → 3 акцента на такт по рисунку трека; вспышка только на сильную долю |
+| `lint.mjs` | Проверяет план: лицо в кадре на крупных планах, плотность вспышек, длина кадров, привязка акцентов, найден ли дроп |
+| `render.mjs` | Рисует план (Skia-canvas): карточки, фоны в цвет персонажа, панч, тряска с motion blur, RGB-сдвиг, радиальный смаз, вспышки; звук −14 LUFS |
 
----
+### Правила для агента
 
-## 6. Verification Checklist
+1. Время в эдите **никогда** не вписывается руками: только из `analyze`/`plan`.
+2. Перед экспортом смотри кадры через `stills`: все крупные планы и момент дропа.
+3. Готовность = `edit_qa.py` PASS **и** визуальный чек-лист ниже. `tools/edit_qa.py` и его пороги не менять.
+4. В отчёт пользователю — сырой вывод `edit_qa.py`, без пересказа.
+5. Если арт не размечен или лицо найдено неверно — поправь `face` в `kori_art_meta.json` и поставь `"locked": true`.
+6. Широкие арты (16:9) в вертикальном кадре превращаются в полоску — для финала стиль берёт только квадратные/вертикальные.
 
-| Criterion | Implementation | Result |
-| :--- | :--- | :--- |
-| **Beat & Accent Sync** | Transient snapping $\pm 2$ frames, syncopated 3-hit pattern detector | $\Delta = [0.47\text{s}, 0.88\text{s}, 0.50\text{s}]$ verified on all measures |
-| **Card Layouts** | 2, 3, 4 card configurations for 1:1 and 9:16 with whip motion blur & 3D tilt | Verified in `output_gacha_hype.mp4` (0–4s) |
-| **Camera Reframing** | Wide $\leftrightarrow$ Close $\leftrightarrow$ Eyes alternating on musical accents | Verified in `output_gacha_hype.mp4` (4–11s) |
-| **Compositing & Light Wrap** | MODNet character isolation + background luminance edge wrap | Verified in `output_aesthetic_lyric.mp4` |
-| **Karaoke Typography** | Word-level glow reveal, `••` ornament, typewriter watermark | Verified in `output_aesthetic_lyric.mp4` |
-| **Safe Zones** | TikTok vertical margins (top 180px, bottom 340px) | All text and faces kept inside safe zone |
-| **Performance** | 60 FPS export, GPU acceleration, DirectML RTX 5060 | Pure 60 FPS output with zero frame drops |
-| **Licenses** | Apache 2.0 (MODNet, RIFE) + OFL fonts (Montserrat, Inter, etc.) | 100% Free / Commercial-friendly |
+## 6. Визуальный чек-лист (глазами, по раскадровке `*_qa_sheet.png` и `stills`)
+
+- [ ] Цвета персонажей совпадают с исходными артами
+- [ ] В каждом крупном плане лицо целиком в кадре
+- [ ] Нет кропов, где в центре кадра торс без лица
+- [ ] Нет каймы и рваных краёв у персонажей, персонаж нигде не обрезан
+- [ ] Пустой белый экран не дольше 4 кадров
+- [ ] Первая секунда в движении (хук)

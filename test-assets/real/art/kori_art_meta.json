@@ -1,0 +1,442 @@
+{
+  "gacha_alpha_lucia.png": {
+    "file": "gacha_alpha_lucia.png",
+    "width": 3840,
+    "height": 2160,
+    "kind": "scene",
+    "bbox": [
+      0,
+      0,
+      3840,
+      2160
+    ],
+    "face": null,
+    "faces": [
+      [
+        1186,
+        184,
+        115,
+        115
+      ],
+      [
+        1128,
+        138,
+        199,
+        199
+      ],
+      [
+        3125,
+        1889,
+        199,
+        199
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c87c43",
+      "dark": "#2d1e12"
+    },
+    "size": 19409214,
+    "locked": false
+  },
+  "gacha_final_shot1.png": {
+    "file": "gacha_final_shot1.png",
+    "width": 1080,
+    "height": 1080,
+    "kind": "scene",
+    "bbox": [
+      0,
+      0,
+      1080,
+      1080
+    ],
+    "face": null,
+    "faces": [
+      [
+        389,
+        60,
+        170,
+        170
+      ],
+      [
+        272,
+        691,
+        246,
+        246
+      ],
+      [
+        379,
+        718,
+        157,
+        157
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c84f42",
+      "dark": "#2d120f"
+    },
+    "size": 1512232,
+    "locked": false
+  },
+  "gacha_final_shot2.png": {
+    "file": "gacha_final_shot2.png",
+    "width": 1080,
+    "height": 1080,
+    "kind": "scene",
+    "bbox": [
+      0,
+      0,
+      1080,
+      1080
+    ],
+    "face": null,
+    "faces": [
+      [
+        899,
+        204,
+        118,
+        118
+      ],
+      [
+        150,
+        727,
+        77,
+        77
+      ],
+      [
+        28,
+        734,
+        69,
+        69
+      ],
+      [
+        952,
+        982,
+        38,
+        38
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c85443",
+      "dark": "#2d1613"
+    },
+    "size": 1427503,
+    "locked": false
+  },
+  "gacha_group.jpg": {
+    "file": "gacha_group.jpg",
+    "width": 7111,
+    "height": 4000,
+    "kind": "scene",
+    "bbox": [
+      0,
+      0,
+      7111,
+      4000
+    ],
+    "face": null,
+    "faces": [
+      [
+        1578,
+        739,
+        270,
+        270
+      ],
+      [
+        3591,
+        1628,
+        184,
+        184
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c84354",
+      "dark": "#2d1216"
+    },
+    "size": 20324653,
+    "locked": false
+  },
+  "gacha_group.png": {
+    "file": "gacha_group.png",
+    "width": 7111,
+    "height": 4000,
+    "kind": "scene",
+    "bbox": [
+      0,
+      0,
+      7111,
+      4000
+    ],
+    "face": null,
+    "faces": [
+      [
+        1578,
+        739,
+        270,
+        270
+      ],
+      [
+        3591,
+        1628,
+        184,
+        184
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c84354",
+      "dark": "#2d1216"
+    },
+    "size": 35132098,
+    "locked": false
+  },
+  "gacha_liv.png": {
+    "file": "gacha_liv.png",
+    "width": 1968,
+    "height": 3119,
+    "kind": "character",
+    "bbox": [
+      0,
+      120,
+      1868,
+      2890
+    ],
+    "face": [
+      867,
+      723,
+      271,
+      271
+    ],
+    "faces": [
+      [
+        867,
+        723,
+        271,
+        271
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#436bc8",
+      "dark": "#131a2d"
+    },
+    "size": 2461225,
+    "locked": false
+  },
+  "gacha_lucia.png": {
+    "file": "gacha_lucia.png",
+    "width": 1552,
+    "height": 2160,
+    "kind": "character",
+    "bbox": [
+      260,
+      273,
+      1165,
+      1757
+    ],
+    "face": [
+      732,
+      395,
+      172,
+      172
+    ],
+    "faces": [
+      [
+        732,
+        395,
+        172,
+        172
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c8352a",
+      "dark": "#2d0c0a"
+    },
+    "size": 891079,
+    "locked": false
+  },
+  "gacha_lucia_4k.jpg": {
+    "file": "gacha_lucia_4k.jpg",
+    "width": 3840,
+    "height": 2160,
+    "kind": "scene",
+    "bbox": [
+      0,
+      0,
+      3840,
+      2160
+    ],
+    "face": null,
+    "faces": [],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c88543",
+      "dark": "#2d2013"
+    },
+    "size": 3130931,
+    "locked": false
+  },
+  "gacha_vera.png": {
+    "file": "gacha_vera.png",
+    "width": 1988,
+    "height": 3181,
+    "kind": "character",
+    "bbox": [
+      0,
+      102,
+      1886,
+      2970
+    ],
+    "face": [
+      906,
+      588,
+      267,
+      267
+    ],
+    "faces": [
+      [
+        906,
+        588,
+        267,
+        267
+      ],
+      [
+        951,
+        986,
+        206,
+        206
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c84350",
+      "dark": "#2d1315"
+    },
+    "size": 1582785,
+    "locked": false
+  },
+  "lyric_2b_nier.png": {
+    "file": "lyric_2b_nier.png",
+    "width": 2041,
+    "height": 3100,
+    "kind": "character",
+    "bbox": [
+      101,
+      25,
+      1765,
+      3047
+    ],
+    "face": null,
+    "faces": [],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c88143",
+      "dark": "#2d1f13"
+    },
+    "size": 2147962,
+    "locked": false
+  },
+  "lyric_ayla_kaleido.png": {
+    "file": "lyric_ayla_kaleido.png",
+    "width": 1552,
+    "height": 2160,
+    "kind": "character",
+    "bbox": [
+      373,
+      0,
+      941,
+      2025
+    ],
+    "face": [
+      784,
+      382,
+      187,
+      187
+    ],
+    "faces": [
+      [
+        784,
+        382,
+        187,
+        187
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#c8436f",
+      "dark": "#2d131b"
+    },
+    "size": 965575,
+    "locked": false
+  },
+  "lyric_selena_capriccio.png": {
+    "file": "lyric_selena_capriccio.png",
+    "width": 2083,
+    "height": 3375,
+    "kind": "character",
+    "bbox": [
+      571,
+      83,
+      1217,
+      3264
+    ],
+    "face": [
+      897,
+      246,
+      337,
+      337
+    ],
+    "faces": [
+      [
+        897,
+        246,
+        337,
+        337
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#4578cf",
+      "dark": "#131c2d"
+    },
+    "size": 1825277,
+    "locked": false
+  },
+  "lyric_selena_tempest.png": {
+    "file": "lyric_selena_tempest.png",
+    "width": 2000,
+    "height": 2689,
+    "kind": "character",
+    "bbox": [
+      209,
+      135,
+      1697,
+      2454
+    ],
+    "face": [
+      871,
+      255,
+      282,
+      282
+    ],
+    "faces": [
+      [
+        871,
+        255,
+        282,
+        282
+      ]
+    ],
+    "detector": "lbpcascade_animeface",
+    "palette": {
+      "main": "#438ec8",
+      "dark": "#13222d"
+    },
+    "size": 1278139,
+    "locked": false
+  }
+}

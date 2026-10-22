@@ -87,3 +87,17 @@ npm run build
 | `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / Redo (Immer patches) |
 | `Ctrl+M` | Open Render & Export Queue |
 | `?` | Open Keyboard Shortcuts Reference Modal |
+
+## Сборка эдитов через CLI
+
+```bash
+npm install
+pip install numpy "opencv-python<5"         # для разметки артов и проверки эдитов
+npm run kori -- faces test-assets/real/art   # разметить арты (лица, контур, цвет)
+npm run kori -- render --audio test-assets/real/track_02_midnight_phonk.mp3 \
+  --art test-assets/real/art/gacha_liv.png test-assets/real/art/gacha_lucia.png test-assets/real/art/gacha_vera.png \
+  --out out/gacha.mp4
+```
+
+Команда `render` анализирует трек (темп, дроп, ритмический рисунок), строит план, проверяет его,
+рендерит MP4 и запускает независимую проверку `tools/edit_qa.py`. Подробности — `docs/AGENT_GUIDE.md`.
