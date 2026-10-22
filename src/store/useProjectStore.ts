@@ -81,7 +81,8 @@ export type ActiveModalType =
   | 'new-comp'
   | 'export'
   | 'precompose'
-  | 'shortcuts';
+  | 'shortcuts'
+  | 'settings';
 
 export interface ProjectStoreState {
   project: Project;
@@ -121,6 +122,8 @@ export interface ProjectStoreState {
   graphEditorMode: 'value' | 'speed';
   rightTab: 'properties' | 'effects';
   activeModal: ActiveModalType;
+  interpolationEngine: 'rife' | 'minterpolate';
+  setInterpolationEngine: (engine: 'rife' | 'minterpolate') => void;
 
   // Core Helpers
   getActiveComp: () => Composition;
@@ -323,6 +326,8 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   graphEditorMode: 'value',
   rightTab: 'properties',
   activeModal: 'none',
+  interpolationEngine: 'rife',
+  setInterpolationEngine: (engine) => set({ interpolationEngine: engine }),
 
   viewportMode: 'program',
   sourceMonitorAssetId: null,

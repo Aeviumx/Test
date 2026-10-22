@@ -9,6 +9,7 @@ import { CompSettingsModal } from './ui/modals/CompSettingsModal';
 import { ExportModal } from './ui/modals/ExportModal';
 import { PrecomposeModal } from './ui/modals/PrecomposeModal';
 import { ShortcutsModal } from './ui/modals/ShortcutsModal';
+import { SettingsModal } from './ui/modals/SettingsModal';
 import { EffectsPanel } from './ui/panels/EffectsPanel';
 import { ProjectPanel } from './ui/panels/ProjectPanel';
 import { PropertiesPanel } from './ui/panels/PropertiesPanel';
@@ -200,6 +201,7 @@ export const App: React.FC = () => {
       {activeModal === 'precompose' && <PrecomposeModal />}
       {activeModal === 'shortcuts' && <ShortcutsModal />}
       {activeModal === 'export' && <ExportModal />}
+      {activeModal === 'settings' && <SettingsModal />}
     </div>
   );
 };

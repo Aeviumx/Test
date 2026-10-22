@@ -58,13 +58,16 @@ This document provides a comprehensive inventory of all third-party neural netwo
 
 ---
 
-## 3. Non-Commercial Warning: RIFE (Real-Time Intermediate Flow Estimation)
+## 3. RIFE Neural Motion Estimation & Licensing Terms
 
-- **License:** Creative Commons Attribution-NonCommercial 4.0 International (CC-BY-NC 4.0) / Megvii Research License.
-- **Commercial Status:** ⚠️ **CANNOT be used in commercial closed-source software without an enterprise license from Megvii.**
-- **Policy in Kōri:**
-  1. RIFE is isolated as an **optional, user-installed research plugin** and is NOT bundled in default commercial installer distributions.
-  2. For default commercial frame interpolation, Kōri defaults to **FFmpeg Motion-Compensated Interpolation (`minterpolate` with bidirectional block motion vectors / optical flow)**, which is 100% open-source and royalty-free under LGPL.
+- **Role in Kōri:** **Primary Slow-Motion Engine for Personal Use**. RIFE provides state-of-the-art optical flow frame interpolation for smooth 60 FPS velocity anime edits.
+- **Repository / Creator:** Megvii Research (Huang et al., *Real-Time Intermediate Flow Estimation for Video Frame Interpolation*, ECCV 2022) — https://github.com/megvii-research/ECCV2022-RIFE
+- **Exact Weights Mirror:** `FuryTMP/RIFE_fp32` (RIFE v4.6 FP32 ONNX checkpoint: `rife_v4.onnx`, 21,604,631 bytes, SHA-256: `6a31074c0f588648982b5e828aee6c27e005015a712a46ea63da48c65fa9a26b`).
+- **License:** Creative Commons Attribution-NonCommercial 4.0 International (**CC-BY-NC 4.0**).
+- **Personal vs Commercial Usage Policy:**
+  1. **Personal Non-Commercial Use:** RIFE is enabled as the default, highest-quality neural flow engine.
+  2. **Commercial Compliance Switch:** A user-facing preference toggle **«RIFE / FFmpeg minterpolate»** is provided directly in `Preferences & Neural Models` (`Ctrl+,`). When switched to **FFmpeg minterpolate**, all slow-motion frames are synthesized via bidirectional motion vector estimation in FFmpeg, which is 100% free and royalty-free under the **LGPL v2.1+ / GPL v3** license.
+  3. **Zero-Bloat Installer Policy:** RIFE weights are NOT bundled in the NSIS desktop setup; weights are downloaded on-demand upon first invocation with cryptographic SHA-256 verification and progress reporting.
 
 ---
 

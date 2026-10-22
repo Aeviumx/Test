@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { FfmpegService } from './ffmpegService';
 import { RifeService } from './rifeService';
+import { ModelManager, MODEL_REGISTRY } from './modelManager';
 import { ProjectSaveData, ExportJobConfig, RifeInterpolationConfig } from '../src/types/electron';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -250,15 +251,23 @@ class KoriDesktopApp {
       return await FfmpegService.extractAudioPcm(filePath, this.cacheDir);
     });
 
-    // 4. AI & Frame Interpolation (RIFE + Held Frames)
+    // 4. AI & Frame Interpolation (RIFE + Held Frames + Dynamic Model Download & SHA-256)
     ipcMain.handle('ai:checkModelStatus', async (_, modelName) => {
-      return RifeService.isModelReady(modelName);
+      return ModelManager.isModelReady(modelName);
     });
 
     ipcMain.handle('ai:downloadModel', async (_, modelName) => {
-      return await RifeService.downloadModel(modelName, (p) => {
+      return await ModelManager.downloadModel(modelName, (p) => {
         this.mainWindow?.webContents.send('ai:modelProgress', p);
       });
+    });
+
+    ipcMain.handle('ai:verifyModelSha256', async (_, modelName) => {
+      return ModelManager.verifyModelSha256(modelName);
+    });
+
+    ipcMain.handle('ai:getModelRegistry', async () => {
+      return MODEL_REGISTRY;
     });
 
     ipcMain.handle('ai:interpolateFrames', async (_, config: RifeInterpolationConfig) => {

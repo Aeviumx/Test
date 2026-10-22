@@ -118,10 +118,12 @@ export interface KoriElectronAPI {
     onProxyProgress: (callback: (progress: ProxyProgressEvent) => void) => () => void;
   };
 
-  // AI & Frame Interpolation (RIFE + Held Frames + MODNet Matting)
+  // AI & Frame Interpolation (RIFE + Held Frames + Dynamic Model Download & SHA-256)
   ai: {
-    checkModelStatus: (modelName: 'rife_v4' | 'anime_matting' | 'modnet') => Promise<boolean>;
-    downloadModel: (modelName: 'rife_v4' | 'anime_matting' | 'modnet') => Promise<boolean>;
+    checkModelStatus: (modelName: string) => Promise<boolean>;
+    downloadModel: (modelName: string) => Promise<boolean>;
+    verifyModelSha256?: (modelName: string) => Promise<{ valid: boolean; actualSha256: string; expectedSha256: string }>;
+    getModelRegistry?: () => Promise<Record<string, unknown>>;
     onModelProgress: (callback: (progress: ModelDownloadProgress) => void) => () => void;
     interpolateFrames: (config: RifeInterpolationConfig) => Promise<{ outputVideoPath: string; totalFrames: number }>;
     segmentCharacterForeground: (imagePath: string) => Promise<{ maskPath: string }>;

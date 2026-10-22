@@ -52,6 +52,8 @@ const api: KoriElectronAPI = {
   ai: {
     checkModelStatus: (modelName) => ipcRenderer.invoke('ai:checkModelStatus', modelName),
     downloadModel: (modelName) => ipcRenderer.invoke('ai:downloadModel', modelName),
+    verifyModelSha256: (modelName) => ipcRenderer.invoke('ai:verifyModelSha256', modelName),
+    getModelRegistry: () => ipcRenderer.invoke('ai:getModelRegistry'),
     onModelProgress: (callback) => {
       const handler = (_: unknown, p: ModelDownloadProgress) => callback(p);
       ipcRenderer.on('ai:modelProgress', handler);

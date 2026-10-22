@@ -273,6 +273,12 @@ export const TopBar: React.FC = () => {
         disabled: selectedLayerIds.length === 0,
         onClick: () => deleteSelectedLayers(),
       },
+      {
+        label: 'Preferences / Settings...',
+        shortcut: 'Ctrl+,',
+        dividerAbove: true,
+        onClick: () => setActiveModal('settings'),
+      },
     ],
     Composition: [
       { label: 'New Composition...', shortcut: 'Ctrl+N', onClick: () => setActiveModal('new-comp') },
