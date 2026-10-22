@@ -1,0 +1,645 @@
+{
+  "audio_file": "D:\\motionforge\\test-assets\\real\\ref2_audio.aac",
+  "language": "en",
+  "language_prob": 0.6796875,
+  "model": "base",
+  "device": "cuda",
+  "top20_words": [
+    {
+      "index": 1,
+      "word": "Come",
+      "canonical": "Come",
+      "start": 0.0,
+      "end": 0.56,
+      "confidence": 0.119,
+      "energy_jump": 307.49,
+      "waveform_verified": true
+    },
+    {
+      "index": 2,
+      "word": "over",
+      "canonical": "over",
+      "start": 0.56,
+      "end": 0.76,
+      "confidence": 0.448,
+      "energy_jump": 2.56,
+      "waveform_verified": true
+    },
+    {
+      "index": 3,
+      "word": "and",
+      "canonical": "and",
+      "start": 0.76,
+      "end": 0.96,
+      "confidence": 0.566,
+      "energy_jump": 0.99,
+      "waveform_verified": true
+    },
+    {
+      "index": 4,
+      "word": "start",
+      "canonical": "start",
+      "start": 0.96,
+      "end": 1.12,
+      "confidence": 0.855,
+      "energy_jump": 1.47,
+      "waveform_verified": true
+    },
+    {
+      "index": 5,
+      "word": "the",
+      "canonical": "the",
+      "start": 1.12,
+      "end": 1.26,
+      "confidence": 0.512,
+      "energy_jump": 0.61,
+      "waveform_verified": true
+    },
+    {
+      "index": 6,
+      "word": "conversation",
+      "canonical": "conversation",
+      "start": 1.26,
+      "end": 1.66,
+      "confidence": 0.931,
+      "energy_jump": 1.3,
+      "waveform_verified": true
+    },
+    {
+      "index": 7,
+      "word": "with",
+      "canonical": "with",
+      "start": 1.66,
+      "end": 2.16,
+      "confidence": 0.708,
+      "energy_jump": 1.46,
+      "waveform_verified": true
+    },
+    {
+      "index": 8,
+      "word": "just",
+      "canonical": "just",
+      "start": 2.16,
+      "end": 2.26,
+      "confidence": 0.261,
+      "energy_jump": 3.52,
+      "waveform_verified": true
+    },
+    {
+      "index": 9,
+      "word": "me",
+      "canonical": "me",
+      "start": 2.26,
+      "end": 2.58,
+      "confidence": 0.99,
+      "energy_jump": 0.53,
+      "waveform_verified": true
+    },
+    {
+      "index": 10,
+      "word": "and",
+      "canonical": "and",
+      "start": 2.58,
+      "end": 2.8,
+      "confidence": 0.794,
+      "energy_jump": 1.54,
+      "waveform_verified": true
+    },
+    {
+      "index": 11,
+      "word": "trust",
+      "canonical": "trust",
+      "start": 2.8,
+      "end": 2.96,
+      "confidence": 0.852,
+      "energy_jump": 1.3,
+      "waveform_verified": true
+    },
+    {
+      "index": 12,
+      "word": "me",
+      "canonical": "me",
+      "start": 2.96,
+      "end": 3.22,
+      "confidence": 0.979,
+      "energy_jump": 0.47,
+      "waveform_verified": true
+    },
+    {
+      "index": 13,
+      "word": "I'll",
+      "canonical": "I'll",
+      "start": 3.22,
+      "end": 3.44,
+      "confidence": 0.781,
+      "energy_jump": 1.67,
+      "waveform_verified": true
+    },
+    {
+      "index": 14,
+      "word": "give",
+      "canonical": "give",
+      "start": 3.44,
+      "end": 3.52,
+      "confidence": 0.986,
+      "energy_jump": 0.78,
+      "waveform_verified": true
+    },
+    {
+      "index": 15,
+      "word": "it",
+      "canonical": "it",
+      "start": 3.52,
+      "end": 3.68,
+      "confidence": 0.958,
+      "energy_jump": 0.75,
+      "waveform_verified": true
+    },
+    {
+      "index": 16,
+      "word": "just",
+      "canonical": "just",
+      "start": 3.68,
+      "end": 4.02,
+      "confidence": 0.84,
+      "energy_jump": 1.6,
+      "waveform_verified": true
+    },
+    {
+      "index": 17,
+      "word": "now",
+      "canonical": "now",
+      "start": 4.02,
+      "end": 4.7,
+      "confidence": 0.402,
+      "energy_jump": 0.77,
+      "waveform_verified": true
+    },
+    {
+      "index": 18,
+      "word": "for",
+      "canonical": "for",
+      "start": 4.7,
+      "end": 4.9,
+      "confidence": 0.154,
+      "energy_jump": 0.82,
+      "waveform_verified": true
+    },
+    {
+      "index": 19,
+      "word": "my",
+      "canonical": "my",
+      "start": 4.9,
+      "end": 5.08,
+      "confidence": 0.995,
+      "energy_jump": 1.09,
+      "waveform_verified": true
+    },
+    {
+      "index": 20,
+      "word": "hands",
+      "canonical": "hand,",
+      "start": 5.08,
+      "end": 5.38,
+      "confidence": 0.604,
+      "energy_jump": 1.16,
+      "waveform_verified": true
+    }
+  ],
+  "all_words": [
+    {
+      "detected_word": "Come",
+      "start": 0.0,
+      "end": 0.56,
+      "confidence": 0.119,
+      "canonical_word": "Come"
+    },
+    {
+      "detected_word": "over",
+      "start": 0.56,
+      "end": 0.76,
+      "confidence": 0.448,
+      "canonical_word": "over"
+    },
+    {
+      "detected_word": "and",
+      "start": 0.76,
+      "end": 0.96,
+      "confidence": 0.566,
+      "canonical_word": "and"
+    },
+    {
+      "detected_word": "start",
+      "start": 0.96,
+      "end": 1.12,
+      "confidence": 0.855,
+      "canonical_word": "start"
+    },
+    {
+      "detected_word": "the",
+      "start": 1.12,
+      "end": 1.26,
+      "confidence": 0.512,
+      "canonical_word": "the"
+    },
+    {
+      "detected_word": "conversation",
+      "start": 1.26,
+      "end": 1.66,
+      "confidence": 0.931,
+      "canonical_word": "conversation"
+    },
+    {
+      "detected_word": "with",
+      "start": 1.66,
+      "end": 2.16,
+      "confidence": 0.708,
+      "canonical_word": "with"
+    },
+    {
+      "detected_word": "just",
+      "start": 2.16,
+      "end": 2.26,
+      "confidence": 0.261,
+      "canonical_word": "just"
+    },
+    {
+      "detected_word": "me",
+      "start": 2.26,
+      "end": 2.58,
+      "confidence": 0.99,
+      "canonical_word": "me"
+    },
+    {
+      "detected_word": "and",
+      "start": 2.58,
+      "end": 2.8,
+      "confidence": 0.794,
+      "canonical_word": "and"
+    },
+    {
+      "detected_word": "trust",
+      "start": 2.8,
+      "end": 2.96,
+      "confidence": 0.852,
+      "canonical_word": "trust"
+    },
+    {
+      "detected_word": "me",
+      "start": 2.96,
+      "end": 3.22,
+      "confidence": 0.979,
+      "canonical_word": "me"
+    },
+    {
+      "detected_word": "I'll",
+      "start": 3.22,
+      "end": 3.44,
+      "confidence": 0.781,
+      "canonical_word": "I'll"
+    },
+    {
+      "detected_word": "give",
+      "start": 3.44,
+      "end": 3.52,
+      "confidence": 0.986,
+      "canonical_word": "give"
+    },
+    {
+      "detected_word": "it",
+      "start": 3.52,
+      "end": 3.68,
+      "confidence": 0.958,
+      "canonical_word": "it"
+    },
+    {
+      "detected_word": "just",
+      "start": 3.68,
+      "end": 4.02,
+      "confidence": 0.84,
+      "canonical_word": "just"
+    },
+    {
+      "detected_word": "now",
+      "start": 4.02,
+      "end": 4.7,
+      "confidence": 0.402,
+      "canonical_word": "now"
+    },
+    {
+      "detected_word": "for",
+      "start": 4.7,
+      "end": 4.9,
+      "confidence": 0.154,
+      "canonical_word": "for"
+    },
+    {
+      "detected_word": "my",
+      "start": 4.9,
+      "end": 5.08,
+      "confidence": 0.995,
+      "canonical_word": "my"
+    },
+    {
+      "detected_word": "hands",
+      "start": 5.08,
+      "end": 5.38,
+      "confidence": 0.604,
+      "canonical_word": "hand,"
+    },
+    {
+      "detected_word": "Stop",
+      "start": 5.38,
+      "end": 5.7,
+      "confidence": 0.195,
+      "canonical_word": "stop,"
+    },
+    {
+      "detected_word": "abandoning",
+      "start": 5.7,
+      "end": 6.58,
+      "confidence": 0.415,
+      "canonical_word": "abandoning"
+    },
+    {
+      "detected_word": "the",
+      "start": 6.58,
+      "end": 6.72,
+      "confidence": 0.625,
+      "canonical_word": "the"
+    },
+    {
+      "detected_word": "toolbox",
+      "start": 6.72,
+      "end": 7.04,
+      "confidence": 0.137,
+      "canonical_word": "toolbox"
+    },
+    {
+      "detected_word": "and",
+      "start": 7.04,
+      "end": 7.4,
+      "confidence": 0.831,
+      "canonical_word": "and"
+    },
+    {
+      "detected_word": "then",
+      "start": 7.4,
+      "end": 7.54,
+      "confidence": 0.62,
+      "canonical_word": "the"
+    },
+    {
+      "detected_word": "we",
+      "start": 7.54,
+      "end": 7.76,
+      "confidence": 0.894,
+      "canonical_word": "we"
+    },
+    {
+      "detected_word": "start",
+      "start": 7.76,
+      "end": 8.06,
+      "confidence": 0.848,
+      "canonical_word": "start"
+    },
+    {
+      "detected_word": "to",
+      "start": 8.06,
+      "end": 8.32,
+      "confidence": 0.933,
+      "canonical_word": "to"
+    },
+    {
+      "detected_word": "dance",
+      "start": 8.32,
+      "end": 8.58,
+      "confidence": 0.995,
+      "canonical_word": "dance"
+    },
+    {
+      "detected_word": "And",
+      "start": 8.58,
+      "end": 8.8,
+      "confidence": 0.197,
+      "canonical_word": "And"
+    },
+    {
+      "detected_word": "I'm",
+      "start": 8.8,
+      "end": 8.98,
+      "confidence": 0.715,
+      "canonical_word": "I'm"
+    },
+    {
+      "detected_word": "singing",
+      "start": 8.98,
+      "end": 9.26,
+      "confidence": 0.954,
+      "canonical_word": "singing"
+    },
+    {
+      "detected_word": "like",
+      "start": 9.26,
+      "end": 9.52,
+      "confidence": 0.942,
+      "canonical_word": "like"
+    },
+    {
+      "detected_word": "girl,",
+      "start": 9.52,
+      "end": 9.9,
+      "confidence": 0.604,
+      "canonical_word": "girl,"
+    },
+    {
+      "detected_word": "you",
+      "start": 9.9,
+      "end": 10.08,
+      "confidence": 0.941,
+      "canonical_word": "you"
+    },
+    {
+      "detected_word": "know",
+      "start": 10.08,
+      "end": 10.38,
+      "confidence": 0.972,
+      "canonical_word": "know"
+    },
+    {
+      "detected_word": "I",
+      "start": 10.38,
+      "end": 10.7,
+      "confidence": 0.87,
+      "canonical_word": "I"
+    },
+    {
+      "detected_word": "won't",
+      "start": 10.7,
+      "end": 11.04,
+      "confidence": 0.778,
+      "canonical_word": "won't"
+    },
+    {
+      "detected_word": "show",
+      "start": 11.04,
+      "end": 11.22,
+      "confidence": 0.595,
+      "canonical_word": "show"
+    },
+    {
+      "detected_word": "love",
+      "start": 11.22,
+      "end": 11.7,
+      "confidence": 0.818,
+      "canonical_word": "love"
+    },
+    {
+      "detected_word": "Your",
+      "start": 11.7,
+      "end": 12.04,
+      "confidence": 0.535,
+      "canonical_word": "Your"
+    },
+    {
+      "detected_word": "love",
+      "start": 12.04,
+      "end": 12.3,
+      "confidence": 0.99,
+      "canonical_word": "love"
+    },
+    {
+      "detected_word": "was",
+      "start": 12.3,
+      "end": 12.5,
+      "confidence": 0.898,
+      "canonical_word": "was"
+    },
+    {
+      "detected_word": "handy",
+      "start": 12.5,
+      "end": 12.84,
+      "confidence": 0.702,
+      "canonical_word": "handy"
+    },
+    {
+      "detected_word": "for",
+      "start": 12.84,
+      "end": 13.22,
+      "confidence": 0.991,
+      "canonical_word": "for"
+    },
+    {
+      "detected_word": "somebody",
+      "start": 13.22,
+      "end": 13.66,
+      "confidence": 0.964,
+      "canonical_word": "somebody"
+    },
+    {
+      "detected_word": "like",
+      "start": 13.66,
+      "end": 14.1,
+      "confidence": 0.991,
+      "canonical_word": "like"
+    },
+    {
+      "detected_word": "me",
+      "start": 14.1,
+      "end": 14.58,
+      "confidence": 0.996,
+      "canonical_word": "me"
+    },
+    {
+      "detected_word": "Come",
+      "start": 14.58,
+      "end": 14.9,
+      "confidence": 0.205,
+      "canonical_word": "Come"
+    },
+    {
+      "detected_word": "and",
+      "start": 14.9,
+      "end": 15.06,
+      "confidence": 0.412,
+      "canonical_word": "and"
+    },
+    {
+      "detected_word": "now",
+      "start": 15.06,
+      "end": 15.26,
+      "confidence": 0.816,
+      "canonical_word": "now"
+    },
+    {
+      "detected_word": "follow",
+      "start": 15.26,
+      "end": 15.5,
+      "confidence": 0.205,
+      "canonical_word": "follow"
+    },
+    {
+      "detected_word": "my",
+      "start": 15.5,
+      "end": 15.76,
+      "confidence": 0.81,
+      "canonical_word": "my"
+    },
+    {
+      "detected_word": "lead",
+      "start": 15.76,
+      "end": 16.12,
+      "confidence": 0.869,
+      "canonical_word": "lead"
+    },
+    {
+      "detected_word": "I",
+      "start": 16.12,
+      "end": 16.56,
+      "confidence": 0.484,
+      "canonical_word": "I"
+    },
+    {
+      "detected_word": "may",
+      "start": 16.56,
+      "end": 16.78,
+      "confidence": 0.441,
+      "canonical_word": "may"
+    },
+    {
+      "detected_word": "be",
+      "start": 16.78,
+      "end": 16.98,
+      "confidence": 0.998,
+      "canonical_word": "be"
+    },
+    {
+      "detected_word": "crazy,",
+      "start": 16.98,
+      "end": 17.4,
+      "confidence": 0.983,
+      "canonical_word": "crazy,"
+    },
+    {
+      "detected_word": "don't",
+      "start": 17.42,
+      "end": 17.86,
+      "confidence": 0.917,
+      "canonical_word": "don't"
+    },
+    {
+      "detected_word": "mind",
+      "start": 17.86,
+      "end": 18.06,
+      "confidence": 0.977,
+      "canonical_word": "mind"
+    },
+    {
+      "detected_word": "me",
+      "start": 18.06,
+      "end": 18.32,
+      "confidence": 0.996,
+      "canonical_word": "me"
+    }
+  ]
+}
