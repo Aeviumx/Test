@@ -307,31 +307,64 @@ function detectLetterboxBorders(rgba: Uint8ClampedArray, w: number, h: number): 
 }
 
 /**
- * Detects hardcoded subtitles in the bottom 15% of frames
+ * Detects hardcoded subtitles by temporal stability:
+ * Real subtitle glyphs stay in the exact same pixel positions in the bottom 18%
+ * across a 1.0–5.0s window while underlying anime background pixels change.
  */
 function detectSubtitlesInFrames(frames: FrameSampleData[], w: number, h: number): boolean {
   if (frames.length === 0) return false;
-  const bottomZoneY = Math.floor(h * 0.85);
+  const bottomZoneY = Math.floor(h * 0.82);
 
-  let highContrastEdgeCount = 0;
-  const f = frames[0].rgba;
+  // If only a single frame is sampled, fall back to high-contrast stroke detection
+  if (frames.length === 1) {
+    let singleFrameEdges = 0;
+    const f = frames[0].rgba;
+    for (let y = bottomZoneY; y < h - 4; y += 4) {
+      for (let x = 8; x < w - 8; x += 4) {
+        const idx = (y * w + x) * 4;
+        const idxR = (y * w + (x + 2)) * 4;
+        const l1 = (f[idx] * 299 + f[idx + 1] * 587 + f[idx + 2] * 114) / 1000;
+        const l2 = (f[idxR] * 299 + f[idxR + 1] * 587 + f[idxR + 2] * 114) / 1000;
+        if (Math.abs(l1 - l2) > 90) singleFrameEdges++;
+      }
+    }
+    return singleFrameEdges > 40;
+  }
 
-  // Scan bottom 15% for high-frequency edges typical of text glyphs
-  for (let y = bottomZoneY; y < h - 4; y += 4) {
-    for (let x = 8; x < w - 8; x += 4) {
+  // Multi-frame temporal stability: text glyph edges stationary while background changes
+  const f1 = frames[0].rgba;
+  const f2 = frames[frames.length - 1].rgba;
+
+  let staticHighContrastEdges = 0;
+  let movingBackgroundPixels = 0;
+
+  for (let y = bottomZoneY; y < h - 4; y += 3) {
+    for (let x = 12; x < w - 12; x += 3) {
       const idx = (y * w + x) * 4;
       const idxR = (y * w + (x + 2)) * 4;
-      const l1 = (f[idx] * 299 + f[idx + 1] * 587 + f[idx + 2] * 114) / 1000;
-      const l2 = (f[idxR] * 299 + f[idxR + 1] * 587 + f[idxR + 2] * 114) / 1000;
 
-      // Subtitles typically have sharp black stroke to white fill gradient
-      if (Math.abs(l1 - l2) > 90) {
-        highContrastEdgeCount++;
+      const l1 = (f1[idx] * 299 + f1[idx + 1] * 587 + f1[idx + 2] * 114) / 1000;
+      const l1R = (f1[idxR] * 299 + f1[idxR + 1] * 587 + f1[idxR + 2] * 114) / 1000;
+      const edge1 = Math.abs(l1 - l1R);
+
+      const l2 = (f2[idx] * 299 + f2[idx + 1] * 587 + f2[idx + 2] * 114) / 1000;
+      const l2R = (f2[idxR] * 299 + f2[idxR + 1] * 587 + f2[idxR + 2] * 114) / 1000;
+      const edge2 = Math.abs(l2 - l2R);
+
+      const pixelDiff = Math.abs(l1 - l2);
+      if (pixelDiff > 18) {
+        movingBackgroundPixels++;
+      }
+
+      // Glyph stroke edges remain sharp and stationary at the exact same pixel coordinate
+      if (edge1 > 85 && edge2 > 85 && Math.abs(edge1 - edge2) < 22) {
+        staticHighContrastEdges++;
       }
     }
   }
 
-  return highContrastEdgeCount > 45;
+  // Hardsub is positive ONLY if text is stationary while the video underneath changes
+  return staticHighContrastEdges > 35 && movingBackgroundPixels > 70;
 }
 
 /**

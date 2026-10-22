@@ -1,9 +1,12 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 import { FfmpegService } from './ffmpegService';
 import { RifeService } from './rifeService';
 import { ProjectSaveData, ExportJobConfig, RifeInterpolationConfig } from '../src/types/electron';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 interface WindowState {
   width: number;

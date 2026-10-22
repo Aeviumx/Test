@@ -310,6 +310,38 @@ export function createDemoProject(): Project {
   tintFx.params.amount.value = 85;
   bgLayer.effects = [fractalFx, tintFx];
 
+  mainComp.audioTrackAnalysis = {
+    bpm: 124,
+    beats: [
+      { time: 0.10, frame: 6, isDownbeat: true, strength: 0.85, frequencyBand: 'snare' },
+      { time: 0.60, frame: 36, isDownbeat: false, strength: 0.65, frequencyBand: 'snare' },
+      { time: 1.12, frame: 67, isDownbeat: false, strength: 0.70, frequencyBand: 'snare' },
+      { time: 1.60, frame: 96, isDownbeat: false, strength: 0.75, frequencyBand: 'snare' },
+      { time: 2.07, frame: 124, isDownbeat: true, strength: 1.0, frequencyBand: 'kick' },
+      { time: 2.55, frame: 153, isDownbeat: false, strength: 0.85, frequencyBand: 'snare' },
+      { time: 3.00, frame: 180, isDownbeat: false, strength: 0.90, frequencyBand: 'snare' },
+      { time: 3.47, frame: 208, isDownbeat: false, strength: 0.95, frequencyBand: 'snare' },
+      { time: 3.98, frame: 239, isDownbeat: true, strength: 1.0, frequencyBand: 'kick' },
+      { time: 4.48, frame: 269, isDownbeat: false, strength: 1.0, frequencyBand: 'snare' },
+      { time: 4.98, frame: 299, isDownbeat: false, strength: 1.0, frequencyBand: 'kick' },
+      { time: 5.45, frame: 327, isDownbeat: false, strength: 0.90, frequencyBand: 'snare' },
+      { time: 5.95, frame: 357, isDownbeat: true, strength: 0.80, frequencyBand: 'kick' },
+    ],
+    sections: [
+      { type: 'intro', startTime: 0, endTime: 1.8, avgEnergy: 0.32 },
+      { type: 'buildup', startTime: 1.8, endTime: 3.98, avgEnergy: 0.68 },
+      { type: 'drop', startTime: 3.98, endTime: 5.4, avgEnergy: 0.98 },
+      { type: 'outro', startTime: 5.4, endTime: 6.0, avgEnergy: 0.42 },
+    ],
+    energyCurve: [
+      0.22, 0.25, 0.28, 0.31, 0.30, 0.29, 0.35, 0.38,
+      0.45, 0.52, 0.60, 0.72, 0.81, 0.88, 0.92, 0.96,
+      0.15, // Pre-drop breath
+      1.00, 0.98, 0.95, 0.97, 0.94, 0.92, 0.88, 0.75,
+      0.60, 0.48, 0.35, 0.28, 0.20
+    ],
+  };
+
   mainComp.layers = [
     adjLayer,
     titleLayer,
@@ -356,6 +388,168 @@ export function createDemoProject(): Project {
   }
   secondaryComp.layers = [reelsText, reelsShape];
 
+  // Real footage assets with detected scenes & tags
+  const assetClip01 = {
+    id: createId('ast'),
+    name: 'anime_clip_01_eminence_action.mp4',
+    type: 'video' as const,
+    mimeType: 'video/mp4',
+    url: 'test-assets/real/anime_clip_01_eminence_action.mp4',
+    width: 1080,
+    height: 1080,
+    duration: 13.51,
+    scenes: [
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 1,
+        name: 'Scene 01: Shadow Strike',
+        inPoint: 0.0,
+        outPoint: 1.5,
+        duration: 1.5,
+        motionIntensity: 0.88,
+        motionDirection: 'right' as const,
+        shotScale: 'close' as const,
+        isJunk: false,
+      },
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 2,
+        name: 'Scene 02: Alpha Counter',
+        inPoint: 1.5,
+        outPoint: 3.43,
+        duration: 1.93,
+        motionIntensity: 0.95,
+        motionDirection: 'in' as const,
+        shotScale: 'extreme-close' as const,
+        isJunk: false,
+      },
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 3,
+        name: 'Scene 03: Blade Flash',
+        inPoint: 3.43,
+        outPoint: 4.55,
+        duration: 1.12,
+        motionIntensity: 0.92,
+        motionDirection: 'left' as const,
+        shotScale: 'medium' as const,
+        isJunk: false,
+      },
+    ],
+  };
+  assetClip01.scenes.forEach(s => { s.assetId = assetClip01.id; });
+
+  const assetClip03 = {
+    id: createId('ast'),
+    name: 'anime_clip_03_shadow_ep12.mp4',
+    type: 'video' as const,
+    mimeType: 'video/mp4',
+    url: 'test-assets/real/anime_clip_03_shadow_ep12.mp4',
+    width: 640,
+    height: 360,
+    duration: 66.73,
+    scenes: [
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 1,
+        name: 'Scene 01: Dialogue Wide',
+        inPoint: 0.0,
+        outPoint: 15.53,
+        duration: 15.53,
+        motionIntensity: 0.05,
+        motionDirection: 'static' as const,
+        shotScale: 'wide' as const,
+        isJunk: true,
+        junkReason: 'Letterbox (72px) & Static Talk',
+        manualOverrideJunk: false,
+      },
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 2,
+        name: 'Scene 02: Shadow Duel',
+        inPoint: 15.53,
+        outPoint: 50.23,
+        duration: 34.7,
+        motionIntensity: 0.72,
+        motionDirection: 'up' as const,
+        shotScale: 'medium' as const,
+        isJunk: true,
+        junkReason: 'Letterbox (72px bars)',
+        manualOverrideJunk: false,
+      },
+    ],
+  };
+  assetClip03.scenes.forEach(s => { s.assetId = assetClip03.id; });
+
+  const assetClip04 = {
+    id: createId('ast'),
+    name: 'anime_clip_04_alpha_combat.mp4',
+    type: 'video' as const,
+    mimeType: 'video/mp4',
+    url: 'test-assets/real/anime_clip_04_alpha_combat.mp4',
+    width: 640,
+    height: 360,
+    duration: 39.29,
+    scenes: [
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 1,
+        name: 'Scene 01: Alpha Rush',
+        inPoint: 0.0,
+        outPoint: 3.93,
+        duration: 3.93,
+        motionIntensity: 0.82,
+        motionDirection: 'left' as const,
+        shotScale: 'medium' as const,
+        isJunk: false,
+      },
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 4,
+        name: 'Scene 04: Dialogue Subtitle',
+        inPoint: 9.77,
+        outPoint: 11.9,
+        duration: 2.13,
+        motionIntensity: 0.28,
+        motionDirection: 'static' as const,
+        shotScale: 'close' as const,
+        isJunk: true,
+        junkReason: 'Hardsub detected (10-12s)',
+        manualOverrideJunk: false,
+      },
+      {
+        id: createId('scn'),
+        assetId: '',
+        sceneIndex: 5,
+        name: 'Scene 05: Sword Slash (RIFE 0.25x)',
+        inPoint: 11.9,
+        outPoint: 13.63,
+        duration: 1.73,
+        motionIntensity: 0.94,
+        motionDirection: 'right' as const,
+        shotScale: 'close' as const,
+        isJunk: false,
+      },
+    ],
+  };
+  assetClip04.scenes.forEach(s => { s.assetId = assetClip04.id; });
+
+  const assetAudio = {
+    id: createId('ast'),
+    name: 'track_01_montagem_shirt_blue.wav',
+    type: 'audio' as const,
+    mimeType: 'audio/wav',
+    url: 'test-assets/real/track_01_montagem_shirt_blue.wav',
+    duration: 13.51,
+  };
+
   return {
     id: createId('proj'),
     name: 'Kōri Showcase.mfproj',
@@ -364,6 +558,6 @@ export function createDemoProject(): Project {
     updatedAt: new Date().toISOString(),
     activeCompId: mainComp.id,
     compositions: [mainComp, secondaryComp],
-    assets: [],
+    assets: [assetClip01, assetClip03, assetClip04, assetAudio],
   };
 }

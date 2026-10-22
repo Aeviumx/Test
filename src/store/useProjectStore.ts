@@ -278,6 +278,7 @@ export interface ProjectStoreState {
   slipLayer: (layerId: string, deltaSeconds: number) => void;
   slideLayer: (layerId: string, deltaSeconds: number) => void;
   detectScenesForAsset: (assetId: string) => Promise<SceneClip[]>;
+  toggleSceneJunk: (assetId: string, sceneId: string) => void;
 }
 
 const initialProject = createDemoProject();
@@ -1884,6 +1885,18 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     } finally {
       set({ isDetectingScenes: false, sceneDetectionProgress: 100 });
     }
+  },
+
+  toggleSceneJunk: (assetId, sceneId) => {
+    get().commitCommand('Toggle Scene Junk Flag', (draft) => {
+      const asset = draft.assets.find((a) => a.id === assetId);
+      if (!asset || !asset.scenes) return;
+      const scn = asset.scenes.find((s) => s.id === sceneId);
+      if (scn) {
+        scn.manualOverrideJunk = !scn.manualOverrideJunk;
+        scn.isJunk = !scn.isJunk;
+      }
+    });
   },
 }));
 

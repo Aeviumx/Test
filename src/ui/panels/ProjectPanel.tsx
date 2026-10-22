@@ -33,6 +33,7 @@ export const ProjectPanel: React.FC = () => {
   const setSourceMonitorAsset = useProjectStore((s) => s.setSourceMonitorAsset);
   const detectScenesForAsset = useProjectStore((s) => s.detectScenesForAsset);
   const insertSceneToTimeline = useProjectStore((s) => s.insertSceneToTimeline);
+  const toggleSceneJunk = useProjectStore((s) => s.toggleSceneJunk);
   const isDetectingScenes = useProjectStore((s) => s.isDetectingScenes);
   const sceneDetectionProgress = useProjectStore((s) => s.sceneDetectionProgress);
 
@@ -416,44 +417,98 @@ export const ProjectPanel: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Collapsible Detected Scene Subclips */}
+                    {/* Collapsible Detected Scene Subclips with Visual Tags & Junk Filter */}
                     {hasScenes && isExpanded && (
-                      <div className="pl-4 pr-1 space-y-1 py-1 border-l border-[var(--border)] ml-3">
-                        {asset.scenes?.map((scene) => (
-                          <div
-                            key={scene.id}
-                            onDoubleClick={() => insertSceneToTimeline(scene)}
-                            title={`${scene.name} (${formatTimecode(scene.inPoint, 30)} - ${formatTimecode(scene.outPoint, 30)}) — double click to insert`}
-                            className="group/scn flex items-center justify-between p-1 rounded hover:bg-[var(--bg-hover)] cursor-pointer text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border border-transparent hover:border-[var(--border)]"
-                          >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              {scene.thumbnail ? (
-                                <img
-                                  src={scene.thumbnail}
-                                  alt={scene.name}
-                                  className="w-8 h-5 object-cover rounded bg-black shrink-0 border border-[var(--border)]"
-                                />
-                              ) : (
-                                <Film className="w-4 h-4 text-[var(--steel)] shrink-0" />
-                              )}
-                              <span className="font-medium truncate">{scene.name}</span>
-                              <span className="font-mono text-[9px] text-[var(--text-muted)]">
-                                {scene.duration.toFixed(1)}s
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                insertSceneToTimeline(scene);
-                              }}
-                              title="Insert Scene to Timeline at Playhead"
-                              className="opacity-0 group-hover/scn:opacity-100 p-0.5 rounded text-[var(--accent)] hover:bg-[var(--bg-elevated)]"
+                      <div className="pl-3 pr-1 space-y-1.5 py-1.5 border-l border-[var(--border)] ml-3">
+                        {asset.scenes?.map((scene) => {
+                          const isJunk = !!scene.isJunk;
+                          return (
+                            <div
+                              key={scene.id}
+                              onDoubleClick={() => insertSceneToTimeline(scene)}
+                              title={`${scene.name} (${formatTimecode(scene.inPoint, 30)} - ${formatTimecode(scene.outPoint, 30)}) — double click to insert`}
+                              className={`group/scn flex flex-col gap-1 p-1.5 rounded cursor-pointer text-[10px] transition-colors border ${
+                                isJunk
+                                  ? 'bg-rose-950/15 border-rose-500/25 hover:border-rose-500/40 text-[var(--text-muted)]'
+                                  : 'bg-[var(--bg-elevated)]/50 border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                              }`}
                             >
-                              <Plus className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
+                              <div className="flex items-center justify-between gap-1.5 min-w-0">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  {scene.thumbnail ? (
+                                    <img
+                                      src={scene.thumbnail}
+                                      alt={scene.name}
+                                      className={`w-10 h-6 object-cover rounded bg-black shrink-0 border ${
+                                        isJunk ? 'opacity-40 grayscale border-rose-500/30' : 'border-[var(--border)]'
+                                      }`}
+                                    />
+                                  ) : (
+                                    <Film className="w-4 h-4 text-[var(--steel)] shrink-0" />
+                                  )}
+                                  <div className="min-w-0 flex flex-col">
+                                    <span className={`font-medium truncate ${isJunk ? 'line-through text-rose-400/80' : ''}`}>
+                                      {scene.name}
+                                    </span>
+                                    <span className="font-mono text-[9px] text-[var(--text-muted)]">
+                                      {scene.duration.toFixed(2)}s · {formatTimecode(scene.inPoint, 30)}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {/* Manual Junk Toggle Button */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleSceneJunk(asset.id, scene.id);
+                                    }}
+                                    title={isJunk ? 'Снять метку мусора (восстановить)' : 'Пометить как мусор'}
+                                    className={`px-1.5 py-0.5 rounded text-[9px] font-semibold tracking-wide uppercase transition-all duration-150 ${
+                                      isJunk
+                                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
+                                        : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                                    }`}
+                                  >
+                                    {isJunk ? 'Мусор' : 'Годен'}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      insertSceneToTimeline(scene);
+                                    }}
+                                    title="Insert Scene to Timeline at Playhead"
+                                    className="p-1 rounded text-[var(--accent)] hover:bg-[var(--bg-hover)] opacity-0 group-hover/scn:opacity-100 transition-opacity"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Scene Tags & Attributes */}
+                              <div className="flex items-center gap-1 flex-wrap text-[8.5px]">
+                                {scene.shotScale && (
+                                  <span className="px-1 py-0.2 rounded bg-[var(--bg-base)] text-[var(--steel-light)] border border-[var(--border)] font-mono">
+                                    {scene.shotScale}
+                                  </span>
+                                )}
+                                {scene.motionDirection && scene.motionDirection !== 'static' && (
+                                  <span className="px-1 py-0.2 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-500/30 font-mono">
+                                    → {scene.motionDirection}
+                                  </span>
+                                )}
+                                {scene.junkReason && isJunk && (
+                                  <span className="px-1 py-0.2 rounded bg-rose-950/60 text-rose-300 border border-rose-500/30 truncate max-w-[140px]">
+                                    {scene.junkReason}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

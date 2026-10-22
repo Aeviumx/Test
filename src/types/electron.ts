@@ -25,6 +25,9 @@ export interface NativeSceneCut {
   endTime: number;
   duration: number;
   thumbnailPath?: string;
+  isJunk?: boolean;
+  junkReason?: string;
+  manualOverrideJunk?: boolean;
 }
 
 export interface ProxyProgressEvent {
@@ -115,10 +118,10 @@ export interface KoriElectronAPI {
     onProxyProgress: (callback: (progress: ProxyProgressEvent) => void) => () => void;
   };
 
-  // AI & Frame Interpolation (RIFE + Held Frames + Matting)
+  // AI & Frame Interpolation (RIFE + Held Frames + MODNet Matting)
   ai: {
-    checkModelStatus: (modelName: 'rife_v4' | 'anime_matting') => Promise<boolean>;
-    downloadModel: (modelName: 'rife_v4' | 'anime_matting') => Promise<boolean>;
+    checkModelStatus: (modelName: 'rife_v4' | 'anime_matting' | 'modnet') => Promise<boolean>;
+    downloadModel: (modelName: 'rife_v4' | 'anime_matting' | 'modnet') => Promise<boolean>;
     onModelProgress: (callback: (progress: ModelDownloadProgress) => void) => () => void;
     interpolateFrames: (config: RifeInterpolationConfig) => Promise<{ outputVideoPath: string; totalFrames: number }>;
     segmentCharacterForeground: (imagePath: string) => Promise<{ maskPath: string }>;

@@ -1131,13 +1131,15 @@ export const TimelinePanel: React.FC = () => {
               className="flex-1 overflow-auto relative"
             >
               <div style={{ width: trackWidth }} className="min-h-full relative">
-                {/* Sticky Time Ruler + RAM Cache Bar + Work Area Bar */}
+                {/* Sticky Time Ruler + RAM Cache Bar + Work Area Bar + Audio Intelligence */}
                 <div
                   onMouseDown={handleRulerMouseDown}
-                  className="sticky top-0 z-30 h-[28px] bg-[var(--bg-elevated)] border-b border-[var(--border)] cursor-ew-resize select-none"
+                  className={`sticky top-0 z-30 ${
+                    comp.audioTrackAnalysis ? 'h-[56px]' : 'h-[28px]'
+                  } bg-[var(--bg-elevated)] border-b border-[var(--border)] cursor-ew-resize select-none transition-[height] duration-150`}
                 >
                   {/* RAM Frame Cache Indicator Bar */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--bg-base)] flex">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--bg-base)] flex z-30">
                     {Array.from({ length: Math.min(240, totalCompFrames) }, (_, i) => {
                       const frameIdx = Math.round((i / Math.min(240, totalCompFrames)) * totalCompFrames);
                       const isCached = cachedFrames.has(frameIdx);
@@ -1152,6 +1154,93 @@ export const TimelinePanel: React.FC = () => {
                       );
                     })}
                   </div>
+
+                  {/* Musical Structure Sections (Intro -> Buildup -> Drop -> Break -> Outro) */}
+                  {comp.audioTrackAnalysis?.sections && (
+                    <div className="absolute top-1 left-0 right-0 h-4 flex pointer-events-none z-20 overflow-hidden">
+                      {comp.audioTrackAnalysis.sections.map((sec, idx) => {
+                        const left = timeToPx(sec.startTime);
+                        const width = timeToPx(sec.endTime - sec.startTime);
+                        const colors = {
+                          intro: 'bg-indigo-950/70 border-indigo-400/40 text-indigo-300',
+                          buildup: 'bg-amber-950/70 border-amber-400/50 text-amber-300',
+                          drop: 'bg-cyan-950/85 border-cyan-400 text-cyan-200 font-bold shadow-[0_0_12px_rgba(6,182,212,0.35)]',
+                          break: 'bg-purple-950/70 border-purple-400/40 text-purple-300',
+                          climax: 'bg-rose-950/85 border-rose-400 text-rose-200 font-bold shadow-[0_0_12px_rgba(244,63,94,0.35)]',
+                          outro: 'bg-slate-900/70 border-slate-500/40 text-slate-300',
+                        };
+                        return (
+                          <div
+                            key={idx}
+                            style={{ left, width }}
+                            className={`absolute top-0 h-full border-r border-t flex items-center justify-between px-1.5 text-[8.5px] uppercase tracking-wider backdrop-blur-sm ${colors[sec.type] || colors.intro}`}
+                          >
+                            <span className="truncate">{sec.type === 'drop' ? 'DROP 🔥' : sec.type}</span>
+                            <span className="opacity-60 font-mono text-[8px]">{(sec.endTime - sec.startTime).toFixed(1)}s</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Dynamic Audio Energy Curve (RMS & Frequency Envelope) */}
+                  {comp.audioTrackAnalysis?.energyCurve && (
+                    <svg
+                      style={{ width: timeToPx(comp.duration) }}
+                      className="absolute top-5 left-0 h-7 pointer-events-none z-10 opacity-75"
+                    >
+                      <defs>
+                        <linearGradient id="energyFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.5" />
+                          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.05" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d={(() => {
+                          const curve = comp.audioTrackAnalysis.energyCurve;
+                          const pts = curve.map((val, i) => {
+                            const t = (i / (curve.length - 1)) * comp.duration;
+                            const x = timeToPx(t);
+                            const y = 26 - val * 22;
+                            return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+                          }).join(' ');
+                          return `${pts} L ${timeToPx(comp.duration)} 28 L 0 28 Z`;
+                        })()}
+                        fill="url(#energyFill)"
+                      />
+                      <path
+                        d={(() => {
+                          const curve = comp.audioTrackAnalysis.energyCurve;
+                          return curve.map((val, i) => {
+                            const t = (i / (curve.length - 1)) * comp.duration;
+                            const x = timeToPx(t);
+                            const y = 26 - val * 22;
+                            return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+                          }).join(' ');
+                        })()}
+                        fill="none"
+                        stroke="#38bdf8"
+                        strokeWidth="1.2"
+                      />
+                    </svg>
+                  )}
+
+                  {/* Synchronized Beat Transients (Snare & Kick) */}
+                  {comp.audioTrackAnalysis?.beats.map((b) => (
+                    <div
+                      key={b.time}
+                      style={{ left: timeToPx(b.time) }}
+                      className={`absolute top-5 bottom-0 pointer-events-none ${
+                        b.isDownbeat
+                          ? 'w-[1.5px] bg-cyan-400 z-10 shadow-[0_0_6px_rgba(56,189,248,0.8)]'
+                          : 'w-[1px] bg-sky-500/35 z-0'
+                      }`}
+                    >
+                      {b.isDownbeat && (
+                        <div className="w-1.5 h-1.5 -ml-[2px] rounded-full bg-cyan-300 shadow-[0_0_4px_cyan]" />
+                      )}
+                    </div>
+                  ))}
 
                   {/* Work Area Bar (B / N) */}
                   <div

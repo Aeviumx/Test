@@ -113,7 +113,7 @@ export function analyzeAudioBuffer(
   }
 
   // 4. BPM estimation & Transient Peak Detection
-  const bpm = options.targetBpm ?? estimateBpm(kickCurve, snareCurve, fps);
+  const bpm = options.targetBpm ?? estimateBpm(kickCurve, snareCurve, vocalCurve, fps);
   const beats = detectBeatGrid(kickCurve, snareCurve, overallEnergy, bpm, fps, duration);
 
   // 5. Measure grouping (4/4 time signature default)
@@ -226,39 +226,98 @@ function filterBandPass(input: Float32Array, sampleRate: number, lowCut: number,
 }
 
 /**
- * Estimates BPM from autocorrelation of energy envelope
+ * Estimates BPM using multi-window autocorrelation across active sections
+ * with standard tempo octave prior weighting centered around 125 BPM
  */
-function estimateBpm(kick: Float32Array, snare: Float32Array, fps: number): number {
+function estimateBpm(
+  kick: Float32Array,
+  snare: Float32Array,
+  vocal: Float32Array,
+  fps: number
+): number {
   const minBpm = 80;
-  const maxBpm = 180;
+  const maxBpm = 175;
   const minLag = Math.floor((60 / maxBpm) * fps);
   const maxLag = Math.floor((60 / minBpm) * fps);
 
-  // Focus on kick + snare transients
-  const len = Math.min(kick.length, fps * 15); // first 15 seconds
-  let bestLag = Math.floor((60 / 128) * fps);
-  let maxCorr = -1;
+  // Divide audio into 8s windows with 4s hop
+  const totalFrames = kick.length;
+  const winFrames = Math.min(totalFrames, Math.round(8 * fps));
+  const hopFrames = Math.max(1, Math.round(4 * fps));
+  const numWindows = Math.max(1, Math.floor((totalFrames - winFrames) / hopFrames) + 1);
 
-  for (let lag = minLag; lag <= maxLag; lag++) {
-    let corr = 0;
-    for (let i = 0; i < len - lag; i++) {
-      const e1 = kick[i] * 1.5 + snare[i];
-      const e2 = kick[i + lag] * 1.5 + snare[i + lag];
-      corr += e1 * e2;
+  const windowVotes: Array<{ bpm: number; weight: number }> = [];
+
+  for (let w = 0; w < numWindows; w++) {
+    const start = w * hopFrames;
+    const end = Math.min(totalFrames, start + winFrames);
+    if (end - start < minLag * 2) continue;
+
+    let winEnergy = 0;
+    for (let f = start; f < end; f++) {
+      winEnergy += kick[f] * 2.0 + snare[f] * 1.5;
     }
-    if (corr > maxCorr) {
-      maxCorr = corr;
-      bestLag = lag;
+    const avgEnergy = winEnergy / (end - start);
+    // Skip silent/percless intro or outro windows
+    if (avgEnergy < 0.12 && numWindows > 2) continue;
+
+    let bestLag = Math.round((60 / 125) * fps);
+    let maxCorr = -1;
+
+    for (let lag = minLag; lag <= maxLag; lag++) {
+      let corr = 0;
+      for (let f = start; f < end - lag; f++) {
+        const e1 = kick[f] * 1.8 + snare[f] * 1.4 + vocal[f] * 0.3;
+        const e2 = kick[f + lag] * 1.8 + snare[f + lag] * 1.4 + vocal[f + lag] * 0.3;
+        corr += e1 * e2;
+      }
+
+      const bpmVal = (60 * fps) / lag;
+      // Gaussian prior centered at 125 BPM to avoid octave jumping (60 vs 120 vs 180)
+      const octaveWeight = Math.exp(-Math.pow(Math.log(bpmVal / 125) / Math.log(1.4), 2));
+      const weightedCorr = corr * octaveWeight;
+
+      if (weightedCorr > maxCorr) {
+        maxCorr = weightedCorr;
+        bestLag = lag;
+      }
+    }
+
+    if (maxCorr > 0) {
+      const rawBpm = (60 * fps) / bestLag;
+      windowVotes.push({ bpm: rawBpm, weight: maxCorr * (avgEnergy + 0.1) });
     }
   }
 
-  const rawBpm = (60 * fps) / bestLag;
-  // Snap to common anime/phonk tempos (e.g. 120, 128, 130, 135, 140, 150, 160)
-  return Math.round(rawBpm);
+  if (windowVotes.length === 0) return 120;
+
+  // Weighted consensus
+  let totalW = 0;
+  let weightedBpm = 0;
+  windowVotes.sort((a, b) => b.weight - a.weight);
+  const leadBpm = windowVotes[0].bpm;
+
+  for (const vote of windowVotes) {
+    let effectiveBpm = vote.bpm;
+    if (Math.abs(effectiveBpm * 2 - leadBpm) < 4) effectiveBpm *= 2;
+    if (Math.abs(effectiveBpm / 2 - leadBpm) < 4) effectiveBpm /= 2;
+
+    if (Math.abs(effectiveBpm - leadBpm) < 7) {
+      weightedBpm += effectiveBpm * vote.weight;
+      totalW += vote.weight;
+    }
+  }
+
+  const consensus = totalW > 0 ? weightedBpm / totalW : leadBpm;
+  const rounded = Math.round(consensus);
+  if (Math.abs(consensus - rounded) < 0.35) return rounded;
+  return Math.round(consensus * 10) / 10;
 }
 
 /**
  * Builds frame-accurate beat grid synchronized with kick/snare transients
+ * with ±2 frame local snapping, drift-free Phase-Locked Loop (PLL) clock tracking,
+ * and support for percless intros (backwards projection from first drum drop).
  */
 function detectBeatGrid(
   kick: Float32Array,
@@ -268,56 +327,135 @@ function detectBeatGrid(
   fps: number,
   duration: number
 ): BeatTransient[] {
-  const beats: BeatTransient[] = [];
   const framesPerBeat = (60 / bpm) * fps;
-  const totalBeats = Math.floor((duration * bpm) / 60);
+  const totalFrames = overallEnergy.length;
 
-  // Find initial phase / first transient hit within first 2 beats
-  const searchWindow = Math.min(kick.length, Math.round(framesPerBeat * 2));
-  let bestStartFrame = 0;
-  let maxPeak = 0;
-  for (let f = 0; f < searchWindow; f++) {
-    const val = kick[f] * 2.0 + snare[f];
-    if (val > maxPeak) {
-      maxPeak = val;
-      bestStartFrame = f;
+  // 1. Locate the first primary rhythmic anchor (where kick or snare hits with real energy)
+  let anchorFrame = 0;
+  let anchorScore = 0;
+
+  // Look for the first transient with strong kick/snare energy (>0.35)
+  for (let f = 0; f < Math.min(totalFrames, Math.round(fps * 20)); f++) {
+    const score = kick[f] * 2.2 + snare[f] * 1.5;
+    // Check if this is a local transient peak
+    const prev = f > 0 ? kick[f - 1] * 2.2 + snare[f - 1] * 1.5 : 0;
+    const next = f < totalFrames - 1 ? kick[f + 1] * 2.2 + snare[f + 1] * 1.5 : 0;
+
+    if (score > 0.35 && score >= prev && score >= next) {
+      anchorFrame = f;
+      anchorScore = score;
+      break;
     }
   }
 
-  for (let b = 0; b < totalBeats; b++) {
-    const nominalFrame = Math.round(bestStartFrame + b * framesPerBeat);
-    if (nominalFrame >= overallEnergy.length) break;
+  // If no strong hit in first 20s, pick the global peak in first 2 beats
+  if (anchorScore === 0) {
+    const searchLimit = Math.min(totalFrames, Math.round(framesPerBeat * 2));
+    let maxP = 0;
+    for (let f = 0; f < searchLimit; f++) {
+      const val = kick[f] * 2.0 + snare[f];
+      if (val > maxP) {
+        maxP = val;
+        anchorFrame = f;
+      }
+    }
+  }
 
-    // Search local ±2 frames for transient peak (human drum quantization)
-    let bestLocalFrame = nominalFrame;
+  // 2. Project backwards from anchorFrame to frame 0 for percless intros
+  const introBeats: Array<{ frame: number; isDownbeat: boolean }> = [];
+  let backPhase = anchorFrame - framesPerBeat;
+  let backBeatCount = 1;
+
+  while (backPhase >= 0) {
+    const nominal = Math.round(backPhase);
+    // Search local ±2 frames for any subtle melodic/energy peak in the intro
+    let bestF = nominal;
+    let maxE = -1;
+    for (let f = Math.max(0, nominal - 2); f <= Math.min(totalFrames - 1, nominal + 2); f++) {
+      const e = overallEnergy[f];
+      if (e > maxE) {
+        maxE = e;
+        bestF = f;
+      }
+    }
+    introBeats.unshift({
+      frame: bestF,
+      isDownbeat: (backBeatCount % 4) === 0,
+    });
+    backPhase -= framesPerBeat;
+    backBeatCount++;
+  }
+
+  // 3. Track forward from anchorFrame using Phase-Locked Loop (PLL)
+  const forwardBeats: Array<{ frame: number; isDownbeat: boolean }> = [];
+  let currentExpected = anchorFrame;
+  let localFramesPerBeat = framesPerBeat;
+  let forwardBeatIndex = 0;
+
+  while (currentExpected < totalFrames) {
+    const nominal = Math.round(currentExpected);
+    // Snap to real transient peak within ±2 frames
+    let bestLocalFrame = nominal;
     let localMax = -1;
-    const pad = Math.min(2, Math.floor(framesPerBeat * 0.15));
-    for (let f = Math.max(0, nominalFrame - pad); f <= Math.min(overallEnergy.length - 1, nominalFrame + pad); f++) {
-      const power = kick[f] * 1.8 + snare[f] * 1.2;
+    const searchRadius = 2; // Exact ±2 frame local transient snapping
+
+    for (
+      let f = Math.max(0, nominal - searchRadius);
+      f <= Math.min(totalFrames - 1, nominal + searchRadius);
+      f++
+    ) {
+      const power = kick[f] * 1.9 + snare[f] * 1.3;
       if (power > localMax) {
         localMax = power;
         bestLocalFrame = f;
       }
     }
 
-    const time = bestLocalFrame / fps;
-    const isDownbeat = b % 4 === 0;
-    const kickScore = kick[bestLocalFrame] || 0;
-    const snareScore = snare[bestLocalFrame] || 0;
-    const band = kickScore > snareScore ? 'kick' : 'snare';
-    const strength = Math.min(1.0, (kickScore + snareScore) * 1.2 + (isDownbeat ? 0.2 : 0));
+    forwardBeats.push({
+      frame: bestLocalFrame,
+      isDownbeat: (forwardBeatIndex % 4) === 0,
+    });
 
-    beats.push({
+    // Phase error correction (PLL) to prevent drift to the end of the track
+    const phaseError = bestLocalFrame - nominal;
+    // If a clear hit was found, adapt local phase smoothly
+    if (localMax > 0.15) {
+      currentExpected = bestLocalFrame + localFramesPerBeat + phaseError * 0.08;
+    } else {
+      // In quiet breaks, smoothly continue the locked beat clock
+      currentExpected += localFramesPerBeat;
+    }
+
+    forwardBeatIndex++;
+  }
+
+  // 4. Combine intro and forward beats into indexed timeline
+  const combinedBeats = [...introBeats, ...forwardBeats];
+  const result: BeatTransient[] = [];
+
+  for (let b = 0; b < combinedBeats.length; b++) {
+    const item = combinedBeats[b];
+    const f = item.frame;
+    const time = f / fps;
+    const kickScore = kick[f] || 0;
+    const snareScore = snare[f] || 0;
+    const band = kickScore >= snareScore ? 'kick' : 'snare';
+    const strength = Math.min(
+      1.0,
+      (kickScore + snareScore) * 1.25 + (item.isDownbeat ? 0.2 : 0)
+    );
+
+    result.push({
       index: b,
       time,
-      frame: bestLocalFrame,
+      frame: f,
       strength,
-      isDownbeat,
+      isDownbeat: item.isDownbeat,
       frequencyBand: band,
     });
   }
 
-  return beats;
+  return result;
 }
 
 /**
@@ -366,24 +504,31 @@ function segmentTrackSections(
     }
   }
 
-  // Build standard anime edit progression around the drop
-  // 1. Intro
-  const introEndMeasure = Math.max(1, Math.min(2, Math.floor(maxDropMeasure / 2)));
-  const introEndBeat = introEndMeasure * 4;
+  // Build anime edit progression around the drop
+  // 1. Intro: low percussion / atmospheric start until buildup
+  let firstRiseMeasure = 0;
+  for (let m = 0; m < maxDropMeasure; m++) {
+    if (measureEnergies[m] > 0.28 || (m > 0 && measureEnergies[m] > measureEnergies[m - 1] * 1.6)) {
+      firstRiseMeasure = m;
+      break;
+    }
+  }
+  const introEndMeasure = Math.max(1, Math.min(firstRiseMeasure > 0 ? firstRiseMeasure : Math.floor(maxDropMeasure / 2), maxDropMeasure));
+  const introEndBeat = Math.min(beats.length - 1, introEndMeasure * 4);
   sections.push({
     type: 'intro',
     startTime: 0,
-    endTime: beats[Math.min(beats.length - 1, introEndBeat)].time,
+    endTime: beats[introEndBeat].time,
     startBeat: 0,
     endBeat: introEndBeat,
-    avgEnergy: measureEnergies[0] || 0.3,
-    peakEnergy: 0.5,
+    avgEnergy: measureEnergies[0] || 0.2,
+    peakEnergy: 0.45,
   });
 
   // 2. Build-up (rising energy towards drop)
   if (maxDropMeasure > introEndMeasure) {
     const buildupStartBeat = introEndBeat;
-    const buildupEndBeat = maxDropMeasure * 4;
+    const buildupEndBeat = Math.min(beats.length - 1, maxDropMeasure * 4);
     sections.push({
       type: 'buildup',
       startTime: beats[buildupStartBeat].time,
@@ -396,8 +541,8 @@ function segmentTrackSections(
   }
 
   // 3. Drop (The climax/peak)
-  const dropStartBeat = maxDropMeasure * 4;
-  const dropLengthMeasures = Math.min(4, numMeasures - maxDropMeasure);
+  const dropStartBeat = Math.min(beats.length - 1, maxDropMeasure * 4);
+  const dropLengthMeasures = Math.min(8, Math.max(4, Math.floor((numMeasures - maxDropMeasure) / 2)));
   const dropEndBeat = Math.min(beats.length - 1, dropStartBeat + dropLengthMeasures * 4);
   sections.push({
     type: 'drop',
@@ -409,17 +554,55 @@ function segmentTrackSections(
     peakEnergy: 1.0,
   });
 
-  // 4. Outro / Clean ending
+  // 4. Break / Climax / Outro for longer tracks
   if (dropEndBeat < beats.length - 1) {
-    sections.push({
-      type: 'outro',
-      startTime: beats[dropEndBeat].time,
-      endTime: duration,
-      startBeat: dropEndBeat,
-      endBeat: beats.length,
-      avgEnergy: 0.4,
-      peakEnergy: 0.6,
-    });
+    const remainingMeasures = numMeasures - (maxDropMeasure + dropLengthMeasures);
+    if (remainingMeasures > 8) {
+      // Find secondary drop / climax
+      const breakEndBeat = Math.min(beats.length - 1, dropEndBeat + 16);
+      sections.push({
+        type: 'break',
+        startTime: beats[dropEndBeat].time,
+        endTime: beats[breakEndBeat].time,
+        startBeat: dropEndBeat,
+        endBeat: breakEndBeat,
+        avgEnergy: 0.5,
+        peakEnergy: 0.7,
+      });
+
+      const climaxEndBeat = Math.min(beats.length - 1, breakEndBeat + 16);
+      sections.push({
+        type: 'climax',
+        startTime: beats[breakEndBeat].time,
+        endTime: beats[climaxEndBeat].time,
+        startBeat: breakEndBeat,
+        endBeat: climaxEndBeat,
+        avgEnergy: 0.9,
+        peakEnergy: 1.0,
+      });
+
+      if (climaxEndBeat < beats.length - 1) {
+        sections.push({
+          type: 'outro',
+          startTime: beats[climaxEndBeat].time,
+          endTime: duration,
+          startBeat: climaxEndBeat,
+          endBeat: beats.length,
+          avgEnergy: 0.35,
+          peakEnergy: 0.5,
+        });
+      }
+    } else {
+      sections.push({
+        type: 'outro',
+        startTime: beats[dropEndBeat].time,
+        endTime: duration,
+        startBeat: dropEndBeat,
+        endBeat: beats.length,
+        avgEnergy: 0.4,
+        peakEnergy: 0.6,
+      });
+    }
   }
 
   return sections;

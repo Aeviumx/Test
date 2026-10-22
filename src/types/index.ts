@@ -276,6 +276,12 @@ export interface Composition {
   layers: Layer[];
   markers: Marker[];
   guides: { id: string; orientation: 'horizontal' | 'vertical'; position: number }[];
+  audioTrackAnalysis?: {
+    bpm: number;
+    beats: Array<{ time: number; frame: number; isDownbeat: boolean; strength: number; frequencyBand?: string }>;
+    sections: Array<{ type: 'intro' | 'buildup' | 'drop' | 'break' | 'climax' | 'outro'; startTime: number; endTime: number; avgEnergy: number }>;
+    energyCurve?: number[]; // normalized 0..1 per frame or sample
+  };
 }
 
 export type AssetType = 'image' | 'video' | 'audio';
@@ -289,6 +295,15 @@ export interface SceneClip {
   outPoint: number; // seconds in source asset
   duration: number; // seconds
   thumbnail?: string; // base64/dataURL preview image
+  // Material analysis metadata & junk controls
+  motionIntensity?: number;
+  motionDirection?: 'left' | 'right' | 'up' | 'down' | 'in' | 'out' | 'static';
+  shotScale?: 'extreme-close' | 'close' | 'medium' | 'wide';
+  dominantColor?: string;
+  isJunk?: boolean;
+  junkReason?: string;
+  manualOverrideJunk?: boolean; // User manual toggle: "мусор / не мусор"
+  tags?: string[];
 }
 
 export interface MediaAsset {

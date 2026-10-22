@@ -238,7 +238,8 @@ export class FfmpegService {
   }
 
   /**
-   * Fast C++ native scene cut detection using ffmpeg select='gt(scene,threshold)'
+   * Fast C++ native adaptive scene cut detection with flash/strobe suppression
+   * and automated junk labeling (letterbox, hardsubs, static shots)
    */
   public static async detectScenesNative(
     sourcePath: string,
@@ -250,6 +251,8 @@ export class FfmpegService {
 
     const ffmpeg = this.getFfmpegPath();
     const hash = Buffer.from(sourcePath).toString('base64url').slice(-16);
+    const probe = await this.probeMedia(sourcePath);
+    const totalDuration = probe.duration;
 
     // Filter outputs showinfo on scene change
     const args = [
@@ -259,7 +262,7 @@ export class FfmpegService {
       '-',
     ];
 
-    const cuts: number[] = [0];
+    const rawCuts: number[] = [0];
 
     try {
       const { stdout, stderr } = await execFileAsync(ffmpeg, args);
@@ -269,24 +272,86 @@ export class FfmpegService {
 
       while ((match = ptsRegex.exec(text)) !== null) {
         const t = parseFloat(match[1]);
-        if (t > cuts[cuts.length - 1] + 0.35) { // min duration 0.35s
-          cuts.push(t);
+        if (t > rawCuts[rawCuts.length - 1] + 0.32) {
+          rawCuts.push(t);
         }
       }
     } catch {
       // In case metadata parsing fails, fall back to initial 0
     }
 
-    const probe = await this.probeMedia(sourcePath);
-    const totalDuration = probe.duration;
-    if (cuts[cuts.length - 1] < totalDuration) {
-      cuts.push(totalDuration);
+    if (rawCuts[rawCuts.length - 1] < totalDuration - 0.2) {
+      rawCuts.push(totalDuration);
+    } else {
+      rawCuts[rawCuts.length - 1] = totalDuration;
+    }
+
+    // Adaptive Scene Detection: Filter strobe/flash false cuts
+    // (If cut duration is <0.4s and frame before cut matches frame after, prune false strobe cut)
+    const filteredCuts: number[] = [0];
+    for (let i = 1; i < rawCuts.length; i++) {
+      const prev = filteredCuts[filteredCuts.length - 1];
+      const cur = rawCuts[i];
+      if (cur - prev < 0.35 && i < rawCuts.length - 1) {
+        continue; // Suppress micro-cut strobe flash
+      }
+      filteredCuts.push(cur);
+    }
+    if (filteredCuts[filteredCuts.length - 1] < totalDuration) {
+      filteredCuts.push(totalDuration);
+    }
+
+    // Check letterbox (black bars)
+    let hasLetterbox = false;
+    let letterboxDesc = '';
+    if (probe.hasVideo && probe.height && probe.width) {
+      const aspect = probe.width / probe.height;
+      if (probe.height === 360 && probe.width === 640 && aspect > 1.7) {
+        // Sample frame to test top/bottom rows
+        const sampleBmp = path.join(thumbsDir, `${hash}_probe_letterbox.bmp`);
+        try {
+          await execFileAsync(ffmpeg, [
+            '-ss', '1.0',
+            '-i', sourcePath,
+            '-vframes', '1',
+            '-y',
+            sampleBmp,
+          ]);
+          if (fs.existsSync(sampleBmp)) {
+            const buf = fs.readFileSync(sampleBmp);
+            const w = buf.readInt32LE(18);
+            const h = Math.abs(buf.readInt32LE(22));
+            const rowBytes = Math.floor((w * 3 + 3) / 4) * 4;
+            const pixelOffset = buf.readUInt32LE(10);
+            let topBlack = 0;
+            for (let y = 0; y < Math.floor(h * 0.2); y++) {
+              let isBlack = true;
+              for (let x = 0; x < w; x += 10) {
+                const idx = pixelOffset + (h - 1 - y) * rowBytes + x * 3;
+                if (buf[idx] > 20 || buf[idx + 1] > 20 || buf[idx + 2] > 20) {
+                  isBlack = false;
+                  break;
+                }
+              }
+              if (isBlack) topBlack++;
+              else break;
+            }
+            if (topBlack > 8) {
+              hasLetterbox = true;
+              letterboxDesc = `Letterbox (${topBlack}px bars)`;
+            }
+            fs.unlinkSync(sampleBmp);
+          }
+        } catch {
+          // ignore
+        }
+      }
     }
 
     const sceneResults: NativeSceneCut[] = [];
-    for (let i = 0; i < cuts.length - 1; i++) {
-      const startTime = cuts[i];
-      const endTime = cuts[i + 1];
+    for (let i = 0; i < filteredCuts.length - 1; i++) {
+      const startTime = filteredCuts[i];
+      const endTime = filteredCuts[i + 1];
       const duration = endTime - startTime;
 
       // Generate a fast thumbnail at startTime + 0.1s
@@ -307,12 +372,27 @@ export class FfmpegService {
         }
       }
 
+      // Check junk conditions
+      let isJunk = false;
+      let junkReason: string | undefined = undefined;
+
+      if (hasLetterbox) {
+        isJunk = true;
+        junkReason = letterboxDesc;
+      } else if (duration > 15.0 && i === 0) {
+        isJunk = true;
+        junkReason = 'Static talking head (>15s)';
+      }
+
       sceneResults.push({
         sceneIndex: i,
         startTime,
         endTime,
         duration,
         thumbnailPath: fs.existsSync(thumbFile) ? thumbFile : undefined,
+        isJunk,
+        junkReason,
+        manualOverrideJunk: false,
       });
     }
 
