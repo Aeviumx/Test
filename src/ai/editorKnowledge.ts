@@ -119,6 +119,16 @@ export const EDIT_PRINCIPLES = {
     forbidStaticTalkingHeads: true,
     requireUnifiedColorGrade: true,
   },
+  viral: {
+    hookWindowSeconds: 1.0, // First 1s must contain instant visual grab (punch, card entrance, flash)
+    seamlessLooping: true,  // End clip matches start motion/frame for infinite replay loops
+    tiktokSafeZones: {
+      topPx: 180,           // Avoid search / live header
+      bottomPx: 340,        // Avoid caption, author handle, and audio ticker
+      rightPx: 120,         // Avoid like / comment / share sidebar buttons
+      leftPx: 60,           // Margin
+    },
+  },
 };
 
 /**
