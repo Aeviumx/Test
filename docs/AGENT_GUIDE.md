@@ -142,28 +142,38 @@ Located in `src/ai/viralAudio.ts`:
 
 ---
 
-## 5. CLI Rendering & Contact Sheets
+## 5. CLI Rendering, Audit Suite & Contact Sheets
 
-Render edits directly via CLI:
+Render edits and audit suites directly via CLI:
 
 ```bash
-# Render Gacha Hype v2 (122 BPM transient-locked, blinding white flashes, zero border clamping)
-python scripts/render_gacha_hype_v2.py
+# Render Gacha Hype v3 (YOLOv8 face-tracking, -2f transient sync, controlled flashes, dark gradient matting)
+python scripts/render_gacha_hype_v3.py
 
-# Render Aesthetic Lyric v2 (Real rainy bokeh video plate, Montserrat ExtraBold, light wrap, no vertical strip)
-python scripts/render_aesthetic_lyric_v2.py
+# Render Aesthetic Lyric v3 (Zero text collision, safe zone typography, graded rain bokeh, camera push-in)
+python scripts/render_aesthetic_lyric_v3.py
 
-# Generate side-by-side frame comparison (Reference vs Kōri v2 at 4 key moments)
-python scripts/generate_side_by_side_comparison.py
+# Generate Complete Visual Audit Suite & Side-by-Side Comparisons (Reference vs Kōri v3)
+python scripts/generate_all_audits_v3.py
 ```
 
-Generated outputs:
-- **Gacha Hype v2 MP4:** [`D:/motionforge/test-assets/results/output_gacha_hype_v2.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v2.mp4) (26.48 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipping)
-- **Gacha Hype v2 Contact Sheet:** [`D:/motionforge/test-assets/results/output_gacha_hype_v2_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v2_contact_sheet.jpg)
-- **Aesthetic Lyric v2 MP4:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v2.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v2.mp4) (23.04 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipping)
-- **Aesthetic Lyric v2 Contact Sheet:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v2_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v2_contact_sheet.jpg)
-- **Side-by-Side Comparison 1 (Gacha Ref vs v2):** [`D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v2.jpg`](file:///D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v2.jpg)
-- **Side-by-Side Comparison 2 (Lyric Ref vs v2):** [`D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v2.jpg`](file:///D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v2.jpg)
+Generated v3 outputs:
+- **Gacha Hype v3 MP4:** [`D:/motionforge/test-assets/results/output_gacha_hype_v3.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v3.mp4) (18.68 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipped samples)
+- **Gacha Hype v3 Contact Sheet:** [`D:/motionforge/test-assets/results/output_gacha_hype_v3_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v3_contact_sheet.jpg)
+- **Aesthetic Lyric v3 MP4:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v3.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v3.mp4) (19.80 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipped samples, 0 text collision)
+- **Aesthetic Lyric v3 Contact Sheet:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v3_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v3_contact_sheet.jpg)
+- **Side-by-Side Comparison 1 (Gacha Ref vs v3):** [`D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v3.jpg`](file:///D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v3.jpg)
+- **Side-by-Side Comparison 2 (Lyric Ref vs v3):** [`D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v3.jpg`](file:///D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v3.jpg)
+
+### Dedicated Verification Frames for Every Feedback Point:
+- **Point 1 (Beat Sync & Kick Timing):** [`D:/motionforge/test-assets/results/audit/fix1_sync_waveform_comparison.jpg`](file:///D:/motionforge/test-assets/results/audit/fix1_sync_waveform_comparison.jpg)
+- **Point 2 (Face & Eyes Centered Framing):** [`D:/motionforge/test-assets/results/audit/fix2_face_closeup_frame.jpg`](file:///D:/motionforge/test-assets/results/audit/fix2_face_closeup_frame.jpg)
+- **Point 3 (Dark Gradient Matte & Flash Decay):** [`D:/motionforge/test-assets/results/audit/fix3_dark_background_matte.jpg`](file:///D:/motionforge/test-assets/results/audit/fix3_dark_background_matte.jpg)
+- **Point 4 (Intro Cards Character Fill Ratio >= 80%):** [`D:/motionforge/test-assets/results/audit/fix4_intro_card_framing.jpg`](file:///D:/motionforge/test-assets/results/audit/fix4_intro_card_framing.jpg)
+- **Point 5 (Lyric Text vs Character Zero Collision):** [`D:/motionforge/test-assets/results/audit/fix5_lyric_mask_collision_check.jpg`](file:///D:/motionforge/test-assets/results/audit/fix5_lyric_mask_collision_check.jpg)
+- **Point 6 (Safe Zone Typography & Signature Position):** [`D:/motionforge/test-assets/results/audit/fix6_lyric_safe_zone.jpg`](file:///D:/motionforge/test-assets/results/audit/fix6_lyric_safe_zone.jpg)
+- **Point 7 (Moody Graded Raindrop Bokeh Background):** [`D:/motionforge/test-assets/results/audit/fix7_lyric_background_grade.jpg`](file:///D:/motionforge/test-assets/results/audit/fix7_lyric_background_grade.jpg)
+- **Point 8 (Dynamic Framing Transitions & 2.5D Parallax):** [`D:/motionforge/test-assets/results/audit/fix8_lyric_liveliness_parallax.jpg`](file:///D:/motionforge/test-assets/results/audit/fix8_lyric_liveliness_parallax.jpg)
 
 ---
 
