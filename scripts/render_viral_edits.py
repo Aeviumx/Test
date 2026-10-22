@@ -259,15 +259,33 @@ def render_gacha_hype_edit():
             # Accent Zoom Punch (+18% scale kick)
             total_scale += accent_decay * 0.18
             
-            # Scale & crop character art (Lucia / Vera)
             source_art = im_lucia if t < 8.55 else im_vera
-            art_w = int(W * total_scale * 1.05)
-            art_h = int(W * total_scale * 1.05)
+
+            # 1. Background Padding Blur (eliminates black bars in 9:16 vertical)
+            # Scale background to fill 1080x1920 completely and apply heavy blur
+            bg_scale = max(W / source_art.width, H / source_art.height) * 1.05
+            bg_w = int(source_art.width * bg_scale)
+            bg_h = int(source_art.height * bg_scale)
+            bg_blurred = source_art.resize((bg_w, bg_h), Image.Resampling.BILINEAR)
+            bg_blurred = bg_blurred.filter(ImageFilter.GaussianBlur(35))
+            # Crop to canvas and dim slightly
+            bg_x = (bg_w - W) // 2
+            bg_y = (bg_h - H) // 2
+            frame = bg_blurred.crop((bg_x, bg_y, bg_x + W, bg_y + H))
+            # Darken padding background so foreground art pops
+            dim_mask = Image.new("RGBA", (W, H), (15, 18, 24, 110))
+            frame = Image.alpha_composite(frame, dim_mask)
+
+            # 2. Scale & crop sharp foreground character art (Lucia / Vera)
+            # In wide shot, ensure height fills comfortably or scales dynamically
+            effective_scale = max(1.4, total_scale)
+            art_w = int(W * effective_scale * 1.15)
+            art_h = int(W * effective_scale * 1.15 * (source_art.height / source_art.width))
             scaled_art = source_art.resize((art_w, art_h), Image.Resampling.BILINEAR)
             
             # Center on target point
-            cx = art_w // 2 + int(pan_x * total_scale)
-            cy = art_h // 2 + int(pan_y * total_scale)
+            cx = art_w // 2 + int(pan_x * effective_scale)
+            cy = art_h // 2 + int(pan_y * effective_scale)
             
             # Crop to canvas size (W=1080, H=1920)
             crop_x1 = cx - W // 2
@@ -275,8 +293,6 @@ def render_gacha_hype_edit():
             crop_x2 = crop_x1 + W
             crop_y2 = crop_y1 + H
             
-            # Clamp padding
-            frame = Image.new("RGBA", (W, H), (12, 14, 18, 255))
             paste_x = max(0, -crop_x1)
             paste_y = max(0, -crop_y1)
             src_x1 = max(0, crop_x1)
@@ -285,7 +301,7 @@ def render_gacha_hype_edit():
             src_y2 = min(art_h, crop_y2)
             
             cropped_piece = scaled_art.crop((src_x1, src_y1, src_x2, src_y2))
-            frame.paste(cropped_piece, (paste_x, paste_y))
+            frame.paste(cropped_piece, (paste_x, paste_y), cropped_piece if cropped_piece.mode == "RGBA" else None)
             
             # Rainbow Prism RGB Split on accent
             if accent_decay > 0.05:
@@ -375,9 +391,10 @@ def render_aesthetic_lyric_edit():
     contact_samples = []
     contact_timestamps = [0.8, 1.8, 2.8, 3.8, 4.8, 5.8, 6.8, 7.8, 8.8, 9.8, 10.8, 11.8]
 
-    # Pre-scale character cutout
-    char_base_w = int(W * 1.05)
-    char_base_h = int(W * 1.05 * (char_raw.height / char_raw.width))
+    # Pre-scale character cutout to medium portrait (fills height, placed on left)
+    char_portrait_scale = 1.35
+    char_base_w = int(W * char_portrait_scale)
+    char_base_h = int(W * char_portrait_scale * (char_raw.height / char_raw.width))
     char_scaled = char_raw.resize((char_base_w, char_base_h), Image.Resampling.LANCZOS)
     
     # Pre-generate light wrap & atmospheric rim contour for character
@@ -416,17 +433,22 @@ def render_aesthetic_lyric_edit():
         char_animated = char_with_rim.resize((cw, ch), Image.Resampling.BILINEAR)
         char_animated = char_animated.rotate(sway_angle, resample=Image.Resampling.BICUBIC, expand=True)
         
-        # Position left-center (Reference 2 framing)
-        char_pos_x = -120 + int(math.sin(t * 0.8) * 8)
-        char_pos_y = 480 + int(math.cos(t * 0.6) * 6)
+        # Position LEFT-ALIGNED (Reference 2 framing: character takes left 45%, leaving right 55% for text)
+        char_pos_x = -360 + int(math.sin(t * 0.8) * 8)
+        char_pos_y = 280 + int(math.cos(t * 0.6) * 6)
         frame.paste(char_animated, (char_pos_x, char_pos_y), char_animated)
         
-        # 3. Vignette & Cold Mood Grade
+        # Dark vignette on right side to ensure lyric text has maximum contrast
+        vignette = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        draw_vig = ImageDraw.Draw(vignette)
+        draw_vig.rectangle([(480, 0), (W, H)], fill=(10, 14, 20, 95))
+        frame = Image.alpha_composite(frame, vignette)
+
         draw = ImageDraw.Draw(frame)
         
-        # 4. Karaoke Lyrics & Typography (Right Side Block)
-        lyric_block_x = 560
-        lyric_block_y = 820
+        # 4. Karaoke Lyrics & Typography (Cleanly positioned on right side, NO character overlap)
+        lyric_block_x = 550
+        lyric_block_y = 760
         
         # Glowing ornament: '••'
         draw.text((lyric_block_x, lyric_block_y - 80), "••", fill=(255, 255, 255, 240), font=FONT_ORNAMENT)
@@ -451,7 +473,6 @@ def render_aesthetic_lyric_edit():
                 if is_active:
                     # Glowing bright white with cyan tint
                     fill_col = (255, 255, 255, 255)
-                    # Text glow simulation: draw subtle shadow/halo
                     draw.text((word_x - 1, line_y), w_text, fill=(56, 189, 248, 160), font=FONT_LARGE)
                     draw.text((word_x + 1, line_y), w_text, fill=(56, 189, 248, 160), font=FONT_LARGE)
                     draw.text((word_x, line_y), w_text, fill=fill_col, font=FONT_LARGE)
@@ -467,20 +488,20 @@ def render_aesthetic_lyric_edit():
                 bbox = draw.textbbox((word_x, line_y), w_text, font=FONT_LARGE)
                 word_x += (bbox[2] - bbox[0]) + 18
                 
-                # Wrap line if wide
-                if word_x > W - 140:
+                # Wrap line if approaching right edge
+                if word_x > W - 80:
                     word_x = lyric_block_x
                     line_y += 75
         
         # Track title signature below lyrics
-        draw.text((lyric_block_x, lyric_block_y + 160), "Shape of You • Ed Sheeran (Slowed)", fill=(148, 163, 184, 180), font=FONT_SMALL)
+        draw.text((lyric_block_x, lyric_block_y + 170), "Shape of You • Ed Sheeran (Slowed)", fill=(148, 163, 184, 180), font=FONT_SMALL)
         
         # 5. Typewriter Author Watermark with Blinking Cursor
         cursor = "_" if (int(t * 3.5) % 2 == 0) else " "
         watermark_full = "edit by kōri"
         chars_typed = min(len(watermark_full), int(max(0.0, t - 0.8) * 8.0))
         watermark_text = f"{watermark_full[:chars_typed]} {cursor}"
-        draw.text((120, H - 240), watermark_text, fill=(203, 213, 225, 200), font=FONT_MEDIUM)
+        draw.text((100, H - 220), watermark_text, fill=(203, 213, 225, 200), font=FONT_MEDIUM)
 
         # Pipe raw RGB frame to ffmpeg
         rgb_data = frame.convert("RGB").tobytes()
