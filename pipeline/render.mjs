@@ -1,11 +1,12 @@
 // Рендер плана в MP4: Skia-canvas (кадры) → ffmpeg (H.264 + звук с нормализацией громкости).
 // Рисует ровно то, что описано в плане: карточки интро, кадры, события (панч, тряска, RGB, вспышки).
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { ffmpegPath, measureLoudness } from './ffmpeg.mjs';
 import { frameFor, cardFrame, faceCenter } from './framing.mjs';
+import { sourceAt } from './styles/velocity.mjs';
 
 const DECAY = { punch: 13, shake: 9, rgb: 16, flash: 45, colorflash: 12 };
 const CARD_W = 760;
@@ -43,6 +44,8 @@ class Renderer {
     this.images = {};
     this.backgrounds = {};
     this.cards = {};
+    this.decoded = []; // декодированные диапазоны видео (держим два последних)
+    this.frameCanvases = new Map();
   }
 
   async prepare() {
@@ -196,6 +199,100 @@ class Renderer {
     return c;
   }
 
+  /** Декодирует нужный диапазон кадров сцены (с запасом для смешивания) один раз на кадр эдита. */
+  decodeFor(shot) {
+    const key = `${shot.clip}:${shot.crop.x}:${shot.ramps[0].srcA}`;
+    const hit = this.decoded.find((d) => d.key === key);
+    if (hit) return hit;
+    const clip = this.plan.clips[shot.clip];
+    const srcMin = Math.min(...shot.ramps.map((r) => r.srcA)) - 0.12;
+    const srcMax = Math.max(...shot.ramps.map((r) => r.srcB)) + 0.05;
+    const first = Math.max(0, Math.floor(srcMin * clip.fps));
+    const count = Math.ceil(srcMax * clip.fps) - first + 1;
+    const { w, h, x } = shot.crop;
+    const r = spawnSync(ffmpegPath(), [
+      '-v', 'error', '-ss', (first / clip.fps).toFixed(5), '-i', clip.path, '-frames:v', String(count),
+      '-vf', `crop=${w}:${h}:${x}:0,format=rgba`, '-f', 'rawvideo', '-',
+    ], { maxBuffer: 2 ** 31 });
+    if (r.status !== 0) throw new Error(`ffmpeg не смог декодировать ${clip.path}: ${r.stderr}`);
+    const n = Math.floor(r.stdout.length / (w * h * 4));
+    const d = { key, first, n, w, h, fps: clip.fps, buf: r.stdout };
+    this.decoded.unshift(d);
+    if (this.decoded.length > 2) this.decoded.pop();
+    for (const k of [...this.frameCanvases.keys()]) if (!this.decoded.some((x) => k.startsWith(x.key + '#'))) this.frameCanvases.delete(k);
+    return d;
+  }
+
+  frameCanvas(d, i) {
+    const idx = Math.max(0, Math.min(d.n - 1, i));
+    const key = `${d.key}#${idx}`;
+    let c = this.frameCanvases.get(key);
+    if (!c) {
+      c = createCanvas(d.w, d.h);
+      const g = c.getContext('2d');
+      const im = g.createImageData(d.w, d.h);
+      im.data.set(d.buf.subarray(idx * d.w * d.h * 4, (idx + 1) * d.w * d.h * 4));
+      g.putImageData(im, 0, 0);
+      this.frameCanvases.set(key, c);
+      if (this.frameCanvases.size > 48) this.frameCanvases.delete(this.frameCanvases.keys().next().value);
+    }
+    return c;
+  }
+
+  /** Кадр твикстора в момент t: при разгоне — смешивание нескольких кадров (motion blur). */
+  videoImage(shot, t) {
+    const d = this.decodeFor(shot);
+    if (!this.vblend || this.vblend.width !== d.w || this.vblend.height !== d.h) this.vblend = createCanvas(d.w, d.h);
+    const g = this.vblend.getContext('2d');
+    const { src, speed } = sourceAt(shot, t);
+    const step = (speed * d.fps) / this.plan.fps; // сколько кадров исходника проходит за кадр эдита
+    g.globalCompositeOperation = 'source-over';
+    if (step > 1.3) {
+      const n = Math.min(6, Math.round(step));
+      for (let j = 0; j < n; j++) {
+        const sj = src - (j / n) * (speed / this.plan.fps);
+        g.globalAlpha = 1 / (j + 1);
+        g.drawImage(this.frameCanvas(d, Math.round(sj * d.fps) - d.first), 0, 0);
+      }
+    } else {
+      const fi = src * d.fps - d.first;
+      const i0 = Math.floor(fi);
+      const frac = fi - i0;
+      g.globalAlpha = 1;
+      g.drawImage(this.frameCanvas(d, i0), 0, 0);
+      if (frac > 0.05) {
+        g.globalAlpha = frac;
+        g.drawImage(this.frameCanvas(d, i0 + 1), 0, 0);
+      }
+    }
+    g.globalAlpha = 1;
+    return this.vblend;
+  }
+
+  drawVideoShot(ctx, t, shot) {
+    const { W, H, plan } = this;
+    const img = this.videoImage(shot, t);
+    const p = clamp01((t - shot.start) / Math.max(1e-6, shot.end - shot.start));
+    const punch = envelope(plan.events, 'punch', t);
+    const shake = envelope(plan.events, 'shake', t);
+    const zoom = 1.04 * (1 + 0.05 * p) * (1 + 0.09 * punch);
+    const sx = 18 * shake * Math.sin(t * 83 + 1.3);
+    const sy = 13 * shake * Math.cos(t * 71 + 0.4);
+    const rot = 0.02 * shake * Math.sin(t * 57);
+    const ax = W / 2;
+    const ay = shot.anchorY * H;
+    const s = H / img.height;
+    ctx.save();
+    ctx.translate(ax + sx, ay + sy);
+    ctx.rotate(rot);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-ax, -ay);
+    ctx.filter = 'contrast(1.07) saturate(1.15)';
+    ctx.drawImage(img, W / 2 - (img.width * s) / 2, 0, img.width * s, H);
+    ctx.filter = 'none';
+    ctx.restore();
+  }
+
   shotAt(t) {
     const shots = this.plan.shots;
     for (let i = shots.length - 1; i >= 0; i--) if (t >= shots[i].start - 1e-9) return shots[i];
@@ -299,14 +396,16 @@ class Renderer {
     return { z, anchor: [ax, ay] };
   }
 
-  /** Сцена без постобработки. */
-  drawRaw(ctx, t) {
+  /** Сцена без постобработки. mainT — время основного кадра (подкадры motion blur остаются в его шоте). */
+  drawRaw(ctx, t, mainT = t) {
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = '#06070b';
     ctx.fillRect(0, 0, this.W, this.H);
     if (this.plan.cards && t < this.plan.cards.end) return this.drawCards(ctx, t);
-    this.drawShot(ctx, t);
+    const shot = this.shotAt(mainT);
+    if (shot.type === 'video') this.drawVideoShot(ctx, Math.max(t, shot.start), shot);
+    else this.drawShot(ctx, t);
     return null;
   }
 
@@ -329,7 +428,7 @@ class Renderer {
       const tmp = this.tmp.getContext('2d');
       for (let i = 0; i < K; i++) {
         const ti = t - (i / (K - 1)) * (0.7 / fps);
-        const r = this.drawRaw(tmp, ti);
+        const r = this.drawRaw(tmp, ti, t);
         if (i === 0) info = r;
         acc.globalCompositeOperation = 'source-over';
         acc.globalAlpha = 1 / (i + 1);

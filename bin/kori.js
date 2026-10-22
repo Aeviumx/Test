@@ -20,13 +20,16 @@ Kōri (氷) CLI
 
 Команды:
   faces    <папка с артами>                 Разметить арты: лица, контур, цвет (Python + OpenCV)
+  clips    <папка с видео>                  Разметить клипы/твиксторы: сцены, движение, лица
   analyze  --audio <трек>                   Темп, биты, дроп, ритмический рисунок
-  plan     --audio <трек> --art <папка|файлы...> --out plan.json
-           [--style gacha-hype] [--duration 15] [--signature "edit by ..."]
+  plan     --audio <трек> --art <папка|файлы...> --out plan.json             (стиль gacha-hype, по умолчанию)
+  plan     --style velocity --audio <трек> --clips <папка|файлы...> --out plan.json   (твикстор-эдит)
+           [--duration 15] [--signature "edit by ..."]
+           [--lead-frames 2]  на сколько кадров раньше удара ставить склейки/вспышки (0 — точно в удар)
   lint     --plan plan.json                 Проверить план (лица в кадре, вспышки, синхрон)
   stills   --plan plan.json --times 1,4.5,8 --out <папка>   Отдельные кадры в PNG
   export   --plan plan.json --out edit.mp4 [--force]        Рендер MP4 (+ проверка edit_qa.py)
-  render   --audio <трек> --art <папка|файлы...> --out edit.mp4 [...]  plan + lint + export + qa
+  render   те же параметры, что у plan, + --out edit.mp4           plan + lint + export + qa
   qa       <edit.mp4>                       Независимая проверка готового эдита
 
 Переменные: KORI_FFMPEG, KORI_FFPROBE, KORI_PYTHON — пути к программам, если их нет в PATH.
@@ -67,22 +70,33 @@ function runPython(script, scriptArgs) {
 
 async function loadStyle(style) {
   if (style === 'gacha-hype') return import('../pipeline/styles/gachaHype.mjs');
-  throw new Error(`Стиль «${style}» пока не реализован в конвейере. Доступно: gacha-hype`);
+  if (style === 'velocity') return import('../pipeline/styles/velocity.mjs');
+  throw new Error(`Стиль «${style}» пока не реализован в конвейере. Доступно: gacha-hype, velocity`);
 }
 
 async function makePlan() {
   const audio = getArg('--audio');
-  const art = getList('--art');
-  if (!audio || !art.length) throw new Error('Нужны --audio <трек> и --art <папка или файлы>');
-  const { collectArt, loadArtMeta } = await import('../pipeline/art.mjs');
-  const style = await loadStyle(getArg('--style', 'gacha-hype'));
-  const assets = loadArtMeta(collectArt(art));
+  const styleId = getArg('--style', 'gacha-hype');
+  const style = await loadStyle(styleId);
+  let sources;
+  if (styleId === 'velocity') {
+    const clipArgs = getList('--clips');
+    if (!audio || !clipArgs.length) throw new Error('Нужны --audio <трек> и --clips <папка или файлы>');
+    const { collectClips, loadClipMeta } = await import('../pipeline/clips.mjs');
+    sources = { clips: loadClipMeta(collectClips(clipArgs)) };
+  } else {
+    const art = getList('--art');
+    if (!audio || !art.length) throw new Error('Нужны --audio <трек> и --art <папка или файлы>');
+    const { collectArt, loadArtMeta } = await import('../pipeline/art.mjs');
+    sources = { assets: loadArtMeta(collectArt(art)) };
+  }
   return style.buildPlan({
     audioFile: path.resolve(audio),
-    assets,
+    ...sources,
     targetDuration: parseFloat(getArg('--duration', '15')),
     fps: parseInt(getArg('--fps', '60'), 10),
     signature: getArg('--signature', ''),
+    leadFrames: parseFloat(getArg('--lead-frames', '2')),
   });
 }
 
@@ -122,7 +136,7 @@ async function exportPlan(plan, out) {
 function summary(plan) {
   const a = plan.audio;
   console.log(`[kori] Темп ${a.bpm} BPM, фрагмент ${a.start.toFixed(2)}–${(a.start + a.duration).toFixed(2)} с трека`);
-  console.log(`[kori] Дроп на ${a.dropAt.toFixed(2)} с эдита (+${a.dropRise} дБ), ритмический рисунок: восьмые ${a.pattern.join(', ')}`);
+  console.log(`[kori] Дроп на ${a.dropAt.toFixed(2)} с эдита (+${a.dropRise} дБ), ритмический рисунок (шестнадцатые 0–15): ${a.pattern.join(', ')}`);
   console.log(`[kori] Кадров: ${plan.shots.length}, акцентов: ${plan.accents.length}, вспышек: ${plan.events.filter((e) => e.type === 'flash').length}`);
 }
 
@@ -136,6 +150,11 @@ async function main() {
       const dir = args[1];
       if (!dir) throw new Error('Укажи папку с артами: kori faces <папка>');
       return runPython('detect_faces.py', [dir, ...args.slice(2)]);
+    }
+    case 'clips': {
+      const dir = args[1];
+      if (!dir) throw new Error('Укажи папку с видео: kori clips <папка>');
+      return runPython('analyze_clips.py', [dir, ...args.slice(2)]);
     }
     case 'analyze': {
       const { analyzeTrack, findDrop, accentPattern } = await import('../pipeline/audio.mjs');

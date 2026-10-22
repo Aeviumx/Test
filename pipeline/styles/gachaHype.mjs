@@ -1,7 +1,8 @@
 // Стиль Gacha Hype (по референсу 1): интро с карточками → дроп → по 3 акцента на такт
 // по ритмическому рисунку трека, белая вспышка только на сильную долю, панчи на лицо.
 // Всё время и все решения берутся из анализа трека и разметки артов — ничего не вписано руками.
-import { analyzeTrack, findDrop, accentPattern, snapToOnset } from '../audio.mjs';
+import { snapToOnset } from '../audio.mjs';
+import { buildRhythm, audioBlock } from '../rhythm.mjs';
 
 export const STYLE_ID = 'gacha-hype';
 
@@ -10,7 +11,7 @@ const FRAMING_ORDER = [
   ['mid', 'full', 'close'],
 ];
 
-export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080, height = 1920, fps = 60, signature = '' }) {
+export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080, height = 1920, fps = 60, signature = '', leadFrames = 2 }) {
   const characters = assets.filter((a) => a.kind === 'character' && a.face);
   // широкие арты (16:9) в вертикальном кадре превращаются в узкую полоску — в финал берём только вертикальные/квадратные
   const scenes = assets.filter((a) => a.kind === 'scene' && a.width / a.height <= 1.05);
@@ -18,27 +19,14 @@ export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080
     throw new Error('Для Gacha Hype нужен минимум один арт персонажа на прозрачном фоне с найденным лицом.');
   }
 
-  const analysis = analyzeTrack(audioFile);
-  const barDur = analysis.beatInterval * 4;
-  const introBars = 2;
-  const dropBars = Math.max(3, Math.round((targetDuration - introBars * barDur) / barDur));
-  const drop = findDrop(analysis, introBars, dropBars + 1);
-  if (!drop) throw new Error('Не удалось найти дроп в треке: трек слишком короткий или без выраженной структуры.');
-
-  const db = analysis.downbeats;
-  const start = db[drop.bar - introBars];
-  const end = db[drop.bar + dropBars] ?? db[drop.bar] + dropBars * barDur;
-  const duration = end - start;
-  const rel = (t) => Number((t - start).toFixed(4));
-  const lead = 1 / fps; // визуальное событие на 1 кадр раньше удара — так воспринимается «в бит»
-
-  const pattern = accentPattern(analysis, drop.bar, drop.bar + dropBars, 3);
-  const beatsEdit = analysis.beats.filter((t) => t >= start - 1e-3 && t < end).map(rel);
-  const dropAt = rel(drop.time);
+  const r = buildRhythm({ audioFile, introBars: 2, targetDuration, fps, leadFrames });
+  const { analysis, drop, dropBars, rel, lead, beatsEdit, dropAt, accents } = r;
+  const duration = r.duration;
 
   // ---------- интро: карточки ----------
   const cardChars = [0, 1, 2].map((i) => characters[i % characters.length].id);
-  const introBeats = beatsEdit.filter((t) => t < dropAt - 1e-3);
+  // карточки входят на уточнённые удары интро (каждая вторая доля), зум к дропу — с 7-й доли
+  const introBeats = r.introAccents.map((a) => a.t);
   const enterIdx = [0, 2, 4];
   const cards = {
     start: 0,
@@ -46,7 +34,7 @@ export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080
     items: cardChars.map((id, i) => ({
       asset: id,
       slot: ['center', 'left', 'right'][i],
-      enter: Math.max(0, (introBeats[enterIdx[i]] ?? i * analysis.beatInterval * 2) - lead),
+      enter: introBeats[enterIdx[i]] ?? i * analysis.beatInterval * 2,
       from: i === 1 ? 'left' : 'right',
     })),
     zoomStart: introBeats[6] ?? dropAt - 2 * analysis.beatInterval,
@@ -54,31 +42,9 @@ export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080
 
   const events = [];
   for (const it of cards.items) events.push({ t: it.enter, type: 'punch', strength: 0.6 });
-  const preDrop = snapToOnset(analysis, drop.time - analysis.beatInterval / 2);
+  const preDrop = snapToOnset(analysis, drop.time - analysis.beatInterval / 2);  // восьмая перед дропом
   const preColor = characters.find((c) => c.id === cardChars[0]).palette.main;
   events.push({ t: Math.max(0, rel(preDrop.t) - lead), type: 'colorflash', strength: 0.7, color: preColor });
-
-  // ---------- после дропа: акценты по рисунку ----------
-  const accents = [];
-  for (let b = 0; b < dropBars; b++) {
-    const barIdx = drop.bar + b;
-    const t0 = db[barIdx];
-    const beatsInBar = analysis.beats.filter((t) => t >= t0 - 1e-3 && t < t0 + barDur - 1e-3);
-    for (const pos of pattern.positions) {
-      const beatNo = Math.floor(pos / 2);
-      const base = beatsInBar[beatNo] ?? t0 + beatNo * analysis.beatInterval;
-      const grid = pos % 2 === 0 ? base : base + analysis.beatInterval / 2;
-      const sn = pos === 0 ? { t: t0, snapped: true } : snapToOnset(analysis, grid);
-      accents.push({
-        bar: b,
-        pos,
-        audioT: rel(sn.t),
-        t: Math.max(0, rel(sn.t) - lead),
-        snapped: sn.snapped,
-        flash: pos === 0,
-      });
-    }
-  }
 
   // ---------- кадры ----------
   const shots = [];
@@ -126,19 +92,9 @@ export function buildPlan({ audioFile, assets, targetDuration = 15, width = 1080
     fps,
     duration: Number(duration.toFixed(4)),
     signature,
-    audio: {
-      file: audioFile,
-      start: Number(start.toFixed(4)),
-      duration: Number(duration.toFixed(4)),
-      bpm: analysis.bpm,
-      dropAt,
-      dropRise: drop.rise,
-      pattern: pattern.positions,
-      patternScores: pattern.scores,
-      tempoCandidates: analysis.tempoCandidates,
-    },
+    audio: audioBlock(audioFile, r),
     beats: beatsEdit,
-    downbeats: db.filter((t) => t >= start - 1e-3 && t < end).map(rel),
+    downbeats: r.downbeatsEdit,
     assets: Object.fromEntries(assets.filter((a) => usedIds.has(a.id)).map((a) => [a.id, a])),
     cards,
     shots,

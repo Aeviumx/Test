@@ -34,6 +34,16 @@ export function lintPlan(plan) {
 
   // 4. Лицо в кадре на всех крупных планах (с учётом наезда и панча)
   for (const s of plan.shots) {
+    if (s.type === 'video') {
+      // твикстор: время в исходнике идёт только вперёд и не выходит за сцену
+      for (let i = 0; i < s.ramps.length; i++) {
+        const r = s.ramps[i];
+        if (r.srcB <= r.srcA) errors.push(`${s.clip} (${s.start.toFixed(2)} с): время исходника не идёт вперёд`);
+        if (i && Math.abs(r.srcA - s.ramps[i - 1].srcB) > 1e-3) errors.push(`${s.clip} (${s.start.toFixed(2)} с): разрыв во времени исходника`);
+      }
+      if (s.slowFactor < 0.4) warnings.push(`${s.clip}, сцена ${s.scene}: сцена короткая — такт замедлен в ${(1 / s.slowFactor).toFixed(1)} раза`);
+      continue;
+    }
     const a = plan.assets[s.asset];
     if (!a) {
       errors.push(`Кадр ${s.start} ссылается на неизвестный арт ${s.asset}`);
@@ -65,11 +75,11 @@ export function lintPlan(plan) {
   const perBar = new Map();
   plan.accents.forEach((acc) => {
     const shot = plan.shots.find((s) => Math.abs(s.start - acc.t) < 1e-6);
-    if (shot && !perBar.has(acc.bar)) perBar.set(acc.bar, shot.asset);
+    if (shot && !perBar.has(acc.bar)) perBar.set(acc.bar, shot.asset ?? `${shot.clip}#${shot.scene}`);
   });
   const bars = [...perBar.keys()].sort((a, b) => a - b);
   for (let i = 1; i < bars.length; i++) {
-    if (perBar.get(bars[i]) === perBar.get(bars[i - 1]) && Object.keys(plan.assets).length > 2) {
+    if (perBar.get(bars[i]) === perBar.get(bars[i - 1]) && new Set(perBar.values()).size > 2) {
       warnings.push(`Такты ${bars[i - 1]} и ${bars[i]}: один и тот же арт подряд`);
     }
   }

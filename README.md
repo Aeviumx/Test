@@ -99,5 +99,8 @@ npm run kori -- render --audio test-assets/real/track_02_midnight_phonk.mp3 \
   --out out/gacha.mp4
 ```
 
+Твикстор-эдит из видеоклипов: `npm run kori -- clips <папка>`, затем
+`npm run kori -- render --style velocity --audio <трек> --clips <клипы> --out out/velocity.mp4`.
+
 Команда `render` анализирует трек (темп, дроп, ритмический рисунок), строит план, проверяет его,
 рендерит MP4 и запускает независимую проверку `tools/edit_qa.py`. Подробности — `docs/AGENT_GUIDE.md`.

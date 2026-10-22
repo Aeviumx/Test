@@ -6,6 +6,11 @@ const SR = 22050;
 const N = 1024;
 const HOP = 256;
 export const FRAME_RATE = SR / HOP;
+// кадр анализа f описывает окно [f·HOP, f·HOP + N): его время — середина окна, а не начало
+const WIN_CENTER = N / 2 / SR;
+export const frameToTime = (f) => f / FRAME_RATE + WIN_CENTER;
+export const timeToFrame = (t) => Math.round((t - WIN_CENTER) * FRAME_RATE);
+const ENV_RATE = 1000; // огибающая низких частот с шагом 1 мс — для точной атаки удара
 
 function fftMag(re, im) {
   const n = re.length;
@@ -113,7 +118,7 @@ export function computeEnvelopes(samples) {
   const fullN = norm(full);
   const lowN = norm(low);
   const onset = fullN.map((v, i) => v + lowN[i]);
-  return { onset, kick: lowN, rms, lowEnergy, frameRate: FRAME_RATE };
+  return { onset, kick: lowN, rms, lowEnergy, lowEnv: lowEnvelope(samples), frameRate: FRAME_RATE };
 }
 
 /** Темп по автокорреляции огибающей с мягким предпочтением 90–140 BPM. */
@@ -214,7 +219,7 @@ export function analyzeTrack(file) {
   const env = computeEnvelopes(samples);
   const tempo = estimateTempo(env.onset);
   const beatFrames = trackBeats(env.onset, tempo.bpm);
-  const beats = beatFrames.map((f) => f / FRAME_RATE);
+  const beats = beatFrames.map(frameToTime);
   // уточнённый темп по медиане интервалов
   const iv = beats.slice(1).map((b, i) => b - beats[i]).sort((a, b) => a - b);
   const medIv = iv[Math.floor(iv.length / 2)];
@@ -231,8 +236,8 @@ export function analyzeTrack(file) {
   // громкость по тактам (дБ)
   const barEnergy = downbeats.map((t0, b) => {
     const t1 = downbeats[b + 1] ?? t0 + 4 * medIv;
-    const a = Math.round(t0 * FRAME_RATE);
-    const z = Math.min(env.rms.length, Math.round(t1 * FRAME_RATE));
+    const a = Math.max(0, timeToFrame(t0));
+    const z = Math.min(env.rms.length, timeToFrame(t1));
     let s = 0;
     for (let i = a; i < z; i++) s += env.rms[i] * env.rms[i];
     return 10 * Math.log10(s / Math.max(1, z - a) + 1e-12);
@@ -276,19 +281,29 @@ export function findDrop(analysis, minStartBar = 2, needBars = 6) {
   return cands.find((c) => c.rise >= 0.75 * top);
 }
 
+/** Время доли внутри такта: beats — биты такта, pos — шестнадцатая (0..15). */
+export function gridTime(analysis, barStart, pos) {
+  const { beats, beatInterval } = analysis;
+  const inBar = beats.filter((t) => t >= barStart - 1e-3 && t < barStart + 4 * beatInterval - 1e-3);
+  const beatNo = Math.floor(pos / 4);
+  const b0 = inBar[beatNo] ?? barStart + beatNo * beatInterval;
+  const b1 = inBar[beatNo + 1] ?? b0 + beatInterval;
+  return b0 + ((pos % 4) / 4) * (b1 - b0);
+}
+
 /**
- * Ритмический рисунок: какие восьмые внутри такта сильнее всего звучат в секции после дропа.
- * Возвращает позиции (0..7) — всегда включает сильную долю (0).
+ * Ритмический рисунок: какие шестнадцатые внутри такта сильнее всего «бьют» в секции после дропа.
+ * Вес бочки выше, чем у остальных атак: визуальный удар воспринимается вместе с низом.
+ * Возвращает позиции 0..15, всегда включая сильную долю (0).
  */
 export function accentPattern(analysis, fromBar, toBar, count = 3) {
-  const { env, downbeats, beatInterval } = analysis;
-  const scores = new Array(8).fill(0);
+  const { env, downbeats } = analysis;
+  const scores = new Array(16).fill(0);
   for (let b = fromBar; b < Math.min(toBar, downbeats.length); b++) {
-    const t0 = downbeats[b];
     const vals = [];
-    for (let j = 0; j < 8; j++) {
-      const t = t0 + (j * beatInterval) / 2;
-      vals.push(peakNear(env.onset, Math.round(t * FRAME_RATE), 3).value);
+    for (let j = 0; j < 16; j++) {
+      const f = timeToFrame(gridTime(analysis, downbeats[b], j));
+      vals.push(peakNear(env.kick, f, 2).value + 0.35 * peakNear(env.onset, f, 2).value);
     }
     const mx = Math.max(...vals) || 1;
     vals.forEach((v, j) => (scores[j] += v / mx));
@@ -297,19 +312,80 @@ export function accentPattern(analysis, fromBar, toBar, count = 3) {
   const order = scores.map((s, j) => ({ s, j })).filter((o) => o.j !== 0).sort((a, b) => b.s - a.s);
   for (const o of order) {
     if (chosen.length >= count) break;
-    if (chosen.every((c) => Math.abs(c - o.j) >= 2 && 8 - Math.abs(c - o.j) >= 2)) chosen.push(o.j);
+    if (chosen.every((c) => Math.abs(c - o.j) >= 3 && 16 - Math.abs(c - o.j) >= 3)) chosen.push(o.j);
   }
   chosen.sort((a, b) => a - b);
   return { positions: chosen, scores: scores.map((s) => Number(s.toFixed(2))) };
 }
 
-/** Подтягивает время к ближайшей реальной атаке, если она достаточно сильная. */
-export function snapToOnset(analysis, t, radiusSec = 0.045, minRel = 0.35) {
+/**
+ * Подтягивает время к атаке: сначала к удару бочки (±70 мс), иначе к любой сильной атаке (±45 мс).
+ */
+export function snapToOnset(analysis, t) {
   const { env } = analysis;
-  const f = Math.round(t * FRAME_RATE);
-  const r = Math.round(radiusSec * FRAME_RATE);
-  const pk = peakNear(env.onset, f, r);
-  const local = peakNear(env.onset, f, Math.round(FRAME_RATE * 0.5)).value || 1;
-  if (pk.value >= minRel * local) return { t: pk.frame / FRAME_RATE, snapped: true, strength: pk.value };
-  return { t, snapped: false, strength: pk.value };
+  const f = timeToFrame(t);
+  const localKick = peakNear(env.kick, f, Math.round(FRAME_RATE * 0.5)).value || 1;
+  const r = Math.round(0.07 * FRAME_RATE);
+  const k = peakNear(env.kick, f, r);
+  if (k.value >= 0.3 * localKick && localKick > 0.15) {
+    // начало атаки, а не пик: у 808/бочки щелчок идёт раньше «тела» звука (до ~70 мс),
+    // поэтому берём самый ранний кадр перед пиком, где удар уже заметен
+    let a = k.frame;
+    for (let j = Math.max(0, k.frame - 6, f - r); j < k.frame; j++) {
+      if (env.kick[j] >= 0.35 * k.value) {
+        a = j;
+        break;
+      }
+    }
+    return { t: refineAttack(env, frameToTime(a)), snapped: true, kind: 'kick' };
+  }
+  const localOn = peakNear(env.onset, f, Math.round(FRAME_RATE * 0.5)).value || 1;
+  const o = peakNear(env.onset, f, Math.round(0.045 * FRAME_RATE));
+  if (o.value >= 0.35 * localOn) return { t: refineAttack(env, frameToTime(o.frame)), snapped: true, kind: 'onset' };
+  return { t, snapped: false, kind: 'grid' };
+}
+
+/** Огибающая низа (< ~150 Гц) с шагом 1 мс: два однополюсных фильтра + RMS за 20 мс (один период баса 808). */
+function lowEnvelope(samples) {
+  const a = Math.exp((-2 * Math.PI * 150) / SR);
+  let y1 = 0;
+  let y2 = 0;
+  const step = SR / ENV_RATE;
+  const out = new Float32Array(Math.floor(samples.length / step));
+  const win = Math.round(0.02 * SR);
+  let acc = 0;
+  const sq = new Float32Array(samples.length);
+  for (let i = 0; i < samples.length; i++) {
+    y1 = (1 - a) * samples[i] + a * y1;
+    y2 = (1 - a) * y1 + a * y2;
+    sq[i] = y2 * y2;
+    acc += sq[i];
+    if (i >= win) acc -= sq[i - win];
+    const k = Math.floor(i / step);
+    // центр окна RMS отстаёт на win/2 — компенсируем
+    const c = Math.floor((i - win / 2) / step);
+    if (c >= 0 && c < out.length && k !== Math.floor((i - 1) / step)) out[c] = Math.sqrt(acc / win);
+  }
+  return out;
+}
+
+/**
+ * Уточняет время удара по огибающей низа: момент, когда удар набрал половину своей силы
+ * (стандартная оценка воспринимаемой атаки). Если внизу удара нет — время не меняется.
+ */
+export function refineAttack(env, t) {
+  const e = env.lowEnv;
+  if (!e) return t;
+  const c = Math.round(t * ENV_RATE);
+  const lo = Math.max(1, c - 50);
+  const hi = Math.min(e.length - 1, c + 70);
+  let p = lo;
+  for (let i = lo; i <= hi; i++) if (e[i] > e[p]) p = i;
+  let floor = e[p];
+  for (let i = Math.max(0, p - 120); i < p; i++) floor = Math.min(floor, e[i]);
+  if (e[p] < 1e-4 || e[p] < 1.5 * floor) return t;
+  const half = floor + 0.5 * (e[p] - floor);
+  let a = p;
+  while (a > lo && e[a - 1] >= half) a--;
+  return a / ENV_RATE;
 }

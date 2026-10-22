@@ -43,10 +43,13 @@ THRESHOLDS = {
     "max_white_run_frames": 4,       # дольше пустой белый экран держать нельзя
     "max_flashes_per_10s": 10,       # больше = стробоскоп (у референса ~8)
     "min_flash_gap_s": 0.4,
-    "sync_tolerance_frames": 2,      # событие «в бит», если ближе 2 кадров к удару
+    # Синхрон. Монтажёры ставят склейку/вспышку на 1–3 кадра РАНЬШЕ удара — так она воспринимается «в бит»
+    # (у референса профи медиана −40 мс). Позже удара — заметно сразу. Главное — постоянство смещения.
     "sync_search_window_s": 0.15,
-    "min_on_beat_ratio": 0.5,        # откалибровано по референсу профи (~0.54)
-    "max_median_abs_offset_ms": 25,
+    "sync_offset_range_ms": (-60, 17),  # медиана смещения «событие минус удар»
+    "max_jitter_ms": 25,                # разброс (медиана отклонений от медианы); у профи ~22
+    "warn_jitter_ms": 12,
+    "min_consistent_ratio": 0.5,        # доля событий в пределах ±2 кадров от медианного смещения
     "freeze_diff": 0.35,             # средняя разница соседних кадров (0..255) ниже = нет движения
     "max_freeze_s": 2.0,
     "edge_bar_frac": 0.012,          # толщина проверяемой полосы у края кадра
@@ -88,8 +91,8 @@ def read_gray_frames(ffmpeg, path, fps, w=96):
     return raw[: n * w * h].reshape(n, h, w).astype(np.float32)
 
 
-def read_audio(ffmpeg, path, sr=22050):
-    r = run([ffmpeg, "-v", "error", "-i", path, "-ac", "1", "-ar", str(sr), "-f", "f32le", "-"])
+def read_audio(ffmpeg, path, sr=22050, af=None):
+    r = run([ffmpeg, "-v", "error", "-i", path] + (["-af", af] if af else []) + ["-ac", "1", "-ar", str(sr), "-f", "f32le", "-"])
     return np.frombuffer(r.stdout, dtype=np.float32), sr
 
 
@@ -108,8 +111,30 @@ def loudness(ffmpeg, path):
     return lufs, tp
 
 
-def audio_onsets(x, sr):
-    """Удары в звуке: спектральный поток по всему спектру + отдельно низкие частоты (бочка)."""
+def rms_env(x, sr, win_s=0.02):
+    w = max(1, int(win_s * sr))
+    return np.sqrt(np.convolve(x.astype(np.float64) ** 2, np.ones(w) / w, "same"))
+
+
+def refine_attack(env, sr, t, before=0.06, after=0.10):
+    """Момент, когда удар набрал половину силы (воспринимаемая атака). None — удара нет."""
+    lo = max(0, int((t - before) * sr))
+    hi = min(len(env), int((t + after) * sr))
+    if hi - lo < 4:
+        return None
+    w = env[lo:hi]
+    p = int(np.argmax(w))
+    floor = float(w[: p + 1].min())
+    if w[p] < 1.5 * floor or w[p] < 1e-4:
+        return None
+    below = np.where(w[: p + 1] < floor + 0.5 * (w[p] - floor))[0]
+    a = (below[-1] + 1) if len(below) else 0
+    return (lo + a) / sr
+
+
+def audio_onsets(x, sr, x_low=None):
+    """Удары в звуке: пики спектрального потока (весь спектр + низ), время уточняется
+    до момента 50% атаки по огибающей низа (бочка/808) или, если удара внизу нет, всего сигнала."""
     hop, n = 128, 1024
     if len(x) < n * 2:
         return []
@@ -128,10 +153,17 @@ def audio_onsets(x, sr):
     low = flux((freqs > 35) & (freqs < 160))
     env = full / (full.max() + 1e-9) + low / (low.max() + 1e-9)
     thr = np.percentile(env, 93)
+    env_low = rms_env(x_low, sr) if x_low is not None else None
+    env_all = rms_env(x, sr)
     out = []
     for i in range(1, len(env) - 1):
         if env[i] > thr and env[i] >= env[i - 1] and env[i] >= env[i + 1]:
-            t = (i + 1) / fr
+            # кадр спектра i описывает окно [i·hop, i·hop + n): берём его середину
+            t = ((i + 1) * hop + n / 2) / sr
+            a = refine_attack(env_low, sr, t) if env_low is not None else None
+            if a is None:
+                a = refine_attack(env_all, sr, t)
+            t = a if a is not None else t
             if not out or t - out[-1] > 0.08:
                 out.append(t)
     return out
@@ -201,7 +233,8 @@ def main():
             add("loudness_lufs", a <= lufs <= b, lufs, f"{a}..{b} LUFS")
         if tp is not None:
             add("true_peak", tp <= T["true_peak_dbtp_max"], tp, f'<= {T["true_peak_dbtp_max"]} dBTP')
-        onsets = audio_onsets(x, sr)
+        x_low = read_audio(args.ffmpeg, path, af="lowpass=f=150,lowpass=f=150")[0]
+        onsets = audio_onsets(x, sr, x_low)
     else:
         add("audio", False, "нет звука", "есть звуковая дорожка")
         onsets = []
@@ -239,7 +272,11 @@ def main():
 
     # синхрон: вспышки + жёсткие склейки против ударов в звуке
     cuts = scene_cuts(args.ffmpeg, path)
-    events = sorted(set([round(t, 3) for t in flash_starts + cuts]))
+    # вспышка и склейка в соседних кадрах — одно событие
+    events = []
+    for t in sorted(flash_starts + cuts):
+        if not events or t - events[-1] > 3.0 / fps:
+            events.append(round(t, 3))
     sync_rows = []
     if onsets and events:
         on = np.array(onsets)
@@ -250,19 +287,23 @@ def main():
             near = abs(off) <= T["sync_search_window_s"]
             sync_rows.append({"event_s": t, "nearest_onset_s": round(float(on[k]), 3),
                               "offset_ms": round(off * 1000), "has_onset_near": near})
-        tol = T["sync_tolerance_frames"] / fps
-        on_beat = [r for r in sync_rows if r["has_onset_near"] and abs(r["offset_ms"]) / 1000 <= tol]
-        ratio = round(len(on_beat) / len(sync_rows), 3)
-        offs = [r["offset_ms"] for r in sync_rows if r["has_onset_near"]]
-        med = float(np.median(np.abs(offs))) if offs else None
-        signed = float(np.median(offs)) if offs else None
-        add("events_on_beat_ratio", ratio >= T["min_on_beat_ratio"], ratio,
-            f'>= {T["min_on_beat_ratio"]} событий в пределах ±{T["sync_tolerance_frames"]} кадров от удара')
-        add("median_abs_offset_ms", med is not None and med <= T["max_median_abs_offset_ms"], med,
-            f'<= {T["max_median_abs_offset_ms"]} мс')
-        if signed is not None:
-            add("median_signed_offset_ms (плюс = событие позже удара)", abs(signed) <= 17, signed,
-                "-17..+17 мс", severity="WARN")
+        offs = np.array([r["offset_ms"] for r in sync_rows if r["has_onset_near"]], dtype=float)
+        if len(offs):
+            med = float(np.median(offs))
+            jitter = float(np.median(np.abs(offs - med)))
+            consistent = float(np.sum(np.abs(offs - med) <= 2000.0 / fps) / len(sync_rows))
+            lo_ms, hi_ms = T["sync_offset_range_ms"]
+            add("median_offset_ms (минус = раньше удара)", lo_ms <= med <= hi_ms, round(med, 1),
+                f"{lo_ms}..{hi_ms} мс (раньше удара допустимо, позже — нет)")
+            add("jitter_ms (разброс смещения)", jitter <= T["max_jitter_ms"], round(jitter, 1),
+                f'<= {T["max_jitter_ms"]} мс')
+            if jitter <= T["max_jitter_ms"]:
+                add("jitter_ms_soft", jitter <= T["warn_jitter_ms"], round(jitter, 1),
+                    f'<= {T["warn_jitter_ms"]} мс — иначе удары «плавают»', severity="WARN")
+            add("consistent_events_ratio", consistent >= T["min_consistent_ratio"], round(consistent, 3),
+                f'>= {T["min_consistent_ratio"]} событий в пределах ±2 кадров от медианного смещения')
+        else:
+            add("sync", False, "нет событий рядом с ударами", "события стоят на ударах")
 
     # пустые/чёрные полосы у краёв: однотонная тёмная полоса, неподвижная во времени
     h, w = g.shape[1], g.shape[2]

@@ -62,3 +62,35 @@ describe('план Gacha Hype', () => {
     }
   });
 });
+
+describe('план Velocity (твикстор)', async () => {
+  const { buildPlan: buildVelocity, sourceAt } = await import('../pipeline/styles/velocity.mjs');
+  const { loadClipMeta } = await import('../pipeline/clips.mjs');
+  const clips = loadClipMeta([path.resolve('public/assets/makima_twixtor.mp4')]);
+  const plan = buildVelocity({ audioFile: TRACK, clips });
+
+  it('проходит линтер', () => {
+    expect(lintPlan(plan).errors).toEqual([]);
+  });
+
+  it('склейки на сильных долях, время исходника внутри своей сцены и только вперёд', () => {
+    for (const s of plan.shots) {
+      const scene = clips[0].scenes[s.scene];
+      let prev = -Infinity;
+      for (let t = s.start; t < s.end; t += 1 / 60) {
+        const { src, speed } = sourceAt(s, t);
+        expect(src).toBeGreaterThanOrEqual(scene.start - 1e-6);
+        expect(src).toBeLessThanOrEqual(scene.end + 1e-6);
+        expect(src).toBeGreaterThanOrEqual(prev - 1e-9);
+        expect(speed).toBeGreaterThan(0);
+        prev = src;
+      }
+    }
+  });
+
+  it('на ударе замедление, перед следующим ударом разгон', () => {
+    const s = plan.shots[plan.shots.length - 1];
+    const r = s.ramps[0];
+    expect(sourceAt(s, r.a + 0.01).speed).toBeLessThan(sourceAt(s, r.b - 0.01).speed);
+  });
+});

@@ -1,0 +1,92 @@
+{
+  "makima_twixtor.mp4": {
+    "file": "makima_twixtor.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 15.45,
+    "size": 7486537,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.5833,
+        "frames": 95,
+        "motion": 0.429,
+        "peak": 0.1833,
+        "face": null
+      },
+      {
+        "start": 1.5833,
+        "end": 3.65,
+        "frames": 124,
+        "motion": 0.553,
+        "peak": 1.6833,
+        "face": {
+          "x": 0.4863,
+          "y": 0.525,
+          "size": 0.8583
+        }
+      },
+      {
+        "start": 3.65,
+        "end": 4.9833,
+        "frames": 80,
+        "motion": 0.221,
+        "peak": 3.9667,
+        "face": null
+      },
+      {
+        "start": 4.9833,
+        "end": 7.3167,
+        "frames": 140,
+        "motion": 0.288,
+        "peak": 6.1333,
+        "face": {
+          "x": 0.4094,
+          "y": 0.325,
+          "size": 0.0736
+        }
+      },
+      {
+        "start": 7.3167,
+        "end": 9.1167,
+        "frames": 108,
+        "motion": 0.455,
+        "peak": 8.9,
+        "face": {
+          "x": 0.465,
+          "y": 0.2587,
+          "size": 0.3187
+        }
+      },
+      {
+        "start": 9.1167,
+        "end": 11.2333,
+        "frames": 127,
+        "motion": 0.123,
+        "peak": 10.1333,
+        "face": null
+      },
+      {
+        "start": 11.2333,
+        "end": 14.1167,
+        "frames": 173,
+        "motion": 0.946,
+        "peak": 12.2833,
+        "face": {
+          "x": 0.6,
+          "y": 0.2792,
+          "size": 0.0694
+        }
+      },
+      {
+        "start": 14.1167,
+        "end": 15.45,
+        "frames": 80,
+        "motion": 1.373,
+        "peak": 15.2,
+        "face": null
+      }
+    ]
+  }
+}
