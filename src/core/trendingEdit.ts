@@ -14,85 +14,60 @@ import {
 } from './defaults';
 
 export function createTrendingAnimeEditProject(): Project {
-  // 1. Assets: Rendered Master Edit + Soundtrack + Characters
+  // 1. Assets: Rendered Master Edit + Soundtrack
   const masterVideoAsset: MediaAsset = {
-    id: 'asset_mmd_master_edit',
-    name: 'HuTao_Miku_Viral_MMD_Velocity_Edit_1080p60.mp4',
+    id: 'asset_gacha_master_edit',
+    name: 'Anime_Gacha_Fast_Paced_Edit_1080p60.mp4',
     type: 'video',
     mimeType: 'video/mp4',
-    url: '/assets/trending_character_edit.mp4',
+    url: '/assets/anime_gacha_edit.mp4',
     width: 1080,
     height: 1080,
-    duration: 13.51,
+    duration: 8.00,
     scenes: [
-      { id: 'scn_0', assetId: 'asset_mmd_master_edit', sceneIndex: 0, name: '00 // [Hu Tao] Crimson Teaser Card', inPoint: 0.00, outPoint: 0.50, duration: 0.50 },
-      { id: 'scn_1', assetId: 'asset_mmd_master_edit', sceneIndex: 1, name: '01 // [Hatsune Miku] Cyan Teaser Card', inPoint: 0.50, outPoint: 1.00, duration: 0.50 },
-      { id: 'scn_2', assetId: 'asset_mmd_master_edit', sceneIndex: 2, name: '02 // [Furina] Hydro Teaser Card', inPoint: 1.00, outPoint: 1.50, duration: 0.50 },
-      { id: 'scn_3', assetId: 'asset_mmd_master_edit', sceneIndex: 3, name: '03 // Modern Studio Gallery Stage Glide', inPoint: 1.50, outPoint: 2.50, duration: 1.00 },
-      { id: 'scn_4', assetId: 'asset_mmd_master_edit', sceneIndex: 4, name: '04 // Lock on Hu Tao // Dolly Zoom', inPoint: 2.50, outPoint: 3.44, duration: 0.94 },
-      { id: 'scn_5', assetId: 'asset_mmd_master_edit', sceneIndex: 5, name: '05 // 360° Whip Rotation Spin into Eye', inPoint: 3.44, outPoint: 3.86, duration: 0.42 },
-      { id: 'scn_6', assetId: 'asset_mmd_master_edit', sceneIndex: 6, name: '06 // 🔥 BASS DROP // Hu Tao Finger Point', inPoint: 3.86, outPoint: 4.54, duration: 0.68 },
-      { id: 'scn_7', assetId: 'asset_mmd_master_edit', sceneIndex: 7, name: '07 // Miku Forehead Salute Wink', inPoint: 4.54, outPoint: 5.28, duration: 0.74 },
-      { id: 'scn_8', assetId: 'asset_mmd_master_edit', sceneIndex: 8, name: '08 // Framed PIP Card [Hu Tao Ghost Paw]', inPoint: 5.28, outPoint: 6.20, duration: 0.92 },
-      { id: 'scn_9', assetId: 'asset_mmd_master_edit', sceneIndex: 9, name: '09 // Hu Tao Peace Sign Wink Closeup', inPoint: 6.20, outPoint: 7.06, duration: 0.86 },
-      { id: 'scn_10', assetId: 'asset_mmd_master_edit', sceneIndex: 10, name: '10 // Miku Head Tilt Smile Closeup', inPoint: 7.06, outPoint: 7.86, duration: 0.80 },
-      { id: 'scn_11', assetId: 'asset_mmd_master_edit', sceneIndex: 11, name: '11 // Hu Tao Forehead Salute Wink', inPoint: 7.86, outPoint: 8.72, duration: 0.86 },
-      { id: 'scn_12', assetId: 'asset_mmd_master_edit', sceneIndex: 12, name: '12 // Framed PIP Card [Miku Cyan Digital]', inPoint: 8.72, outPoint: 9.74, duration: 1.02 },
-      { id: 'scn_13', assetId: 'asset_mmd_master_edit', sceneIndex: 13, name: '13 // Miku Double Peace Charm Wink', inPoint: 9.74, outPoint: 10.76, duration: 1.02 },
-      { id: 'scn_14', assetId: 'asset_mmd_master_edit', sceneIndex: 14, name: '14 // 16th Note Stutter Cuts [Hu Tao <-> Miku]', inPoint: 10.76, outPoint: 11.50, duration: 0.74 },
-      { id: 'scn_15', assetId: 'asset_mmd_master_edit', sceneIndex: 15, name: '15 // 🔥 GRAND CLIMAX // Hu Tao Climax Pose', inPoint: 11.50, outPoint: 12.52, duration: 1.02 },
-      { id: 'scn_16', assetId: 'asset_mmd_master_edit', sceneIndex: 16, name: '16 // Anamorphic Lens Flare Outro', inPoint: 12.52, outPoint: 13.51, duration: 0.99 },
+      { id: 'scn_0', assetId: 'asset_gacha_master_edit', sceneIndex: 0, name: '01 // Vera Garnet Splash Art (Push-in)', inPoint: 0.00, outPoint: 0.90, duration: 0.90 },
+      { id: 'scn_1', assetId: 'asset_gacha_master_edit', sceneIndex: 1, name: '02 // Liv Empyrea Splash Art (Circular Light)', inPoint: 0.90, outPoint: 1.80, duration: 0.90 },
+      { id: 'scn_2', assetId: 'asset_gacha_master_edit', sceneIndex: 2, name: '03 // Lucia Plume Splash Art (Red Panel)', inPoint: 1.80, outPoint: 2.70, duration: 0.90 },
+      { id: 'scn_3', assetId: 'asset_gacha_master_edit', sceneIndex: 3, name: '04 // Three Cards Shrink & Build-up', inPoint: 2.70, outPoint: 3.86, duration: 1.16 },
+      { id: 'scn_4', assetId: 'asset_gacha_master_edit', sceneIndex: 4, name: '05 // 🔥 BASS DROP: Whip-Pan & Zoom Blur Swaps', inPoint: 3.86, outPoint: 5.50, duration: 1.64 },
+      { id: 'scn_5', assetId: 'asset_gacha_master_edit', sceneIndex: 5, name: '06 // Final Shot: Trio with Long Red Blade', inPoint: 5.50, outPoint: 8.00, duration: 2.50 },
     ],
   };
 
   const audioAsset: MediaAsset = {
     id: 'asset_trending_soundtrack',
-    name: 'Montagem_Shirt_Blue_Phonk.aac',
+    name: 'Montagem_Shirt_Blue_Phonk_8s.aac',
     type: 'audio',
     mimeType: 'audio/aac',
-    url: '/assets/trending_audio.aac',
-    duration: 13.51,
+    url: '/assets/gacha_audio_8s.aac',
+    duration: 8.00,
   };
 
-  const introStageAsset: MediaAsset = {
-    id: 'asset_intro_stage',
-    name: 'Miku_HuTao_Furina_Gallery_Stage.png',
-    type: 'image',
-    mimeType: 'image/png',
-    url: '/assets/miku_stage.png',
-    width: 2560,
-    height: 1080,
-  };
-
-  // 2. Main 1:1 Square Edit Composition (1080x1080 @ 60 FPS, 13.51s)
+  // 2. Main 1:1 Square Edit Composition (1080x1080 @ 60 FPS, 8.00s)
   const mainComp: Composition = createDefaultComposition({
-    name: 'Hu Tao & Hatsune Miku 氷 [Viral 3D MMD Velocity Edit 1:1]',
+    name: 'Anime Gacha-Game Style Edit [8s • 1:1 • 60 FPS]',
     width: 1080,
     height: 1080,
     fps: 60,
-    duration: 13.51,
-    backgroundColor: '#0a0a0f',
+    duration: 8.00,
+    backgroundColor: '#ffffff',
   });
 
-  // Precise Beat Markers matching the viral reference track
+  // Precise Beat Markers matching the phonk soundtrack
   mainComp.markers = [
-    { id: createId('mrk'), time: 0.00, label: 'Hu Tao Teaser Card // Crimson Flash', color: '#e2727f' },
-    { id: createId('mrk'), time: 0.50, label: 'Miku Teaser Card // Cyan Flash', color: '#38bdf8' },
-    { id: createId('mrk'), time: 1.00, label: 'Furina Teaser Card // Hydro Flash', color: '#60a5fa' },
-    { id: createId('mrk'), time: 1.50, label: 'Studio Gallery Stage Pan', color: '#e9edf3' },
-    { id: createId('mrk'), time: 2.50, label: 'Lock on Hu Tao // Dolly Zoom', color: '#e2727f' },
-    { id: createId('mrk'), time: 3.44, label: '360° Whip Rotation Spin into Eye', color: '#f0d4d8' },
-    { id: createId('mrk'), time: 3.86, label: '🔥 THE BASS DROP // Hu Tao Finger Point', color: '#e2727f' },
-    { id: createId('mrk'), time: 4.54, label: 'Snare 2 // Miku Forehead Salute Wink', color: '#38bdf8' },
-    { id: createId('mrk'), time: 5.28, label: 'Framed PIP Card [Hu Tao Ghost Paw]', color: '#e2727f' },
-    { id: createId('mrk'), time: 6.20, label: 'Kick 3 // Hu Tao Peace Sign Wink Closeup', color: '#e2727f' },
-    { id: createId('mrk'), time: 7.06, label: 'Kick 4 // Miku Head Tilt Smile Closeup', color: '#38bdf8' },
-    { id: createId('mrk'), time: 7.86, label: 'Kick 5 // Hu Tao Forehead Salute Wink', color: '#e2727f' },
-    { id: createId('mrk'), time: 8.72, label: 'Framed PIP Card [Miku Cyan Digital]', color: '#38bdf8' },
-    { id: createId('mrk'), time: 9.74, label: 'Miku Double Peace Charm Wink', color: '#38bdf8' },
-    { id: createId('mrk'), time: 10.76, label: '16th Note Stutter Cuts [Hu Tao <-> Miku]', color: '#f0d4d8' },
-    { id: createId('mrk'), time: 11.50, label: '🔥 GRAND CLIMAX // Hu Tao Climax Pose', color: '#e2727f' },
-    { id: createId('mrk'), time: 12.52, label: 'Outro Flare // Horizontal Anamorphic Star', color: '#e2727f' },
+    { id: createId('mrk'), time: 0.00, label: 'Kick 1 // Vera Garnet Splash Art', color: '#e11d48' },
+    { id: createId('mrk'), time: 0.50, label: 'Kick 2 // Subtle Push-in Pulse', color: '#e11d48' },
+    { id: createId('mrk'), time: 0.90, label: 'Snare 1 // Hard Cut to Liv Empyrea', color: '#38bdf8' },
+    { id: createId('mrk'), time: 1.80, label: 'Kick 3 // Hard Cut to Lucia Plume', color: '#e11d48' },
+    { id: createId('mrk'), time: 2.70, label: 'Snare Roll // Cards Shrink Side-by-Side', color: '#0f172a' },
+    { id: createId('mrk'), time: 3.86, label: '🔥 THE BASS DROP // Whip-Pan Card Swaps', color: '#e11d48' },
+    { id: createId('mrk'), time: 4.54, label: 'Snare 2 // Liv Pop & Counter-Swap', color: '#38bdf8' },
+    { id: createId('mrk'), time: 5.10, label: '16th-Note Shuffle & Launch', color: '#e11d48' },
+    { id: createId('mrk'), time: 5.50, label: '🔥 Downbeat // Action Blade Closeup', color: '#e11d48' },
+    { id: createId('mrk'), time: 6.20, label: 'Kick 4 // Speed Ramp Impact', color: '#e11d48' },
+    { id: createId('mrk'), time: 6.50, label: 'Full-Body Trio Reveal (Long Red Blade)', color: '#0f172a' },
+    { id: createId('mrk'), time: 7.06, label: 'Kick 5 // Final Pulse', color: '#e11d48' },
+    { id: createId('mrk'), time: 8.00, label: 'Clean Ending', color: '#0f172a' },
   ];
 
   // Layer 1: Adjustment Layer — Anime CC & Color Grade (Vignette + Deep Contrast)
@@ -221,8 +196,8 @@ export function createTrendingAnimeEditProject(): Project {
     dropTextLayer.textContents.strokeWidth = createProperty('Stroke Width', 3, { min: 0, max: 50, unit: 'px' });
   }
 
-  // Layer 6: Master Rendered Video Track (1080x1080 @ 60 FPS)
-  const masterVideoLayer = createDefaultLayer(mainComp, 'video', 'Video Track // Master 3D MMD Velocity Edit (60 FPS)', {
+  // Master Rendered Video Track (1080x1080 @ 60 FPS, 8.00s)
+  const masterVideoLayer = createDefaultLayer(mainComp, 'video', 'Video Track // Anime Gacha Edit (60 FPS)', {
     assetId: masterVideoAsset.id,
     width: 1080,
     height: 1080,
@@ -230,35 +205,33 @@ export function createTrendingAnimeEditProject(): Project {
   masterVideoLayer.labelColor = 'ice';
   masterVideoLayer.startTime = 0.0;
   masterVideoLayer.inPoint = 0.0;
-  masterVideoLayer.outPoint = 13.51;
+  masterVideoLayer.outPoint = 8.00;
   masterVideoLayer.transform.position.value = [540, 540];
   masterVideoLayer.transform.scale.value = [100, 100];
 
-  // Layer 7: Background Soundtrack
-  const audioLayer = createDefaultLayer(mainComp, 'audio', 'Audio // Viral Phonk Soundtrack (AAC)');
+  // Background Soundtrack (8.00s)
+  const audioLayer = createDefaultLayer(mainComp, 'audio', 'Audio // Phonk Soundtrack (8s)');
   audioLayer.assetId = audioAsset.id;
   audioLayer.labelColor = 'denim';
   audioLayer.inPoint = 0.0;
-  audioLayer.outPoint = 13.51;
+  audioLayer.outPoint = 8.00;
 
   mainComp.layers = [
     adjCcLayer,
     shakeLayer,
     flashLayer,
-    dropTextLayer,
-    textIntroTag,
     masterVideoLayer,
     audioLayer,
   ];
 
   return {
-    id: createId('proj_mmd_viral'),
-    name: 'Hu Tao & Hatsune Miku 氷 // [Viral 1:1 3D MMD Velocity Edit].mfproj',
+    id: createId('proj_gacha_viral'),
+    name: 'Anime Gacha-Game Style Edit // [Vera, Liv & Lucia 1:1].mfproj',
     version: '1.0.0',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     activeCompId: mainComp.id,
     compositions: [mainComp],
-    assets: [masterVideoAsset, audioAsset, introStageAsset],
+    assets: [masterVideoAsset, audioAsset],
   };
 }
