@@ -34,13 +34,27 @@ Kōri replaces naive "cut-on-every-quarter-beat" editing with **rhythmic accent 
 ## 2. Reference Style Recipes
 
 ### Recipe 1: Gacha / Live2D Hype Edit (Reference 1 DNA)
-*Tested on `test-assets/real/refs/ref_01_gacha_hype.mp4` $\to$ Generated `output_gacha_hype.mp4`*
+*Tested on `test-assets/real/refs/ref_01_gacha_hype.mp4` and `test-assets/real/track_02_midnight_phonk.mp3`*
 
 - **Format:** 9:16 vertical ($1080 \times 1920$), 60 FPS.
-- **BPM & Metric DNA:** 130.0 BPM (bar duration = $1.846\text{ s}$).
-- **Syncopation Pattern:** 3-hit repeating syncopation per bar:
-  $$\Delta t = [0.47\text{ s}, 0.88\text{ s}, 0.50\text{ s}]$$
-  Accent timestamps: $t = [4.38, 4.85, 5.73, 6.23, 6.70, 7.58, 8.08, 8.55, 9.43, 9.93, 10.40]$.
+- **Art Assets Location:** `test-assets/real/art/`
+  - `gacha_liv.png`: Left card & secondary character
+  - `gacha_vera.png`: Hero card & primary punch-in character
+  - `gacha_lucia.png`: Right card & secondary punch-in character
+  - `gacha_group.png`: Climax group splash art
+- **BPM & Metric Adaptation for Arbitrary Tracks:**
+  1. Determine track tempo ($\text{BPM}$) and drop onset timestamp ($t_{\text{drop}}$).
+     - For 130.0 BPM: $\Delta t = 0.4615\text{ s}$ (bar = $1.846\text{ s}$).
+     - For 122.0 BPM (Midnight Phonk): $\Delta t = 0.4918\text{ s}$ (bar = $1.967\text{ s}$).
+  2. **Intro Alignment:** Align audio so that $t_{\text{drop}}$ lands exactly at visual $t = 4.0\text{ s}$ via audio lead-in offset:
+     $$\text{audio\_offset} = \max(0, t_{\text{drop}} - 4.0\text{ s})$$
+  3. **Accent Grid:** Generate beat accents from $4.0\text{ s}$ to total duration ($11\text{ s}$, $15\text{ s}$, or $30\text{ s}$):
+     $$t_k = 4.00 + k \cdot \Delta t$$
+  4. **Camera Reframing:** Dynamically alternate camera shot scales on beats:
+     - Wide full-body ($1.15\times - 1.25\times$)
+     - Face close-up ($2.5\times - 2.8\times$, vertical pan $-200\text{ px}$ to $-240\text{ px}$)
+     - Macro eyes punch ($4.2\times - 4.7\times$, vertical pan $-320\text{ px}$ to $-360\text{ px}$)
+     - Climax final shot ($0.7\text{ s}$): Full group splash art ($1.10\times$).
 - **Sequence Breakdown:**
   1. **0.0s – 4.0s (Intro Cards):**
      - Clean graphic white/light background (`#f8f9fa`) with subtle radial glow.
@@ -49,7 +63,7 @@ Kōri replaces naive "cut-on-every-quarter-beat" editing with **rhythmic accent 
      - At $t = 2.0\text{ s}$: Card swap transition with scale bounce ($+15\%$) and whip blur.
      - At $t = 3.38\text{ s} - 3.65\text{ s}$: Translucent red flash transition (`#ff1a40` at 70% opacity, screen blend).
      - At $t = 3.6\text{ s} - 4.0\text{ s}$: Climax zoom expansion into full group splash art (`gacha_group.png`).
-  2. **4.0s – 11.0s (Accent-Driven Reframe & Prism Flashes):**
+  2. **4.0s – End (Accent-Driven Reframe & Prism Flashes):**
      - Single character art (`gacha_lucia` / `gacha_vera`).
      - Dynamic camera punch-in alternating shot scales on every syncopated accent:
        - Wide ($1.15\times$) $\leftrightarrow$ Face close-up ($2.5\times$) $\leftrightarrow$ Macro eyes punch ($4.2\times$).
@@ -130,14 +144,19 @@ Located in `src/ai/viralAudio.ts`:
 
 ## 5. CLI Rendering & Contact Sheets
 
-Render both viral edits directly via CLI:
+Render edits directly via CLI:
 
 ```bash
-# Render both showcase edits and generate contact sheets
+# Render showcase edits and generate contact sheets
 python scripts/render_viral_edits.py
+
+# Render 15-second Gacha Hype Phonk edit (Task 5)
+python scripts/render_gacha_hype_phonk_15s.py
 ```
 
 Generated outputs:
+- [`D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s.mp4) (30.67 MB, 1080×1920 60fps, 15.0s, 900 frames)
+- [`D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s_contact_sheet.jpg) (4×4 grid contact sheet)
 - [`D:/motionforge/test-assets/results/output_gacha_hype.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype.mp4) (18.56 MB, 1080×1920 60fps)
 - [`D:/motionforge/test-assets/results/output_aesthetic_lyric.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric.mp4) (9.75 MB, 1080×1920 60fps)
 - Contact sheet 1: `output_gacha_hype_contact_sheet.jpg`
