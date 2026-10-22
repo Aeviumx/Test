@@ -39,3 +39,9 @@ acheron_cuts.txt
 *.mp4
 test_cuts.mjs
 fetch_assets.mjs
+
+# AI ONNX & whisper weights (downloaded automatically by modelManager)
+models/
+test-assets/results/audit/
+test-assets/results/audit_v4/
+
