@@ -66,6 +66,16 @@ export const MODEL_REGISTRY: Record<string, ModelMetadata> = {
     license: 'Apache-2.0',
     description: 'Monocular depth estimation foundation model',
   },
+  realesrgan_anime: {
+    id: 'realesrgan_anime',
+    name: 'Real-ESRGAN Anime 4x Super-Resolution (6B)',
+    fileName: 'RealESRGAN_x4plus_anime_6B.onnx',
+    expectedSha256: '2648cab4c4343541c1aa291c6754e9e8edbe7a813fffc2a677423dd12cb6b7f7',
+    sizeBytes: 17906596,
+    url: 'https://huggingface.co/deepghs/imgutils-models/resolve/main/real_esrgan/RealESRGAN_x4plus_anime_6B.onnx',
+    license: 'BSD-3-Clause',
+    description: 'AI Super-resolution upscaler for anime illustrations and gacha arts',
+  },
   modnet: {
     id: 'modnet',
     name: 'MODNet Matting',

@@ -147,20 +147,23 @@ Located in `src/ai/viralAudio.ts`:
 Render edits directly via CLI:
 
 ```bash
-# Render showcase edits and generate contact sheets
-python scripts/render_viral_edits.py
+# Render Gacha Hype v2 (122 BPM transient-locked, blinding white flashes, zero border clamping)
+python scripts/render_gacha_hype_v2.py
 
-# Render 15-second Gacha Hype Phonk edit (Task 5)
-python scripts/render_gacha_hype_phonk_15s.py
+# Render Aesthetic Lyric v2 (Real rainy bokeh video plate, Montserrat ExtraBold, light wrap, no vertical strip)
+python scripts/render_aesthetic_lyric_v2.py
+
+# Generate side-by-side frame comparison (Reference vs Kōri v2 at 4 key moments)
+python scripts/generate_side_by_side_comparison.py
 ```
 
 Generated outputs:
-- [`D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s.mp4) (30.67 MB, 1080×1920 60fps, 15.0s, 900 frames)
-- [`D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_phonk_15s_contact_sheet.jpg) (4×4 grid contact sheet)
-- [`D:/motionforge/test-assets/results/output_gacha_hype.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype.mp4) (18.56 MB, 1080×1920 60fps)
-- [`D:/motionforge/test-assets/results/output_aesthetic_lyric.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric.mp4) (9.75 MB, 1080×1920 60fps)
-- Contact sheet 1: `output_gacha_hype_contact_sheet.jpg`
-- Contact sheet 2: `output_aesthetic_lyric_contact_sheet.jpg`
+- **Gacha Hype v2 MP4:** [`D:/motionforge/test-assets/results/output_gacha_hype_v2.mp4`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v2.mp4) (26.48 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipping)
+- **Gacha Hype v2 Contact Sheet:** [`D:/motionforge/test-assets/results/output_gacha_hype_v2_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_gacha_hype_v2_contact_sheet.jpg)
+- **Aesthetic Lyric v2 MP4:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v2.mp4`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v2.mp4) (23.04 MB, 1080×1920 60fps, 15.0s, -1.93 dBTP, 0 clipping)
+- **Aesthetic Lyric v2 Contact Sheet:** [`D:/motionforge/test-assets/results/output_aesthetic_lyric_v2_contact_sheet.jpg`](file:///D:/motionforge/test-assets/results/output_aesthetic_lyric_v2_contact_sheet.jpg)
+- **Side-by-Side Comparison 1 (Gacha Ref vs v2):** [`D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v2.jpg`](file:///D:/motionforge/test-assets/results/comparison_gacha_hype_ref_vs_v2.jpg)
+- **Side-by-Side Comparison 2 (Lyric Ref vs v2):** [`D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v2.jpg`](file:///D:/motionforge/test-assets/results/comparison_aesthetic_lyric_ref_vs_v2.jpg)
 
 ---
 

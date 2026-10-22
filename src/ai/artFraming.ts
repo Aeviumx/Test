@@ -370,3 +370,44 @@ export function generateReframeTimeline(
 
   return isOptionsObject ? { cuts, keyframes } : keyframes;
 }
+
+export interface ArtResolutionAudit {
+  imageWidth: number;
+  imageHeight: number;
+  compWidth: number;
+  compHeight: number;
+  maxSharpZoom: number;
+  requestedZoom: number;
+  needsUpscaling: boolean;
+  warning?: string;
+}
+
+/**
+ * Checks whether camera punch-in zoom exceeds source art resolution,
+ * generating a warning and flagging Real-ESRGAN upscaling requirement.
+ */
+export function checkArtZoomResolution(
+  imageWidth: number,
+  imageHeight: number,
+  requestedZoom: number,
+  compWidth: number = 1080,
+  compHeight: number = 1920
+): ArtResolutionAudit {
+  const scaleToFit = Math.max(compWidth / imageWidth, compHeight / imageHeight);
+  const maxSharpZoom = Number((1.0 / scaleToFit).toFixed(2));
+  const needsUpscaling = requestedZoom > maxSharpZoom;
+  const warning = needsUpscaling
+    ? `Warning: Camera zoom ${requestedZoom.toFixed(2)}x exceeds maximum sharp zoom ${maxSharpZoom.toFixed(2)}x for ${imageWidth}x${imageHeight} art in ${compWidth}x${compHeight} composition. Art requires Real-ESRGAN AI upscaling to prevent blur.`
+    : undefined;
+
+  return {
+    imageWidth,
+    imageHeight,
+    compWidth,
+    compHeight,
+    maxSharpZoom,
+    requestedZoom,
+    needsUpscaling,
+    warning,
+  };
+}

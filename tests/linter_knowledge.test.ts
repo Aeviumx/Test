@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildEditorKnowledgeSystemPrompt } from '../src/ai/editorKnowledge';
-import { EditLinter } from '../src/ai/editLinter';
+import { EditLinter, auditAccentTransientSync, auditOverscanBorders } from '../src/ai/editLinter';
 import { EditPlan } from '../src/ai/editPlanSchema';
 import { SceneCatalog } from '../src/ai/sceneCatalog';
 import { VideoSceneAnalysis } from '../src/ai/videoAnalysis';
@@ -239,5 +239,47 @@ describe('Editor Knowledge Base & Deterministic Linter Engine', () => {
 
     expect(cleanReport.overallScore).toBeGreaterThanOrEqual(85);
     expect(cleanReport.passStatus).toBe('pass');
+  });
+
+  it('should audit accent-to-transient sync strictly within ±1 frame tolerance', () => {
+    // 60 fps -> 1 frame = 16.67 ms
+    const realTransients = [4.000, 4.492, 4.984, 5.476, 5.968];
+
+    // Perfect sync (all <= 1 frame)
+    const syncedAccents = [4.005, 4.488, 4.980, 5.480, 5.970];
+    const reportPass = auditAccentTransientSync(syncedAccents, realTransients, 60, 1);
+    expect(reportPass.passed).toBe(true);
+    expect(reportPass.violationsCount).toBe(0);
+    expect(reportPass.maxDiffMs).toBeLessThanOrEqual(16.7);
+    expect(reportPass.formattedReport).toContain('PASSED');
+
+    // Desynced accents (e.g. 0.46s off as noticed by user)
+    const desyncedAccents = [4.000, 4.460, 4.984]; // 4.46 is 0.032s = 32ms off 4.492 (> 1 frame)
+    const reportFail = auditAccentTransientSync(desyncedAccents, realTransients, 60, 1);
+    expect(reportFail.passed).toBe(false);
+    expect(reportFail.violationsCount).toBeGreaterThanOrEqual(1);
+    expect(reportFail.formattedReport).toContain('FAILED');
+    expect(reportFail.formattedReport).toContain('MISALIGNED');
+  });
+
+  it('should audit overscan borders and catch empty edge exposure under motion', () => {
+    // With insufficient overscan (e.g. 1.0x with 120px pan), edges are exposed
+    const leakyTransforms = [
+      { frameIndex: 0, time: 0.0, scale: 1.0, panX: 0, panY: 0 },
+      { frameIndex: 10, time: 0.16, scale: 1.0, panX: 120, panY: 0, shakeX: 30 },
+    ];
+    const reportFail = auditOverscanBorders(leakyTransforms, 1080, 1920, 1.00);
+    expect(reportFail.passed).toBe(false);
+    expect(reportFail.violationsCount).toBeGreaterThanOrEqual(1);
+
+    // With +15% overscan (1.15x), 150px shake is fully contained
+    const safeTransforms = [
+      { frameIndex: 0, time: 0.0, scale: 1.15, panX: 0, panY: 0 },
+      { frameIndex: 10, time: 0.16, scale: 1.15, panX: 20, panY: 10, shakeX: 15, shakeY: 15 },
+    ];
+    const reportPass = auditOverscanBorders(safeTransforms, 1080, 1920, 1.08);
+    expect(reportPass.passed).toBe(true);
+    expect(reportPass.violationsCount).toBe(0);
+    expect(reportPass.formattedReport).toContain('PASSED (Zero Empty Edges)');
   });
 });

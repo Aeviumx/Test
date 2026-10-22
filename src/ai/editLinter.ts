@@ -425,3 +425,180 @@ export class EditLinter {
     return { fixedPlan, fixesApplied };
   }
 }
+
+export interface AccentTransientMatch {
+  accentIndex: number;
+  accentTime: number;
+  nearestTransientTime: number;
+  diffMs: number;
+  diffFrames: number;
+  isWithinTolerance: boolean;
+}
+
+export interface TransientSyncAuditReport {
+  passed: boolean;
+  maxToleranceFrames: number;
+  maxDiffMs: number;
+  meanDiffMs: number;
+  totalAccents: number;
+  violationsCount: number;
+  matches: AccentTransientMatch[];
+  formattedReport: string;
+}
+
+export function auditAccentTransientSync(
+  accentTimes: number[],
+  realTransients: number[],
+  fps: number = 60,
+  maxToleranceFrames: number = 1
+): TransientSyncAuditReport {
+  const frameDurationMs = 1000 / fps;
+  const maxAllowedMs = maxToleranceFrames * frameDurationMs;
+  let maxDiffMs = 0;
+  let totalDiffMs = 0;
+  const matches: AccentTransientMatch[] = [];
+
+  for (let i = 0; i < accentTimes.length; i++) {
+    const aTime = accentTimes[i];
+    let bestDist = Infinity;
+    let bestTrans = aTime;
+
+    for (const t of realTransients) {
+      const dist = Math.abs(aTime - t);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestTrans = t;
+      }
+    }
+
+    const diffMs = bestDist * 1000;
+    const diffFrames = diffMs / frameDurationMs;
+    const isWithinTolerance = diffFrames <= (maxToleranceFrames + 0.05);
+
+    if (diffMs > maxDiffMs) maxDiffMs = diffMs;
+    totalDiffMs += diffMs;
+
+    matches.push({
+      accentIndex: i,
+      accentTime: aTime,
+      nearestTransientTime: bestTrans,
+      diffMs: Number(diffMs.toFixed(2)),
+      diffFrames: Number(diffFrames.toFixed(2)),
+      isWithinTolerance,
+    });
+  }
+
+  const meanDiffMs = matches.length > 0 ? totalDiffMs / matches.length : 0;
+  const violations = matches.filter((m) => !m.isWithinTolerance);
+  const passed = violations.length === 0;
+
+  const lines: string[] = [
+    `=== Transient Sync Audit Report (${fps} FPS, Tolerance: ±${maxToleranceFrames} frame / ${maxAllowedMs.toFixed(1)} ms) ===`,
+    `Total Accents: ${accentTimes.length} | Violations: ${violations.length} | Max Diff: ${maxDiffMs.toFixed(2)} ms | Mean Diff: ${meanDiffMs.toFixed(2)} ms | Status: ${passed ? 'PASSED' : 'FAILED'}`,
+    `---------------------------------------------------------------------------------------------------------`,
+    `Accent # | Accent Time (s) | Nearest Transient (s) | Diff (ms) | Diff (frames) | Status`,
+    `---------------------------------------------------------------------------------------------------------`,
+  ];
+
+  for (const m of matches) {
+    const status = m.isWithinTolerance ? 'OK' : 'MISALIGNED';
+    lines.push(
+      `#${String(m.accentIndex).padStart(2)}      | ${m.accentTime.toFixed(3).padStart(15)} | ${m.nearestTransientTime.toFixed(3).padStart(21)} | ${m.diffMs.toFixed(2).padStart(9)} | ${m.diffFrames.toFixed(2).padStart(13)} | ${status}`
+    );
+  }
+
+  return {
+    passed,
+    maxToleranceFrames,
+    maxDiffMs: Number(maxDiffMs.toFixed(2)),
+    meanDiffMs: Number(meanDiffMs.toFixed(2)),
+    totalAccents: accentTimes.length,
+    violationsCount: violations.length,
+    matches,
+    formattedReport: lines.join('\n'),
+  };
+}
+
+export interface OverscanBorderAuditReport {
+  passed: boolean;
+  totalFramesAudited: number;
+  overscanPercent: number;
+  violationsCount: number;
+  violations: Array<{
+    frameIndex: number;
+    time: number;
+    edge: 'left' | 'right' | 'top' | 'bottom';
+    gapPx: number;
+  }>;
+  formattedReport: string;
+}
+
+export function auditOverscanBorders(
+  transforms: Array<{
+    frameIndex: number;
+    time: number;
+    scale: number;
+    panX: number;
+    panY: number;
+    shakeX?: number;
+    shakeY?: number;
+  }>,
+  compWidth: number = 1080,
+  compHeight: number = 1920,
+  overscanFactor: number = 1.08
+): OverscanBorderAuditReport {
+  const violations: Array<{
+    frameIndex: number;
+    time: number;
+    edge: 'left' | 'right' | 'top' | 'bottom';
+    gapPx: number;
+  }> = [];
+
+  for (const tr of transforms) {
+    const totalScale = tr.scale * overscanFactor;
+    const layerW = compWidth * totalScale;
+    const layerH = compHeight * totalScale;
+
+    const totalPanX = tr.panX + (tr.shakeX ?? 0);
+    const totalPanY = tr.panY + (tr.shakeY ?? 0);
+
+    const leftBoundary = (layerW - compWidth) / 2 + totalPanX;
+    const rightBoundary = (layerW - compWidth) / 2 - totalPanX;
+    const topBoundary = (layerH - compHeight) / 2 + totalPanY;
+    const bottomBoundary = (layerH - compHeight) / 2 - totalPanY;
+
+    if (leftBoundary < 0) {
+      violations.push({ frameIndex: tr.frameIndex, time: tr.time, edge: 'left', gapPx: Math.abs(leftBoundary) });
+    }
+    if (rightBoundary < 0) {
+      violations.push({ frameIndex: tr.frameIndex, time: tr.time, edge: 'right', gapPx: Math.abs(rightBoundary) });
+    }
+    if (topBoundary < 0) {
+      violations.push({ frameIndex: tr.frameIndex, time: tr.time, edge: 'top', gapPx: Math.abs(topBoundary) });
+    }
+    if (bottomBoundary < 0) {
+      violations.push({ frameIndex: tr.frameIndex, time: tr.time, edge: 'bottom', gapPx: Math.abs(bottomBoundary) });
+    }
+  }
+
+  const passed = violations.length === 0;
+  const lines: string[] = [
+    `=== Overscan & Border Clamping Audit Report (Viewport: ${compWidth}x${compHeight}, Overscan: +${((overscanFactor - 1) * 100).toFixed(1)}%) ===`,
+    `Total Frames: ${transforms.length} | Exposed Border Violations: ${violations.length} | Status: ${passed ? 'PASSED (Zero Empty Edges)' : 'FAILED'}`,
+  ];
+
+  if (!passed) {
+    for (const v of violations.slice(0, 5)) {
+      lines.push(`  Frame ${v.frameIndex} (t = ${v.time.toFixed(3)}s): ${v.edge} edge exposed by ${v.gapPx.toFixed(1)}px`);
+    }
+  }
+
+  return {
+    passed,
+    totalFramesAudited: transforms.length,
+    overscanPercent: Number(((overscanFactor - 1) * 100).toFixed(1)),
+    violationsCount: violations.length,
+    violations,
+    formattedReport: lines.join('\n'),
+  };
+}

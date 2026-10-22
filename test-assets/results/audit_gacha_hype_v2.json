@@ -1,0 +1,207 @@
+{
+  "mp4": "D:\\motionforge\\test-assets\\results\\output_gacha_hype_v2.mp4",
+  "contact_sheet": "D:\\motionforge\\test-assets\\results\\output_gacha_hype_v2_contact_sheet.jpg",
+  "resolution": "1080x1920",
+  "fps": 60,
+  "duration": 15.0,
+  "bpm": 122.0,
+  "dropOnsetVisualTime": 3.97,
+  "audioStartOffset": 12.3167,
+  "transientSyncMatches": [
+    {
+      "accentIndex": 0,
+      "accentTime": 4.0,
+      "nearestTransientTime": 4.0,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 1,
+      "accentTime": 4.5,
+      "nearestTransientTime": 4.5,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 2,
+      "accentTime": 4.9833,
+      "nearestTransientTime": 4.9833,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 3,
+      "accentTime": 5.4833,
+      "nearestTransientTime": 5.4833,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 4,
+      "accentTime": 5.9666,
+      "nearestTransientTime": 5.9666,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 5,
+      "accentTime": 6.4666,
+      "nearestTransientTime": 6.4666,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 6,
+      "accentTime": 6.95,
+      "nearestTransientTime": 6.95,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 7,
+      "accentTime": 7.45,
+      "nearestTransientTime": 7.45,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 8,
+      "accentTime": 7.9333,
+      "nearestTransientTime": 7.9333,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 9,
+      "accentTime": 8.45,
+      "nearestTransientTime": 8.45,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 10,
+      "accentTime": 8.9166,
+      "nearestTransientTime": 8.9166,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 11,
+      "accentTime": 9.4333,
+      "nearestTransientTime": 9.4333,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 12,
+      "accentTime": 9.9,
+      "nearestTransientTime": 9.9,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 13,
+      "accentTime": 10.4,
+      "nearestTransientTime": 10.4,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 14,
+      "accentTime": 10.8833,
+      "nearestTransientTime": 10.8833,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 15,
+      "accentTime": 11.3833,
+      "nearestTransientTime": 11.3833,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 16,
+      "accentTime": 11.8666,
+      "nearestTransientTime": 11.8666,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 17,
+      "accentTime": 12.3666,
+      "nearestTransientTime": 12.3666,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 18,
+      "accentTime": 12.85,
+      "nearestTransientTime": 12.85,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 19,
+      "accentTime": 13.35,
+      "nearestTransientTime": 13.35,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 20,
+      "accentTime": 13.85,
+      "nearestTransientTime": 13.85,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 21,
+      "accentTime": 14.3333,
+      "nearestTransientTime": 14.3333,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    },
+    {
+      "accentIndex": 22,
+      "accentTime": 14.8166,
+      "nearestTransientTime": 14.8166,
+      "diffMs": 0.0,
+      "diffFrames": 0.0,
+      "isWithinTolerance": true
+    }
+  ],
+  "audioAudit": {
+    "maxPeakAmplitude": 0.80047607421875,
+    "maxDbTp": -1.9330328873872873,
+    "clippedSamples": 0,
+    "passed": true
+  },
+  "overscanAudit": {
+    "overscanFactor": 1.15,
+    "emptyEdgeViolations": 0,
+    "passed": true
+  }
+}

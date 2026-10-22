@@ -1,0 +1,20 @@
+{
+  "mp4": "D:\\motionforge\\test-assets\\results\\output_aesthetic_lyric_v2.mp4",
+  "contact_sheet": "D:\\motionforge\\test-assets\\results\\output_aesthetic_lyric_v2_contact_sheet.jpg",
+  "resolution": "1080x1920",
+  "fps": 60,
+  "duration": 15.0,
+  "background": "bg_vertical_bokeh_city_99844.mp4 + bg_raindrops_glass_city_99834.mp4",
+  "character": "lyric_selena_capriccio.png (2083x3375, official Kuro Games splash)",
+  "font": "Montserrat-ExtraBold.ttf (72pt, line height ~105px / 5.5% frame height)",
+  "verticalOverlayRemoved": true,
+  "lightWrapEnabled": true,
+  "matchColorEnabled": true,
+  "maskCollisionOverlap": 1.0,
+  "audioAudit": {
+    "maxPeakAmplitude": 0.80047607421875,
+    "maxDbTp": -1.9330328873872873,
+    "clippedSamples": 0,
+    "passed": true
+  }
+}

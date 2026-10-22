@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateArtFraming, generateReframeTimeline } from '../src/ai/artFraming';
+import { calculateArtFraming, generateReframeTimeline, checkArtZoomResolution } from '../src/ai/artFraming';
 import { createMultiplaneParallax } from '../src/ai/depthParallax';
 import { createLivelinessTrack, applyLivelinessToLayer } from '../src/engine/liveliness';
 import { calculateCardLayout, generateCardSequenceLayers } from '../src/core/cardLayouts';
@@ -111,5 +111,18 @@ describe('Block 1: Art Framing, 2.5D Parallax, Liveliness & Card Layouts', () =>
     expect(card1!.transform.position.animated).toBe(true);
     expect(card1!.transform.scale.animated).toBe(true);
     expect(card1!.effects.some((e) => e.type === 'directional-blur')).toBe(true);
+  });
+
+  it('should audit art resolution headroom and warn when camera zoom causes pixel stretching', () => {
+    // 720x720 small art in 1080x1920 viewport: fit requires 2.67x stretch, so max sharp zoom is only 0.38x
+    const smallArtAudit = checkArtZoomResolution(720, 720, 3.5, 1080, 1920);
+    expect(smallArtAudit.needsUpscaling).toBe(true);
+    expect(smallArtAudit.warning).toBeDefined();
+    expect(smallArtAudit.warning).toContain('Real-ESRGAN');
+
+    // 2000x3200 high-res art in 1080x1920 viewport: high native density allows crisp zoom
+    const highResAudit = checkArtZoomResolution(2000, 3200, 1.25, 1080, 1920);
+    expect(highResAudit.needsUpscaling).toBe(false);
+    expect(highResAudit.warning).toBeUndefined();
   });
 });

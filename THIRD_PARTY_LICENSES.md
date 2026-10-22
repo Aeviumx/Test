@@ -14,6 +14,7 @@ This document provides a comprehensive inventory of all third-party neural netwo
 | **DeepGHS Anime Face Detector** | YOLOv8 Anime Face ONNX | DeepGHS (`deepghs/anime_face_detection`) | **Apache-2.0** | **YES** | $F_1 = 0.95$ on anime lineart and stylized eyes |
 | **CFA Landmark Model** | 24-point Facial Landmarks | kanosawa (`anime_face_landmark_detection`) | **MIT** | **YES** | Exported to standalone ONNX (`anime_landmarks_cfa.onnx`) |
 | **Depth Anything V2 Small** | Monocular Depth Estimation | ByteDance & HKU MMLab | **Apache-2.0** | **YES** | **Depth Anything V2 is Apache 2.0** (unlike V1 CC-BY-NC) |
+| **Real-ESRGAN Anime 4x (6B)** | AI Super-Resolution Upscaling | Xintao Wang / DeepGHS | **BSD-3-Clause** | **YES** | High-quality 4x anime art upscaler for zoom headroom |
 | **ONNX Runtime Node** | Native C++ Inference Engine | Microsoft Corporation | **MIT** | **YES** | DirectML / CUDA / CPU execution providers |
 | **FFmpeg & FFprobe** | Audio/Video Processing | FFmpeg team | **LGPL v2.1+ / GPL v3** | **YES** | Bundled as external binary (`ffmpeg-static`), compliant |
 | **Electron & Node.js** | Desktop Shell Runtime | OpenJS Foundation / GitHub | **MIT** | **YES** | Standard commercial desktop application stack |
@@ -55,6 +56,12 @@ This document provides a comprehensive inventory of all third-party neural netwo
 - **Model Path:** `models/ggml-base.bin` (141.1 MB)
 - **License:** **MIT License**
 - **Commercial Usage:** Permitted for unrestricted commercial use.
+
+### 2.6 Real-ESRGAN Anime 4x Super-Resolution (6B)
+- **Model Path:** `models/RealESRGAN_x4plus_anime_6B.onnx` (17.1 MB)
+- **Architecture:** Compact 6-block RRDB anime super-resolution network fine-tuned on lineart and illustrations.
+- **License:** **BSD 3-Clause License**
+- **Commercial Usage:** Permitted without royalty. Automatic upscale during import prevents blur when camera punch zoom reaches 2.5×–4.0×.
 
 ---
 
