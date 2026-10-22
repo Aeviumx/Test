@@ -3,7 +3,7 @@ import { Sliders, Sparkles } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { usePlaybackLoop } from './hooks/usePlaybackLoop';
-import { loadProjectFromIndexedDB } from './store/persistence';
+import { loadProjectFromIndexedDB, importMediaFile } from './store/persistence';
 import { useProjectStore } from './store/useProjectStore';
 import { CompSettingsModal } from './ui/modals/CompSettingsModal';
 import { ExportModal } from './ui/modals/ExportModal';
@@ -15,24 +15,106 @@ import { PropertiesPanel } from './ui/panels/PropertiesPanel';
 import { TimelinePanel } from './ui/panels/TimelinePanel';
 import { TopBar } from './ui/panels/TopBar';
 import { ViewportPanel } from './ui/panels/ViewportPanel';
+import { MediaAsset, Project } from './types';
 
 export const App: React.FC = () => {
   const rightTab = useProjectStore((s) => s.rightTab);
   const setRightTab = useProjectStore((s) => s.setRightTab);
   const activeModal = useProjectStore((s) => s.activeModal);
   const setProject = useProjectStore((s) => s.setProject);
+  const addMediaAsset = useProjectStore((s) => s.addMediaAsset);
+  const project = useProjectStore((s) => s.project);
 
   usePlaybackLoop();
   useKeyboardShortcuts();
 
-  // Restore auto-saved project from IndexedDB on mount if available
+  // Restore auto-saved project on mount (from Electron desktop storage or IndexedDB)
   useEffect(() => {
-    void loadProjectFromIndexedDB().then((saved) => {
-      if (saved && saved.compositions?.length > 0) {
-        setProject(saved);
-      }
-    });
+    if (window.koriAPI?.storage) {
+      void window.koriAPI.storage.loadAutoRecovery().then((recovery) => {
+        if (recovery && recovery.project) {
+          setProject(recovery.project as Project);
+          return;
+        }
+        void loadProjectFromIndexedDB().then((saved) => {
+          if (saved && saved.compositions?.length > 0) {
+            setProject(saved);
+          }
+        });
+      });
+    } else {
+      void loadProjectFromIndexedDB().then((saved) => {
+        if (saved && saved.compositions?.length > 0) {
+          setProject(saved);
+        }
+      });
+    }
   }, [setProject]);
+
+  // Periodic Auto-Save every 60s
+  useEffect(() => {
+    if (!window.koriAPI?.storage) return;
+    const timer = setInterval(() => {
+      void window.koriAPI?.storage.saveAutoRecovery({
+        version: '1.0.0',
+        name: project.name || 'AutoRecovered',
+        lastModified: Date.now(),
+        appVersion: '1.0.0',
+        project,
+        mediaPaths: {},
+      });
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [project]);
+
+  // Native Drag-and-Drop files from Windows Explorer
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    };
+
+    const handleDrop = async (e: DragEvent) => {
+      e.preventDefault();
+      const files = Array.from(e.dataTransfer?.files || []);
+      for (const file of files) {
+        const filePath = (file as unknown as { path?: string }).path;
+        if (filePath && window.koriAPI?.media) {
+          try {
+            const probe = await window.koriAPI.media.probe(filePath);
+            const assetType = probe.hasVideo ? 'video' : probe.hasAudio ? 'audio' : 'image';
+            const asset: MediaAsset = {
+              id: `asset_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+              name: probe.fileName,
+              type: assetType,
+              mimeType: probe.hasVideo ? 'video/mp4' : 'audio/wav',
+              url: `file://${filePath.replace(/\\/g, '/')}`,
+              width: probe.width,
+              height: probe.height,
+              duration: probe.duration,
+            };
+            addMediaAsset(asset, true);
+          } catch (err) {
+            console.error('Failed to probe dropped media file', err);
+          }
+        } else {
+          try {
+            const asset = await importMediaFile(file);
+            addMediaAsset(asset, true);
+          } catch (err) {
+            console.error('Browser import error', err);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('drop', handleDrop);
+    return () => {
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('drop', handleDrop);
+    };
+  }, [addMediaAsset]);
 
   return (
     <div className="w-screen h-screen flex flex-col bg-[var(--bg-base)] text-[var(--text-primary)] overflow-hidden select-none">

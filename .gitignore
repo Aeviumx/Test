@@ -4,6 +4,9 @@ node_modules/
 # Build output
 dist/
 dist-ssr/
+dist-electron/
+release/
+test-assets/test_cache/
 
 # Local env & logs
 *.local

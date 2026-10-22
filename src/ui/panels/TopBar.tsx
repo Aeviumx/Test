@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Check,
   Circle,
+  Copy,
   Crosshair,
   Download,
   FolderOpen,
   Hand,
   HelpCircle,
   Hexagon,
+  Minus,
   MousePointer,
   MoveHorizontal,
   PenTool,
@@ -20,12 +22,13 @@ import {
   Star,
   Type,
   Undo2,
+  X,
   ZoomIn,
 } from 'lucide-react';
 import { EFFECT_CATALOG } from '../../core/defaults';
 import { downloadProjectFile, importMediaFile, saveProjectToIndexedDB } from '../../store/persistence';
 import { useProjectStore } from '../../store/useProjectStore';
-import { Project, ShapeGeometryType, ToolType } from '../../types';
+import { MediaAsset, Project, ShapeGeometryType, ToolType } from '../../types';
 
 interface MenuItem {
   label: string;
@@ -71,9 +74,19 @@ export const TopBar: React.FC = () => {
   const fitViewportToComp = useProjectStore((s) => s.fitViewportToComp);
 
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [isDesktop] = useState(() => typeof window !== 'undefined' && !!window.koriAPI);
+  const [isMaximized, setIsMaximized] = useState(false);
   const menuBarRef = useRef<HTMLDivElement>(null);
   const projectFileInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (window.koriAPI?.window) {
+      void window.koriAPI.window.isMaximized().then(setIsMaximized);
+      const unsub = window.koriAPI.window.onMaximizeChange(setIsMaximized);
+      return unsub;
+    }
+  }, []);
 
   useEffect(() => {
     if (!openMenu) return;
@@ -117,11 +130,66 @@ export const TopBar: React.FC = () => {
     e.target.value = '';
   };
 
+  const openProjectNativeOrWeb = async () => {
+    if (window.koriAPI?.dialog) {
+      const res = await window.koriAPI.dialog.openProjectFile();
+      if (res && res.data?.project) {
+        setProject(res.data.project as Project);
+      }
+    } else {
+      projectFileInputRef.current?.click();
+    }
+  };
+
+  const saveProjectNativeOrWeb = async () => {
+    if (window.koriAPI?.dialog) {
+      const saveData = {
+        version: '1.0.0',
+        name: project.name || 'Untitled',
+        lastModified: Date.now(),
+        appVersion: '1.0.0',
+        project,
+        mediaPaths: {},
+      };
+      await window.koriAPI.dialog.saveProjectFile(saveData);
+    } else {
+      void saveProjectToIndexedDB(project);
+      downloadProjectFile(project);
+    }
+  };
+
+  const importMediaNativeOrWeb = async () => {
+    if (window.koriAPI?.dialog && window.koriAPI?.media) {
+      const filePaths = await window.koriAPI.dialog.openMediaFiles();
+      if (filePaths) {
+        for (const filePath of filePaths) {
+          try {
+            const probe = await window.koriAPI.media.probe(filePath);
+            const asset: MediaAsset = {
+              id: `asset_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+              name: probe.fileName,
+              type: probe.hasVideo ? 'video' : probe.hasAudio ? 'audio' : 'image',
+              mimeType: probe.hasVideo ? 'video/mp4' : 'audio/wav',
+              url: `file://${filePath.replace(/\\/g, '/')}`,
+              width: probe.width,
+              height: probe.height,
+              duration: probe.duration,
+            };
+            addMediaAsset(asset, true);
+          } catch (err) {
+            console.error('Native import error:', err);
+          }
+        }
+      }
+    } else {
+      mediaInputRef.current?.click();
+    }
+  };
+
   const selectedLayerId = selectedLayerIds[0] ?? null;
 
   const saveProject = () => {
-    void saveProjectToIndexedDB(project);
-    downloadProjectFile(project);
+    void saveProjectNativeOrWeb();
   };
 
   // Global hotkeys (Ctrl+S / Ctrl+O / Ctrl+I) are dispatched from useKeyboardShortcuts
@@ -129,8 +197,8 @@ export const TopBar: React.FC = () => {
   saveProjectRef.current = saveProject;
   useEffect(() => {
     const onSave = () => saveProjectRef.current();
-    const onOpen = () => projectFileInputRef.current?.click();
-    const onImport = () => mediaInputRef.current?.click();
+    const onOpen = () => void openProjectNativeOrWeb();
+    const onImport = () => void importMediaNativeOrWeb();
     window.addEventListener('mf:save-project', onSave);
     window.addEventListener('mf:open-project', onOpen);
     window.addEventListener('mf:import-media', onImport);
@@ -153,18 +221,18 @@ export const TopBar: React.FC = () => {
         label: 'Open Project...',
         shortcut: 'Ctrl+O',
         dividerAbove: true,
-        onClick: () => projectFileInputRef.current?.click(),
+        onClick: () => void openProjectNativeOrWeb(),
       },
       {
         label: 'Save Project',
         shortcut: 'Ctrl+S',
-        onClick: () => saveProject(),
+        onClick: () => void saveProjectNativeOrWeb(),
       },
       {
         label: 'Import Media...',
         shortcut: 'Ctrl+I',
         dividerAbove: true,
-        onClick: () => mediaInputRef.current?.click(),
+        onClick: () => void importMediaNativeOrWeb(),
       },
       {
         label: 'Export...',
@@ -352,11 +420,14 @@ export const TopBar: React.FC = () => {
   ];
 
   return (
-    <header className="h-[36px] gloss-glasses border-b border-[var(--border)] px-2.5 flex items-center justify-between select-none shrink-0 z-40 transition-colors duration-150">
+    <header
+      className="h-[36px] gloss-glasses border-b border-[var(--border)] px-2.5 flex items-center justify-between select-none shrink-0 z-40 transition-colors duration-150"
+      style={{ WebkitAppRegion: isDesktop ? 'drag' : 'no-drag' } as React.CSSProperties}
+    >
       <input
         ref={projectFileInputRef}
         type="file"
-        accept=".mfproj,.json"
+        accept=".mfproj,.kori,.json"
         className="hidden"
         onChange={handleOpenProjectFile}
       />
@@ -370,7 +441,11 @@ export const TopBar: React.FC = () => {
       />
 
       {/* Left: Brand + Application Menus */}
-      <div ref={menuBarRef} className="flex items-center gap-1">
+      <div
+        ref={menuBarRef}
+        className="flex items-center gap-1"
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      >
         <div className="flex items-center gap-2 pr-2.5 mr-1 border-r border-[var(--border)]">
           <div
             className="w-5 h-5 rounded bg-gradient-to-br from-[var(--accent)] to-[var(--accent-deep)] flex items-center justify-center shadow-sm font-black text-[#0b0d11] text-[12px] leading-none select-none font-sans"
@@ -504,7 +579,10 @@ export const TopBar: React.FC = () => {
       </div>
 
       {/* Right: Project Save/Open & Export Actions */}
-      <div className="flex items-center gap-1.5">
+      <div
+        className="flex items-center gap-1.5"
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      >
         <button
           type="button"
           onClick={() => loadTrendingAnimeEdit()}
@@ -516,7 +594,7 @@ export const TopBar: React.FC = () => {
         </button>
         <button
           type="button"
-          onClick={() => projectFileInputRef.current?.click()}
+          onClick={() => void openProjectNativeOrWeb()}
           title="Open Project (Ctrl+O)"
           className="h-[24px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
         >
@@ -525,7 +603,7 @@ export const TopBar: React.FC = () => {
         </button>
         <button
           type="button"
-          onClick={saveProject}
+          onClick={() => void saveProjectNativeOrWeb()}
           title="Save Project (Ctrl+S)"
           className="h-[24px] px-2 rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 text-[11px] transition-colors duration-150"
         >
@@ -549,6 +627,39 @@ export const TopBar: React.FC = () => {
           <Download className="w-3.5 h-3.5" />
           <span>Export</span>
         </button>
+
+        {/* Midnight Ice Desktop Window Controls */}
+        {isDesktop && (
+          <div className="flex items-center gap-0.5 ml-1 pl-1.5 border-l border-[var(--border)]">
+            <button
+              type="button"
+              onClick={() => void window.koriAPI?.window.minimize()}
+              title="Minimize"
+              className="h-[24px] w-[28px] rounded flex items-center justify-center text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (isMaximized) void window.koriAPI?.window.unmaximize();
+                else void window.koriAPI?.window.maximize();
+              }}
+              title={isMaximized ? 'Restore Down' : 'Maximize'}
+              className="h-[24px] w-[28px] rounded flex items-center justify-center text-[var(--steel)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
+            >
+              {isMaximized ? <Copy className="w-3 h-3" /> : <Square className="w-3 h-3" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => void window.koriAPI?.window.close()}
+              title="Close"
+              className="h-[24px] w-[28px] rounded flex items-center justify-center text-[var(--steel)] hover:text-white hover:bg-[#e11d48] transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );
