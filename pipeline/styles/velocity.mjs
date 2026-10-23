@@ -1,6 +1,7 @@
-// Стиль Velocity (твикстор-эдит): каждый такт — своя сцена из твикстор-клипа, внутри такта скорость
-// «дышит» под музыку: на ударе замедление, к следующему удару резкий разгон со смешиванием кадров.
-// Склейки — на сильные доли, вспышки — только на сильные доли после дропа.
+// Стиль Velocity (твикстор-эдит): склейка на каждом акценте ритмического рисунка; каждый отрезок
+// начинается на пике движения сцены (удар, взмах, рывок) с замедлением и разгоняется к следующему удару
+// со смешиванием кадров. Вспышки — только на сильные доли после дропа, на склейках сильных долей —
+// чередование «зум-прохода» и «вжуха».
 import { buildRhythm, audioBlock } from '../rhythm.mjs';
 
 export const STYLE_ID = 'velocity';
@@ -9,132 +10,136 @@ export const STYLE_ID = 'velocity';
 const RAMP_DOWNBEAT = { smin: 0.25, smax: 3.2, p: 2.4 }; // сильная доля: самое глубокое замедление
 const RAMP_ACCENT = { smin: 0.45, smax: 2.6, p: 2.2 }; // остальные удары такта — мягче
 const RAMP_INTRO = { smin: 0.55, smax: 1.7, p: 1.8 };
-const ZOOM_THROUGH_EVERY = 2; // «зум-проход» в склейку на каждой второй смене сцены после дропа
+const PRE_ROLL = 0.04; // замедление начинается чуть раньше пика движения, чтобы удар был виден целиком
 const EDGE_FRAMES = 2; // не берём кадры у самой склейки исходника
 
 export const rampNorm = (r) => r.smin + (r.smax - r.smin) / (r.p + 1);
 
 export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080, height = 1920, fps = 60, signature = '', leadFrames = 2 }) {
   const r = buildRhythm({ audioFile, introBars: 1, targetDuration, fps, leadFrames });
-  const totalBars = r.introBars + r.dropBars;
 
-  const pool = [];
+  // отрезки между ударами: в интро — склейка каждые 2 доли, после дропа — на каждом акценте рисунка
+  const points = [
+    ...r.introAccents.filter((a) => a.pos % 8 === 0).map((a) => ({ t: a.t, kind: 'intro', pos: a.pos, bar: a.bar })),
+    ...r.accents.map((a) => ({ t: a.t, kind: 'drop', pos: a.pos, bar: a.bar })),
+  ].sort((a, b) => a.t - b.t);
+  points[0].t = 0;
+  const segs = points.map((p, i) => {
+    const b = i + 1 < points.length ? points[i + 1].t : r.duration;
+    const prof = p.kind === 'intro' ? RAMP_INTRO : p.pos === 0 ? RAMP_DOWNBEAT : RAMP_ACCENT;
+    return { ...p, a: p.t, b, prof, need: (b - p.t) * rampNorm(prof) };
+  });
+
+  // «моменты» — пики движения внутри сцен (удар, взмах, рывок): на них ставится замедление
+  const moments = [];
+  const allCurve = [];
   for (const c of clips) {
-    c.scenes.forEach((s, idx) => {
-      const len = s.end - s.start - (2 * EDGE_FRAMES) / c.fps;
-      if (len >= 0.6) pool.push({ clip: c, idx, scene: s, len });
+    const rate = c.curve_rate || 20;
+    c.scenes.forEach((sc, idx) => {
+      // совсем тёмные «каши» не берём вообще (если клип не размечен по яркости — берём)
+      if (sc.luma !== undefined && (sc.luma < 30 || sc.contrast < 18)) return;
+      const s0 = sc.start + EDGE_FRAMES / c.fps;
+      const s1 = sc.end - EDGE_FRAMES / c.fps;
+      if (s1 - s0 < 0.35) return;
+      const curve = sc.curve && sc.curve.length ? sc.curve : [sc.motion];
+      allCurve.push(...curve);
+      const mx = Math.max(...curve);
+      curve.forEach((v, i) => {
+        const prev = curve[i - 1] ?? -1;
+        const next = curve[i + 1] ?? -1;
+        if (v >= prev && v >= next && v >= 0.35 * mx) {
+          moments.push({ clip: c, idx, scene: sc, s0, s1, t: Math.max(s0, sc.start + i / rate - PRE_ROLL), value: v });
+        }
+      });
+      moments.push({ clip: c, idx, scene: sc, s0, s1, t: s0, value: curve[0] }); // начало сцены — запасной вариант
     });
   }
-  if (!pool.length) throw new Error('В клипах нет сцен длиннее 0.6 с — нечего монтировать.');
+  if (!moments.length) throw new Error('В клипах нет сцен длиннее 0.35 с — нечего монтировать.');
+  const sorted = [...allCurve].sort((a, b) => a - b);
+  const ref = sorted[Math.floor(sorted.length * 0.9)] || 1;
 
-  // отбор сцен: важнее движение, лицо в кадре и запас длины; из одного клипа — не больше своей доли,
-  // чтобы эдит не превращался в пересказ одного клипа
-  const maxMotion = Math.max(...pool.map((p) => p.scene.motion)) || 1;
-  const score = (p) => (p.scene.motion / maxMotion) * (p.scene.face ? 1.25 : 1) * Math.min(1, p.len / 1.8);
-  const ranked = [...pool].sort((a, b) => score(b) - score(a));
-  const perClipCap = Math.max(1, Math.ceil(totalBars / clips.length));
-  const picked = [];
-  const perClip = new Map();
-  for (const p of ranked) {
-    if (picked.length >= totalBars) break;
-    const n = perClip.get(p.clip.id) || 0;
-    if (n >= perClipCap) continue;
-    perClip.set(p.clip.id, n + 1);
-    picked.push(p);
-  }
-  for (let i = 0; picked.length < totalBars; i++) picked.push(ranked[i % ranked.length]); // мало сцен — повторяем
-
-  // самая сильная сцена — на дроп, вторая (по возможности из другого клипа) — на финальный такт,
-  // остальные по убыванию силы, соседние такты — из разных клипов
-  const order = new Array(totalBars).fill(null);
-  const dropSlot = r.introBars;
-  const left = [...picked];
-  const takeOut = (cand) => left.splice(left.indexOf(cand), 1)[0];
-  order[dropSlot] = takeOut(left[0]);
-  if (totalBars - 1 !== dropSlot && left.length) {
-    order[totalBars - 1] = takeOut(left.find((p) => p.clip.id !== order[dropSlot].clip.id) || left[0]);
-  }
-  for (let i = 0; i < totalBars; i++) {
-    if (order[i]) continue;
-    const near = [order[i - 1], order[i + 1]].filter(Boolean).map((p) => p.clip.id);
-    order[i] = takeOut(left.find((p) => !near.includes(p.clip.id)) || left[0]);
-  }
-
-  // точки ударов на каждом такте: интро — каждая доля, после дропа — акценты по рисунку
-  const barPoints = [];
-  for (let b = 0; b < totalBars; b++) {
-    const rel = b - r.introBars;
-    const src = rel < 0 ? r.introAccents.filter((a) => a.bar === rel) : r.accents.filter((a) => a.bar === rel);
-    barPoints.push(src.map((a) => a.t));
-  }
-
-  const shots = [];
-  for (let b = 0; b < totalBars; b++) {
-    const pts = barPoints[b];
-    const a0 = pts[0];
-    const a1 = b + 1 < totalBars ? barPoints[b + 1][0] : r.duration;
-    const profFor = (i) => (b < r.introBars ? RAMP_INTRO : i === 0 ? RAMP_DOWNBEAT : RAMP_ACCENT);
-    const { clip, scene, idx } = order[b];
-    const bounds = [...pts, a1];
-    const need = bounds.slice(0, -1).reduce((acc, t, i) => acc + (bounds[i + 1] - t) * rampNorm(profFor(i)), 0);
-    const s0 = scene.start + EDGE_FRAMES / clip.fps;
-    const s1 = scene.end - EDGE_FRAMES / clip.fps;
-    const avail = s1 - s0;
-    const k = Math.min(1, avail / need); // если сцена короче — замедляем весь такт равномерно
-    const used = need * k;
-    // замедление на сильной доле приходится чуть раньше пика движения сцены
-    let srcStart = Math.min(Math.max(s0, scene.peak - 0.15 * used), s1 - used);
-    srcStart = Math.max(s0, srcStart);
-    const ramps = [];
-    let src = srcStart;
-    for (let i = 0; i < bounds.length - 1; i++) {
-      const prof = profFor(i);
-      const dur = (bounds[i + 1] - bounds[i]) * rampNorm(prof) * k;
-      ramps.push({ a: bounds[i], b: bounds[i + 1], srcA: Number(src.toFixed(4)), srcB: Number((src + dur).toFixed(4)), ...prof });
-      src += dur;
+  // распределение: сначала сильные доли после дропа (им — самые сильные моменты), потом остальные;
+  // соседние отрезки — из разных клипов, куски сцен не повторяются
+  const used = new Map(); // ключ сцены → занятые интервалы исходника
+  const clipUses = new Map();
+  const assign = new Array(segs.length).fill(null);
+  const overlaps = (key, a, b) => (used.get(key) || []).some(([x, y]) => a < y - 0.02 && b > x + 0.02);
+  const pick = (i, allowOverlap) => {
+    const seg = segs[i];
+    const near = [assign[i - 1], assign[i + 1], assign[i - 2]].filter(Boolean).map((x) => x.clip.id);
+    let best = null;
+    for (const m of moments) {
+      const k = Math.min(1, (m.s1 - m.t) / seg.need);
+      if (k < 0.55) continue;
+      const key = `${m.clip.id}#${m.idx}`;
+      if (!allowOverlap && overlaps(key, m.t, m.t + seg.need * k)) continue;
+      let sc = Math.min(1.5, m.value / ref) * (m.scene.face ? 1.15 : 1) * (0.6 + 0.4 * k);
+      // тёмные или бесконтрастные сцены зритель не разберёт, как бы они ни двигались
+      if (m.scene.luma !== undefined && (m.scene.luma < 40 || m.scene.contrast < 20)) sc *= 0.2;
+      if (near.includes(m.clip.id)) sc *= 0.25;
+      sc *= 0.85 ** (clipUses.get(m.clip.id) || 0);
+      if (!best || sc > best.sc) best = { m, k, sc, key };
     }
+    return best;
+  };
+  const order = [
+    ...segs.map((s, i) => i).filter((i) => segs[i].kind === 'drop' && segs[i].pos === 0),
+    ...segs.map((s, i) => i).filter((i) => !(segs[i].kind === 'drop' && segs[i].pos === 0)),
+  ];
+  for (const i of order) {
+    const got = pick(i, false) || pick(i, true);
+    if (!got) throw new Error('Не хватает материала: добавь клипов со сценами длиннее 0.5 с.');
+    const seg = segs[i];
+    const len = seg.need * got.k;
+    used.set(got.key, [...(used.get(got.key) || []), [got.m.t, got.m.t + len]]);
+    clipUses.set(got.m.clip.id, (clipUses.get(got.m.clip.id) || 0) + 1);
+    assign[i] = { clip: got.m.clip, idx: got.m.idx, scene: got.m.scene, srcA: got.m.t, srcB: got.m.t + len, k: got.k };
+  }
+
+  const shots = segs.map((seg, i) => {
+    const { clip, idx, scene, srcA, srcB, k } = assign[i];
     // вертикальный кадр из 16:9: окно 9:16 по высоте исходника, по центру лица (или кадра)
     const cropH = clip.height;
     const cropW = Math.min(clip.width, Math.round((cropH * width) / height / 2) * 2);
-    const fx = scene.face ? scene.face.x : 0.5;
+    const fx = scene.face ? scene.face.x : scene.focus_x ?? 0.5;
     const cropX = Math.round(Math.min(clip.width - cropW, Math.max(0, fx * clip.width - cropW / 2)));
-    shots.push({
+    return {
       type: 'video',
-      start: a0,
-      end: a1,
+      start: seg.a,
+      end: seg.b,
       clip: clip.id,
       scene: idx,
       crop: { x: cropX, w: cropW, h: cropH },
       anchorY: scene.face ? scene.face.y : 0.45,
       slowFactor: Number(k.toFixed(3)),
-      ramps,
-    });
-  }
-  shots[0].start = 0;
+      ramps: [{ a: seg.a, b: seg.b, srcA: Number(srcA.toFixed(4)), srcB: Number(srcB.toFixed(4)), ...seg.prof }],
+    };
+  });
 
   const events = [];
   // хук: эдит открывается ударом камеры и вспышкой, а не статичным кадром
   events.push({ t: 0, type: 'flash', strength: 0.7 });
   events.push({ t: 0, type: 'punch', strength: 1.3 });
   for (const a of r.introAccents) if (a.pos !== 0) events.push({ t: a.t, type: 'punch', strength: 0.35 });
-  // зум-проход: камера разгоняется в склейку, новая сцена «вылетает» навстречу
+  // переходы на склейках сильных долей: чередуются «зум-проход» и «вжух» (whip); первый — в дроп
   const transitions = [];
-  shots.forEach((s, i) => {
-    const barAfterDrop = i - r.introBars;
-    if (i > r.introBars && barAfterDrop % ZOOM_THROUGH_EVERY === 1) {
-      transitions.push({ t: s.start, type: 'zoomthrough', duration: 0.12 });
-      events.push({ t: s.start, type: 'punch', strength: 0.8 });
-    }
+  let n = 0;
+  segs.forEach((seg, i) => {
+    if (i === 0 || seg.kind !== 'drop' || seg.pos !== 0) return;
+    const type = n++ % 2 === 0 ? 'zoomthrough' : 'whip';
+    transitions.push({ t: seg.a, type, duration: type === 'whip' ? 0.1 : 0.12 });
+    events.push({ t: seg.a, type: 'punch', strength: 0.8 });
   });
   for (const a of r.accents) {
     if (a.flash) {
       events.push({ t: a.t, type: 'flash', strength: 0.9 });
       events.push({ t: a.t, type: 'punch', strength: 1.0 });
       events.push({ t: a.t, type: 'rgb', strength: 0.7 });
+      events.push({ t: a.t, type: 'shake', strength: 0.6 });
     } else {
-      events.push({ t: a.t, type: 'punch', strength: 0.6 });
-      events.push({ t: a.t, type: 'shake', strength: 0.5 });
-      events.push({ t: a.t, type: 'rgb', strength: 0.4 });
+      events.push({ t: a.t, type: 'punch', strength: 0.7 });
+      events.push({ t: a.t, type: 'shake', strength: 0.9 });
+      events.push({ t: a.t, type: 'rgb', strength: 0.5 });
     }
   }
   events.sort((a, b) => a.t - b.t);
