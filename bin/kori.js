@@ -26,6 +26,7 @@ Kōri (氷) CLI
   plan     --style velocity --audio <трек> --clips <папка|файлы...> --out plan.json   (твикстор-эдит)
            [--duration 15] [--signature "edit by ..."]
            [--lead-frames 2]  на сколько кадров раньше удара ставить склейки/вспышки (0 — точно в удар)
+           [--sfx <папка>]    звуковые эффекты: подпапки impact/ subdrop/ whoosh/ riser/ (только velocity)
   lint     --plan plan.json                 Проверить план (лица в кадре, вспышки, синхрон)
   stills   --plan plan.json --times 1,4.5,8 --out <папка>   Отдельные кадры в PNG
   export   --plan plan.json --out edit.mp4 [--force]        Рендер MP4 (+ проверка edit_qa.py)
@@ -101,6 +102,7 @@ async function makePlan() {
     fps: parseInt(getArg('--fps', '60'), 10),
     signature: getArg('--signature', ''),
     leadFrames: parseFloat(getArg('--lead-frames', '2')),
+    sfxLibrary: getArg('--sfx') ? (await import('../pipeline/sfx.mjs')).loadSfxLibrary(getArg('--sfx')) : null,
   });
 }
 
@@ -142,6 +144,11 @@ function summary(plan) {
   console.log(`[kori] Темп ${a.bpm} BPM, фрагмент ${a.start.toFixed(2)}–${(a.start + a.duration).toFixed(2)} с трека`);
   console.log(`[kori] Дроп на ${a.dropAt.toFixed(2)} с эдита (+${a.dropRise} дБ), ритмический рисунок (шестнадцатые 0–15): ${a.pattern.join(', ')}`);
   console.log(`[kori] Кадров: ${plan.shots.length}, акцентов: ${plan.accents.length}, вспышек: ${plan.events.filter((e) => e.type === 'flash').length}`);
+  if (plan.sfx && plan.sfx.length) {
+    const byType = {};
+    for (const x of plan.sfx) byType[x.type] = (byType[x.type] || 0) + 1;
+    console.log(`[kori] Звуковые эффекты: ${Object.entries(byType).map(([k, v]) => `${k} ×${v}`).join(', ')}`);
+  }
 }
 
 async function main() {

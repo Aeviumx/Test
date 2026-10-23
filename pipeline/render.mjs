@@ -603,19 +603,31 @@ export async function renderPlan(plan, outFile, { onProgress } = {}) {
   const a = plan.audio;
   const loud = measureLoudness(a.file, a.start, a.duration);
   const fadeOut = Math.max(0, a.duration - 0.08).toFixed(3);
-  let af = `afade=t=in:d=0.01,afade=t=out:st=${fadeOut}:d=0.08,`;
-  af += loud
+  let norm = loud
     ? `loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${loud.input_i}:measured_TP=${loud.input_tp}:measured_LRA=${loud.input_lra}:measured_thresh=${loud.input_thresh}:offset=${loud.target_offset}:linear=true`
     : 'loudnorm=I=-14:TP=-1.5:LRA=11';
   // level=disabled: иначе alimiter после ограничения сам поднимает громкость обратно почти до 0 дБ;
   // предел −2 дБ оставляет запас под пики, которые добавляет сжатие AAC
-  af += ',alimiter=limit=0.79:attack=1:release=50:level=disabled,aresample=48000';
+  norm += ',alimiter=limit=0.79:attack=1:release=50:level=disabled,aresample=48000';
+  // звуковые эффекты подмешиваются к музыке до нормализации громкости
+  const sfx = plan.sfx || [];
+  let fc = `[1:a]afade=t=in:d=0.01,afade=t=out:st=${fadeOut}:d=0.08,aresample=48000,aformat=channel_layouts=stereo[m]`;
+  sfx.forEach((x, i) => {
+    const fadeSt = Math.max(0, x.dur - x.fade).toFixed(4);
+    const ms = Math.round(x.at * 1000);
+    fc += `;[${i + 2}:a]atrim=start=${x.trim}:duration=${x.dur},asetpts=PTS-STARTPTS,aresample=48000,` +
+      `aformat=channel_layouts=stereo,afade=t=out:st=${fadeSt}:d=${x.fade.toFixed(4)},volume=${x.gain},` +
+      `adelay=delays=${ms}:all=1[s${i}]`;
+  });
+  const mixIn = '[m]' + sfx.map((_, i) => `[s${i}]`).join('');
+  fc += sfx.length ? `;${mixIn}amix=inputs=${sfx.length + 1}:normalize=0:duration=first,${norm}[aout]` : `;[m]${norm}[aout]`;
   fs.mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
   const args = [
     '-y', '-hide_banner', '-loglevel', 'error',
     '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(fps), '-i', '-',
     '-ss', String(a.start), '-t', String(a.duration), '-i', a.file,
-    '-map', '0:v', '-map', '1:a', '-af', af,
+    ...sfx.flatMap((x) => ['-i', x.file]),
+    '-filter_complex', fc, '-map', '0:v', '-map', '[aout]',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-pix_fmt', 'yuv420p',
     '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', outFile,
   ];

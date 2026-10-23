@@ -163,7 +163,7 @@ npm run kori -- render --audio test-assets/real/track_02_midnight_phonk.mp3 \
 # Velocity (твикстор-эдит) из видеоклипов:
 npm run kori -- clips public/assets                 # разметка клипов: сцены, движение, лица → kori_clip_meta.json
 npm run kori -- render --style velocity --audio test-assets/real/track_02_midnight_phonk.mp3 \
-  --clips public/assets/makima_twixtor.mp4 --out out/velocity.mp4
+  --clips public/assets/makima_twixtor.mp4 --out out/velocity.mp4 [--sfx test-assets/materials/sfx]
 
 # Или по шагам:
 npm run kori -- analyze --audio <трек>                       # темп, биты, дроп, ритмический рисунок
@@ -185,6 +185,7 @@ npm run kori -- qa out/gacha.mp4
 | `styles/gachaHype.mjs` | Строит план: 2 такта интро с карточками → дроп → 3 акцента на такт по рисунку трека; вспышка только на сильную долю |
 | `styles/velocity.mjs` | Твикстор: такт = сцена клипа (самые динамичные — на дроп и финал); на сильной доле 0.25×, на остальных ударах 0.45×, к следующему удару разгон до 2.6–3.2× со смешиванием кадров; склейки на сильных долях, «зум-проход» в каждую вторую склейку, старт с удара и вспышки |
 | `clips.mjs` | Читает разметку клипов `kori_clip_meta.json` (её делает `tools/analyze_clips.py`) |
+| `sfx.mjs` | Звуковые эффекты: сам размечает каждый файл (атака, пик, уровень) и ставит удар атакой на удар в музыке, «вжух» пиком на склейку, нарастание пиком на дроп (`--sfx <папка>` с подпапками impact/ subdrop/ whoosh/ riser/) |
 | `lint.mjs` | Проверяет план: лицо в кадре на крупных планах, плотность вспышек, длина кадров, привязка акцентов, найден ли дроп |
 | `render.mjs` | Рисует план (Skia-canvas): карточки, фоны в цвет персонажа, видео-сцены с кривыми скорости, панч, тряска с motion blur, RGB-сдвиг, радиальный смаз, зум-проход, свечение (glow), вспышки; события выровнены по кадрам; звук −14 LUFS |
 
