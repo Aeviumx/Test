@@ -25,8 +25,9 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 CASCADE = os.path.join(HERE, "lbpcascade_animeface.xml")
 EXTS = (".mp4", ".mov", ".webm", ".mkv", ".m4v")
-META_VERSION = 5  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица; 5: доля дублей
+META_VERSION = 6  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица; 5: доля дублей; 6: траектория персонажа
 CURVE_RATE = 20
+TRACK_RATE = 4
 
 
 FFMPEG = os.environ.get("KORI_FFMPEG") or shutil.which("ffmpeg") or "ffmpeg"
@@ -95,11 +96,61 @@ def detect_face(path, t, cas):
     return ((x + fw / 2) / s / w, (y + fh / 2) / s / h, fh / s / h)
 
 
+def subject_track(path, w, h):
+    """Где персонаж в каждый момент: 4 замера в секунду по всему клипу.
+    Лицо (если найдено) — главный ориентир; без лица — колонка кадра, где больше всего
+    деталей и движения в верхних 3/4 кадра (там голова и корпус). Возвращает список
+    (время, x центра 0..1, есть ли лицо, «размер» объекта 0..1)."""
+    sw = 640
+    sh = int(round(h * sw / w / 2) * 2)
+    r = subprocess.run([FFMPEG, "-v", "error", "-i", path, "-vf", f"fps={TRACK_RATE},scale={sw}:{sh}",
+                        "-pix_fmt", "bgr24", "-f", "rawvideo", "-"], capture_output=True)
+    raw = np.frombuffer(r.stdout, dtype=np.uint8)
+    n = len(raw) // (sw * sh * 3)
+    if n == 0:
+        return []
+    frames = raw[: n * sw * sh * 3].reshape(n, sh, sw, 3)
+    cas = cv2.CascadeClassifier(CASCADE)
+    crop_frac = min(1.0, (9 / 16) * h / max(1, w))
+    win = max(1, int(round(crop_frac * sw)))
+    out = []
+    prev = None
+    for i in range(n):
+        g = cv2.cvtColor(frames[i], cv2.COLOR_BGR2GRAY)
+        top = g[: int(sh * 0.75)].astype(np.float32)
+        grad = np.abs(np.diff(top, axis=1)).mean(axis=0)
+        mot = np.abs(top - prev).mean(axis=0)[:-1] if prev is not None else np.zeros_like(grad)
+        prev = top
+        energy = grad + 2.0 * mot
+        dens = np.convolve(energy, np.ones(win), "valid")
+        c = int(np.argmax(dens)) if len(dens) else 0
+        x = (c + win / 2) / len(energy) if len(dens) else 0.5
+        conc = float(dens[c] / (energy.sum() + 1e-6)) if len(dens) else 0.0
+        faces = cas.detectMultiScale(cv2.equalizeHist(g), scaleFactor=1.08, minNeighbors=4, minSize=(28, 28))
+        face = 0
+        size = conc
+        if len(faces):
+            fx, fy, fw, fh = max(faces, key=lambda f: f[2] * f[3])
+            x = (fx + fw / 2) / sw
+            face = 1
+            size = max(size, fh / sh * 2.5)
+        out.append([round(i / TRACK_RATE, 3), round(float(x), 4), face, round(min(1.0, size), 3)])
+    # сглаживание: медиана по 3 замерам, затем скользящее среднее — камера не должна дёргаться
+    xs = np.array([o[1] for o in out])
+    if len(xs) >= 3:
+        med = np.array([np.median(xs[max(0, k - 1): k + 2]) for k in range(len(xs))])
+        sm = np.convolve(np.pad(med, 1, mode="edge"), np.ones(3) / 3, "valid")
+        for k, o in enumerate(out):
+            o[1] = round(float(sm[k]), 4)
+    return out
+
+
 def analyze(path):
     fps, w, h, small = read_small(path)
     n = len(small)
     cuts, diff = find_cuts(small, fps)
     bounds = [0] + cuts + [n]
+    track = subject_track(path, w, h)
     cas = cv2.CascadeClassifier(CASCADE)
     scenes = []
     for a, b in zip(bounds[:-1], bounds[1:]):
@@ -140,6 +191,8 @@ def analyze(path):
             "motion": round(motion, 3), "peak": round(peak, 4), "face": face, "curve": curve,
             "luma": round(luma, 1), "contrast": round(contrast, 1), "focus_x": round(float(focus_x), 4),
             "dup": round(dup, 3),
+            # траектория персонажа внутри сцены: [время от начала сцены, x 0..1, лицо 0/1, размер 0..1]
+            "track": [[round(t - a / fps, 3), x, f, sz] for t, x, f, sz in track if a / fps - 1e-6 <= t < b / fps],
         })
     return {
         "file": os.path.basename(path), "fps": round(fps, 3), "width": w, "height": h,

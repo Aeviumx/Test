@@ -16,6 +16,15 @@ const EDGE_FRAMES = 2; // не берём кадры у самой склейк�
 
 export const rampNorm = (r) => r.smin + (r.smax - r.smin) / (r.p + 1);
 
+/** Где персонаж в момент rel (секунды от начала сцены): ближайший замер траектории. */
+function trackAt(scene, rel) {
+  const tr = scene.track;
+  if (!tr || !tr.length) return null;
+  let best = tr[0];
+  for (const p of tr) if (Math.abs(p[0] - rel) < Math.abs(best[0] - rel)) best = p;
+  return { x: best[1], face: best[2], size: best[3] };
+}
+
 /** Источник клипа: нарезки одного видео (name_01.mp4, name_02.mp4…) — один источник. */
 const sourceOf = (clip) => clip.source || clip.id.replace(/[_-]\d+$/, '');
 
@@ -50,14 +59,17 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
       const curve = sc.curve && sc.curve.length ? sc.curve : [sc.motion];
       allCurve.push(...curve);
       const mx = Math.max(...curve);
+      const med = [...curve].sort((a, b) => a - b)[Math.floor(curve.length / 2)] || 0;
       curve.forEach((v, i) => {
         const prev = curve[i - 1] ?? -1;
         const next = curve[i + 1] ?? -1;
         if (v >= prev && v >= next && v >= 0.35 * mx) {
-          moments.push({ clip: c, idx, scene: sc, s0, s1, t: Math.max(s0, sc.start + i / rate - PRE_ROLL), value: v });
+          // «удар» — резкий всплеск над фоном сцены, а не ровное мельтешение
+          const spike = v / (med + 0.5);
+          moments.push({ clip: c, idx, scene: sc, s0, s1, t: Math.max(s0, sc.start + i / rate - PRE_ROLL), value: v, spike });
         }
       });
-      moments.push({ clip: c, idx, scene: sc, s0, s1, t: s0, value: curve[0] }); // начало сцены — запасной вариант
+      moments.push({ clip: c, idx, scene: sc, s0, s1, t: s0, value: curve[0], spike: 1 }); // начало сцены — запасной вариант
     });
   }
   if (!moments.length) throw new Error('В клипах нет сцен длиннее 0.35 с — нечего монтировать.');
@@ -81,7 +93,11 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
       if (k < 0.55) continue;
       const key = `${m.clip.id}#${m.idx}`;
       if (!allowOverlap && overlaps(key, m.t, m.t + seg.need * k)) continue;
-      let sc = Math.min(1.5, m.value / ref) * (m.scene.face ? 1.15 : 1) * (0.6 + 0.4 * k);
+      // момент хорош, когда это резкий удар и персонаж в кадре крупный (лицо — ещё лучше);
+      // общий план с крошечными фигурками проигрывает, даже если там много движения
+      const tr = trackAt(m.scene, m.t - m.scene.start);
+      const subject = tr ? (tr.face ? 1.3 : 1) * (0.55 + 0.9 * Math.min(tr.size, 0.6)) : m.scene.face ? 1.15 : 1;
+      let sc = Math.min(1.5, m.value / ref) * (0.7 + 0.15 * Math.min(m.spike, 2)) * subject * (0.6 + 0.4 * k);
       // тёмные или бесконтрастные сцены зритель не разберёт, как бы они ни двигались
       if (m.scene.luma !== undefined && (m.scene.luma < 40 || m.scene.contrast < 20)) sc *= 0.2;
       if (near.includes(sourceOf(m.clip))) sc *= 0.15;
@@ -108,18 +124,31 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
 
   const shots = segs.map((seg, i) => {
     const { clip, idx, scene, srcA, srcB, k } = assign[i];
-    // вертикальный кадр из 16:9: окно 9:16 по высоте исходника, по центру лица (или кадра)
+    // вертикальный кадр из 16:9: окно 9:16 по высоте исходника ведётся за персонажем по траектории;
+    // декодируется полоса, покрывающая все положения окна на этом отрезке
     const cropH = clip.height;
     const cropW = Math.min(clip.width, Math.round((cropH * width) / height / 2) * 2);
+    // всё по чётным пикселям: ffmpeg при обрезке видео 4:2:0 молча округляет нечётные x/ширину вниз,
+    // и строки кадра «съезжают»
+    const even = (v) => Math.floor(v / 2) * 2;
+    const toCropX = (x) => even(Math.min(clip.width - cropW, Math.max(0, x * clip.width - cropW / 2)));
+    const pts = (scene.track || [])
+      .map((p) => [scene.start + p[0], toCropX(p[1])])
+      .filter(([t]) => t >= srcA - 0.3 && t <= srcB + 0.3);
     const fx = scene.face ? scene.face.x : scene.focus_x ?? 0.5;
-    const cropX = Math.round(Math.min(clip.width - cropW, Math.max(0, fx * clip.width - cropW / 2)));
+    const track = pts.length ? pts : [[srcA, toCropX(fx)]];
+    const minX = Math.min(...track.map((p) => p[1]));
+    const maxX = Math.max(...track.map((p) => p[1]));
+    const cropX = minX;
     return {
       type: 'video',
       start: seg.a,
       end: seg.b,
       clip: clip.id,
       scene: idx,
-      crop: { x: cropX, w: cropW, h: cropH },
+      crop: { x: cropX, w: even(Math.min(clip.width - cropX, maxX - minX + cropW)), h: even(cropH) },
+      viewW: cropW,
+      track: track.map(([t, x]) => [Number(t.toFixed(3)), x]),
       anchorY: scene.face ? scene.face.y : 0.45,
       slowFactor: Number(k.toFixed(3)),
       ramps: [{ a: seg.a, b: seg.b, srcA: Number(srcA.toFixed(4)), srcB: Number(srcB.toFixed(4)), ...seg.prof }],
@@ -140,17 +169,32 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
     transitions.push({ t: seg.a, type, duration: type === 'whip' ? 0.1 : 0.12 });
     events.push({ t: seg.a, type: 'punch', strength: 0.8 });
   });
+  // приёмы на ударах чередуются, чтобы эдит не был «тряской на каждом бите»:
+  // сильные доли — вспышка, кадр-удар (инверсия), стоп-кадры, ч/б; слабые — тряска, наклон, шлейф, заикание
+  const beatFrame = r.analysis.beatInterval;
+  const DOWNBEAT_FX = [
+    (t) => [['flash', 0.9], ['punch', 1.0], ['shake', 0.6], ['rgb', 0.6]],
+    (t) => [['impactframe', 1], ['tilt', 1, { dir: 1 }], ['punch', 1.0]],
+    (t) => [['flash', 0.8], ['stutter', 1, { dur: beatFrame * 0.75 }], ['punch', 0.7]],
+    (t) => [['bw', 1, { dur: beatFrame * 0.5 }], ['punch', 1.0], ['rgb', 0.8]],
+  ];
+  const ACCENT_FX = [
+    (t) => [['shake', 0.9], ['rgb', 0.5], ['punch', 0.6]],
+    (t, i) => [['tilt', 0.8, { dir: i % 2 ? -1 : 1 }], ['punch', 0.7]],
+    (t) => [['echo', 1, { dur: beatFrame * 0.6 }], ['punch', 0.8]],
+    (t) => [['stutter', 1, { dur: beatFrame * 0.5 }], ['shake', 0.6]],
+  ];
+  let di = 0;
+  let ai = 0;
   for (const a of r.accents) {
-    if (a.flash) {
-      events.push({ t: a.t, type: 'flash', strength: 0.9 });
-      events.push({ t: a.t, type: 'punch', strength: 1.0 });
-      events.push({ t: a.t, type: 'rgb', strength: 0.7 });
-      events.push({ t: a.t, type: 'shake', strength: 0.6 });
-    } else {
-      events.push({ t: a.t, type: 'punch', strength: 0.7 });
-      events.push({ t: a.t, type: 'shake', strength: 0.9 });
-      events.push({ t: a.t, type: 'rgb', strength: 0.5 });
-    }
+    const fx = a.flash
+      ? di === 0
+        ? [['flash', 0.9], ['impactframe', 1], ['punch', 1.0], ['rgb', 0.7], ['shake', 0.6]] // сам дроп — всё сразу
+        : DOWNBEAT_FX[(di - 1) % DOWNBEAT_FX.length](a.t)
+      : ACCENT_FX[ai % ACCENT_FX.length](a.t, ai);
+    if (a.flash) di++;
+    else ai++;
+    for (const [type, strength, extra] of fx) events.push({ t: a.t, type, strength, ...(extra || {}) });
   }
   events.sort((a, b) => a.t - b.t);
 
