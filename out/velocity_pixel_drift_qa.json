@@ -1,0 +1,207 @@
+{
+  "file": "D:\\motionforge\\out\\velocity_pixel_drift.mp4",
+  "verdict": "PASS",
+  "fails": 0,
+  "warnings": 0,
+  "info": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 60.0,
+    "duration": 14.745,
+    "has_audio": true
+  },
+  "checks": [
+    {
+      "check": "resolution",
+      "status": "PASS",
+      "value": "1080x1920",
+      "expected": "1080x1920"
+    },
+    {
+      "check": "fps",
+      "status": "PASS",
+      "value": 60.0,
+      "expected": ">= 30"
+    },
+    {
+      "check": "duration",
+      "status": "PASS",
+      "value": 14.74,
+      "expected": "7.0..60.0 s"
+    },
+    {
+      "check": "clipping",
+      "status": "PASS",
+      "value": 0,
+      "expected": "0 отсчётов"
+    },
+    {
+      "check": "loudness_lufs",
+      "status": "PASS",
+      "value": -12.6,
+      "expected": "-16.0..-12.0 LUFS"
+    },
+    {
+      "check": "true_peak",
+      "status": "PASS",
+      "value": -1.0,
+      "expected": "<= -1.0 dBTP"
+    },
+    {
+      "check": "white_run_max_frames",
+      "status": "PASS",
+      "value": 1,
+      "expected": "<= 4 кадров подряд пустого белого экрана"
+    },
+    {
+      "check": "flashes_per_10s",
+      "status": "PASS",
+      "value": 4.1,
+      "expected": "<= 10 (больше = стробоскоп)"
+    },
+    {
+      "check": "min_gap_between_flashes",
+      "status": "PASS",
+      "value": 2.033,
+      "expected": ">= 0.4 s"
+    },
+    {
+      "check": "median_offset_ms (минус = раньше удара)",
+      "status": "PASS",
+      "value": -33.5,
+      "expected": "-60..17 мс (раньше удара допустимо, позже — нет)"
+    },
+    {
+      "check": "jitter_ms (разброс смещения)",
+      "status": "PASS",
+      "value": 11.5,
+      "expected": "<= 25 мс"
+    },
+    {
+      "check": "jitter_ms_soft",
+      "status": "PASS",
+      "value": 11.5,
+      "expected": "<= 12 мс — иначе удары «плавают»"
+    },
+    {
+      "check": "consistent_events_ratio",
+      "status": "PASS",
+      "value": 0.571,
+      "expected": ">= 0.5 событий в пределах ±2 кадров от медианного смещения"
+    },
+    {
+      "check": "edge_bars",
+      "status": "PASS",
+      "value": "нет",
+      "expected": "нет однотонных тёмных полос у краёв (доля кадров с полосой > 0.2 = ошибка)"
+    },
+    {
+      "check": "longest_freeze_s",
+      "status": "PASS",
+      "value": 0.02,
+      "expected": "<= 2.0 s без видимого движения (начало: 9.08 s)"
+    },
+    {
+      "check": "hook_first_second_motion",
+      "status": "PASS",
+      "value": 3.44,
+      "expected": ">= медианы ролика (1.75)"
+    }
+  ],
+  "flash_starts_s": [
+    2.083,
+    4.2,
+    6.3,
+    8.333,
+    10.417,
+    12.617
+  ],
+  "white_runs": [
+    {
+      "start_s": 2.083,
+      "frames": 1
+    },
+    {
+      "start_s": 4.2,
+      "frames": 1
+    },
+    {
+      "start_s": 6.3,
+      "frames": 1
+    },
+    {
+      "start_s": 8.333,
+      "frames": 1
+    },
+    {
+      "start_s": 10.417,
+      "frames": 1
+    },
+    {
+      "start_s": 12.617,
+      "frames": 1
+    }
+  ],
+  "hard_cuts_s": [
+    0.017,
+    2.083,
+    2.1,
+    4.2,
+    4.217,
+    6.3,
+    6.333,
+    8.333,
+    8.35,
+    8.367,
+    10.417,
+    10.433,
+    12.617,
+    12.633
+  ],
+  "sync": [
+    {
+      "event_s": 0.017,
+      "nearest_onset_s": 0.183,
+      "offset_ms": -166,
+      "has_onset_near": false
+    },
+    {
+      "event_s": 2.083,
+      "nearest_onset_s": 2.11,
+      "offset_ms": -27,
+      "has_onset_near": true
+    },
+    {
+      "event_s": 4.2,
+      "nearest_onset_s": 4.24,
+      "offset_ms": -40,
+      "has_onset_near": true
+    },
+    {
+      "event_s": 6.3,
+      "nearest_onset_s": 6.346,
+      "offset_ms": -46,
+      "has_onset_near": true
+    },
+    {
+      "event_s": 8.333,
+      "nearest_onset_s": 8.254,
+      "offset_ms": 79,
+      "has_onset_near": true
+    },
+    {
+      "event_s": 10.417,
+      "nearest_onset_s": 10.382,
+      "offset_ms": 35,
+      "has_onset_near": true
+    },
+    {
+      "event_s": 12.617,
+      "nearest_onset_s": 12.661,
+      "offset_ms": -44,
+      "has_onset_near": true
+    }
+  ],
+  "contact_sheet": "D:\\motionforge\\out\\velocity_pixel_drift_qa_sheet.png",
+  "note": "Автоматические проверки не заменяют просмотр: лицо в кадре, текст поверх персонажа, цвета и обрезка персонажа проверяются глазами по раскадровке."
+}

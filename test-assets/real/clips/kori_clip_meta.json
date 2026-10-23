@@ -1,0 +1,128 @@
+{
+  "twixtor_alpha_blade_acrobatics.mp4": {
+    "file": "twixtor_alpha_blade_acrobatics.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 3.35,
+    "size": 2454380,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 3.35,
+        "frames": 200,
+        "motion": 0.866,
+        "peak": 0.05,
+        "face": {
+          "x": 0.4277,
+          "y": 0.3312,
+          "size": 0.4861
+        }
+      }
+    ]
+  },
+  "twixtor_alpha_dash_combat.mp4": {
+    "file": "twixtor_alpha_dash_combat.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 5.0833,
+    "size": 4517090,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 2.6833,
+        "frames": 160,
+        "motion": 2.876,
+        "peak": 0.0333,
+        "face": {
+          "x": 0.51,
+          "y": 0.4017,
+          "size": 0.6174
+        }
+      },
+      {
+        "start": 2.6833,
+        "end": 5.0833,
+        "frames": 144,
+        "motion": 1.524,
+        "peak": 2.7,
+        "face": null
+      }
+    ]
+  },
+  "twixtor_alpha_eyes_focus.mp4": {
+    "file": "twixtor_alpha_eyes_focus.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.0833,
+    "size": 1393996,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.5333,
+        "frames": 91,
+        "motion": 1.568,
+        "peak": 0.0333,
+        "face": null
+      },
+      {
+        "start": 1.5333,
+        "end": 2.0833,
+        "frames": 33,
+        "motion": 0.458,
+        "peak": 1.5833,
+        "face": {
+          "x": 0.5633,
+          "y": 0.4486,
+          "size": 0.2833
+        }
+      }
+    ]
+  },
+  "twixtor_shadow_cloak_blast.mp4": {
+    "file": "twixtor_shadow_cloak_blast.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8833,
+    "size": 1998547,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8833,
+        "frames": 173,
+        "motion": 0.87,
+        "peak": 0.0167,
+        "face": null
+      }
+    ]
+  },
+  "twixtor_shadow_purple_slash.mp4": {
+    "file": "twixtor_shadow_purple_slash.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 6.35,
+    "size": 8536283,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.0667,
+        "frames": 4,
+        "motion": 10.295,
+        "peak": 0.05,
+        "face": null
+      },
+      {
+        "start": 0.0667,
+        "end": 6.35,
+        "frames": 377,
+        "motion": 2.712,
+        "peak": 0.25,
+        "face": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,1038 @@
+{
+  "version": 1,
+  "style": "velocity",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "duration": 14.7679,
+  "signature": "",
+  "audio": {
+    "file": "D:\\motionforge\\test-assets\\real\\music\\05_baile_rave.mp3",
+    "start": 4.6208,
+    "duration": 14.7679,
+    "bpm": 129.2,
+    "dropAt": 1.846,
+    "dropRise": 9.93,
+    "pattern": [
+      0,
+      8,
+      12
+    ],
+    "patternScores": [
+      6.03,
+      1.7,
+      2,
+      3.84,
+      3.14,
+      2.08,
+      3.45,
+      0.68,
+      4.06,
+      1.18,
+      0.16,
+      2.76,
+      4.84,
+      0.84,
+      2.87,
+      1.61
+    ],
+    "tempoCandidates": [
+      {
+        "bpm": 129.25,
+        "score": 0.0645
+      },
+      {
+        "bpm": 129.5,
+        "score": 0.0635
+      },
+      {
+        "bpm": 129,
+        "score": 0.0634
+      },
+      {
+        "bpm": 129.75,
+        "score": 0.0626
+      },
+      {
+        "bpm": 128.75,
+        "score": 0.0618
+      }
+    ]
+  },
+  "beats": [
+    0,
+    0.4528,
+    0.9172,
+    1.3816,
+    1.846,
+    2.2988,
+    2.7632,
+    3.2392,
+    3.692,
+    4.1564,
+    4.6092,
+    5.0736,
+    5.538,
+    6.0024,
+    6.4551,
+    6.9195,
+    7.3839,
+    7.8367,
+    8.3011,
+    8.7655,
+    9.2299,
+    9.6827,
+    10.1471,
+    10.6115,
+    11.0759,
+    11.5403,
+    11.9931,
+    12.4575,
+    12.9219,
+    13.3863,
+    13.8507,
+    14.3035
+  ],
+  "downbeats": [
+    0,
+    1.846,
+    3.692,
+    5.538,
+    7.3839,
+    9.2299,
+    11.0759,
+    12.9219
+  ],
+  "clips": {
+    "twixtor_alpha_blade_acrobatics": {
+      "path": "D:\\motionforge\\test-assets\\real\\clips\\twixtor_alpha_blade_acrobatics.mp4",
+      "fps": 60,
+      "width": 1920,
+      "height": 1080
+    },
+    "twixtor_alpha_dash_combat": {
+      "path": "D:\\motionforge\\test-assets\\real\\clips\\twixtor_alpha_dash_combat.mp4",
+      "fps": 60,
+      "width": 1920,
+      "height": 1080
+    },
+    "twixtor_alpha_eyes_focus": {
+      "path": "D:\\motionforge\\test-assets\\real\\clips\\twixtor_alpha_eyes_focus.mp4",
+      "fps": 60,
+      "width": 1920,
+      "height": 1080
+    },
+    "twixtor_shadow_cloak_blast": {
+      "path": "D:\\motionforge\\test-assets\\real\\clips\\twixtor_shadow_cloak_blast.mp4",
+      "fps": 60,
+      "width": 1920,
+      "height": 1080
+    },
+    "twixtor_shadow_purple_slash": {
+      "path": "D:\\motionforge\\test-assets\\real\\clips\\twixtor_shadow_purple_slash.mp4",
+      "fps": 60,
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "assets": {},
+  "shots": [
+    {
+      "type": "video",
+      "start": 0,
+      "end": 1.8166666666666667,
+      "clip": "twixtor_alpha_blade_acrobatics",
+      "scene": 0,
+      "crop": {
+        "x": 517,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.3312,
+      "slowFactor": 1,
+      "ramps": [
+        {
+          "a": 0,
+          "b": 0.4166666666666667,
+          "srcA": 0.05,
+          "srcB": 0.4503,
+          "smin": 0.55,
+          "smax": 1.7,
+          "p": 1.8
+        },
+        {
+          "a": 0.4166666666666667,
+          "b": 0.8833333333333333,
+          "srcA": 0.4503,
+          "srcB": 0.8987,
+          "smin": 0.55,
+          "smax": 1.7,
+          "p": 1.8
+        },
+        {
+          "a": 0.8833333333333333,
+          "b": 1.35,
+          "srcA": 0.8987,
+          "srcB": 1.347,
+          "smin": 0.55,
+          "smax": 1.7,
+          "p": 1.8
+        },
+        {
+          "a": 1.35,
+          "b": 1.8166666666666667,
+          "srcA": 1.347,
+          "srcB": 1.7953,
+          "smin": 0.55,
+          "smax": 1.7,
+          "p": 1.8
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "start": 1.8166666666666667,
+      "end": 3.683333333333333,
+      "clip": "twixtor_alpha_dash_combat",
+      "scene": 0,
+      "crop": {
+        "x": 675,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.4017,
+      "slowFactor": 1,
+      "ramps": [
+        {
+          "a": 1.8166666666666667,
+          "b": 2.683333333333333,
+          "srcA": 0.05,
+          "srcB": 1.0187,
+          "smin": 0.25,
+          "smax": 3.2,
+          "p": 2.4
+        },
+        {
+          "a": 2.683333333333333,
+          "b": 3.216666666666667,
+          "srcA": 1.0187,
+          "srcB": 1.617,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        },
+        {
+          "a": 3.216666666666667,
+          "b": 3.683333333333333,
+          "srcA": 1.617,
+          "srcB": 2.1405,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "start": 3.683333333333333,
+      "end": 5.533333333333333,
+      "clip": "twixtor_alpha_dash_combat",
+      "scene": 1,
+      "crop": {
+        "x": 656,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.45,
+      "slowFactor": 1,
+      "ramps": [
+        {
+          "a": 3.683333333333333,
+          "b": 4.616666666666666,
+          "srcA": 2.7166,
+          "srcB": 3.7598,
+          "smin": 0.25,
+          "smax": 3.2,
+          "p": 2.4
+        },
+        {
+          "a": 4.616666666666666,
+          "b": 5.066666666666666,
+          "srcA": 3.7598,
+          "srcB": 4.2646,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        },
+        {
+          "a": 5.066666666666666,
+          "b": 5.533333333333333,
+          "srcA": 4.2646,
+          "srcB": 4.7882,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "start": 5.533333333333333,
+      "end": 7.366666666666666,
+      "clip": "twixtor_alpha_eyes_focus",
+      "scene": 0,
+      "crop": {
+        "x": 656,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.45,
+      "slowFactor": 0.706,
+      "ramps": [
+        {
+          "a": 5.533333333333333,
+          "b": 6.466666666666667,
+          "srcA": 0.05,
+          "srcB": 0.7868,
+          "smin": 0.25,
+          "smax": 3.2,
+          "p": 2.4
+        },
+        {
+          "a": 6.466666666666667,
+          "b": 6.9,
+          "srcA": 0.7868,
+          "srcB": 1.1302,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        },
+        {
+          "a": 6.9,
+          "b": 7.366666666666666,
+          "srcA": 1.1302,
+          "srcB": 1.5,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "start": 7.366666666666666,
+      "end": 9.216666666666667,
+      "clip": "twixtor_shadow_cloak_blast",
+      "scene": 0,
+      "crop": {
+        "x": 656,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.45,
+      "slowFactor": 1,
+      "ramps": [
+        {
+          "a": 7.366666666666666,
+          "b": 8.3,
+          "srcA": 0.0333,
+          "srcB": 1.0765,
+          "smin": 0.25,
+          "smax": 3.2,
+          "p": 2.4
+        },
+        {
+          "a": 8.3,
+          "b": 8.65,
+          "srcA": 1.0765,
+          "srcB": 1.4691,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        },
+        {
+          "a": 8.65,
+          "b": 9.216666666666667,
+          "srcA": 1.4691,
+          "srcB": 2.1049,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "start": 9.216666666666667,
+      "end": 11.066666666666666,
+      "clip": "twixtor_alpha_blade_acrobatics",
+      "scene": 0,
+      "crop": {
+        "x": 517,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.3312,
+      "slowFactor": 1,
+      "ramps": [
+        {
+          "a": 9.216666666666667,
+          "b": 10.15,
+          "srcA": 0.05,
+          "srcB": 1.0932,
+          "smin": 0.25,
+          "smax": 3.2,
+          "p": 2.4
+        },
+        {
+          "a": 10.15,
+          "b": 10.483333333333333,
+          "srcA": 1.0932,
+          "srcB": 1.4671,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        },
+        {
+          "a": 10.483333333333333,
+          "b": 11.066666666666666,
+          "srcA": 1.4671,
+          "srcB": 2.1216,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "start": 11.066666666666666,
+      "end": 12.916666666666666,
+      "clip": "twixtor_alpha_dash_combat",
+      "scene": 1,
+      "crop": {
+        "x": 656,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.45,
+      "slowFactor": 1,
+      "ramps": [
+        {
+          "a": 11.066666666666666,
+          "b": 11.983333333333333,
+          "srcA": 2.7166,
+          "srcB": 3.7411,
+          "smin": 0.25,
+          "smax": 3.2,
+          "p": 2.4
+        },
+        {
+          "a": 11.983333333333333,
+          "b": 12.45,
+          "srcA": 3.7411,
+          "srcB": 4.2647,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        },
+        {
+          "a": 12.45,
+          "b": 12.916666666666666,
+          "srcA": 4.2647,
+          "srcB": 4.7882,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "start": 12.916666666666666,
+      "end": 14.767891156462582,
+      "clip": "twixtor_shadow_purple_slash",
+      "scene": 1,
+      "crop": {
+        "x": 656,
+        "w": 608,
+        "h": 1080
+      },
+      "anchorY": 0.45,
+      "slowFactor": 1,
+      "ramps": [
+        {
+          "a": 12.916666666666666,
+          "b": 13.85,
+          "srcA": 0.1,
+          "srcB": 1.1432,
+          "smin": 0.25,
+          "smax": 3.2,
+          "p": 2.4
+        },
+        {
+          "a": 13.85,
+          "b": 14.183333333333334,
+          "srcA": 1.1432,
+          "srcB": 1.5171,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        },
+        {
+          "a": 14.183333333333334,
+          "b": 14.767891156462582,
+          "srcA": 1.5171,
+          "srcB": 2.1729,
+          "smin": 0.45,
+          "smax": 2.6,
+          "p": 2.2
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "t": 3.683333333333333,
+      "type": "zoomthrough",
+      "duration": 0.12
+    },
+    {
+      "t": 7.366666666666666,
+      "type": "zoomthrough",
+      "duration": 0.12
+    },
+    {
+      "t": 11.066666666666666,
+      "type": "zoomthrough",
+      "duration": 0.12
+    }
+  ],
+  "accents": [
+    {
+      "bar": 0,
+      "pos": 0,
+      "audioT": 1.8492,
+      "t": 1.8166666666666667,
+      "snapped": true,
+      "flash": true
+    },
+    {
+      "bar": 0,
+      "pos": 8,
+      "audioT": 2.7132,
+      "t": 2.683333333333333,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 0,
+      "pos": 12,
+      "audioT": 3.2472,
+      "t": 3.216666666666667,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 1,
+      "pos": 0,
+      "audioT": 3.7142,
+      "t": 3.683333333333333,
+      "snapped": true,
+      "flash": true
+    },
+    {
+      "bar": 1,
+      "pos": 8,
+      "audioT": 4.6422,
+      "t": 4.616666666666666,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 1,
+      "pos": 12,
+      "audioT": 5.0962,
+      "t": 5.066666666666666,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 2,
+      "pos": 0,
+      "audioT": 5.5612,
+      "t": 5.533333333333333,
+      "snapped": true,
+      "flash": true
+    },
+    {
+      "bar": 2,
+      "pos": 8,
+      "audioT": 6.4952,
+      "t": 6.466666666666667,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 2,
+      "pos": 12,
+      "audioT": 6.9392,
+      "t": 6.9,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 3,
+      "pos": 0,
+      "audioT": 7.4042,
+      "t": 7.366666666666666,
+      "snapped": true,
+      "flash": true
+    },
+    {
+      "bar": 3,
+      "pos": 8,
+      "audioT": 8.3402,
+      "t": 8.3,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 3,
+      "pos": 12,
+      "audioT": 8.6772,
+      "t": 8.65,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 4,
+      "pos": 0,
+      "audioT": 9.2502,
+      "t": 9.216666666666667,
+      "snapped": true,
+      "flash": true
+    },
+    {
+      "bar": 4,
+      "pos": 8,
+      "audioT": 10.1762,
+      "t": 10.15,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 4,
+      "pos": 12,
+      "audioT": 10.5172,
+      "t": 10.483333333333333,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 5,
+      "pos": 0,
+      "audioT": 11.0962,
+      "t": 11.066666666666666,
+      "snapped": true,
+      "flash": true
+    },
+    {
+      "bar": 5,
+      "pos": 8,
+      "audioT": 12.0182,
+      "t": 11.983333333333333,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 5,
+      "pos": 12,
+      "audioT": 12.4792,
+      "t": 12.45,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 6,
+      "pos": 0,
+      "audioT": 12.9432,
+      "t": 12.916666666666666,
+      "snapped": true,
+      "flash": true
+    },
+    {
+      "bar": 6,
+      "pos": 8,
+      "audioT": 13.8792,
+      "t": 13.85,
+      "snapped": true,
+      "flash": false
+    },
+    {
+      "bar": 6,
+      "pos": 12,
+      "audioT": 14.2102,
+      "t": 14.183333333333334,
+      "snapped": true,
+      "flash": false
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "type": "flash",
+      "strength": 0.7
+    },
+    {
+      "t": 0,
+      "type": "punch",
+      "strength": 1.3
+    },
+    {
+      "t": 0.4166666666666667,
+      "type": "punch",
+      "strength": 0.35
+    },
+    {
+      "t": 0.8833333333333333,
+      "type": "punch",
+      "strength": 0.35
+    },
+    {
+      "t": 1.35,
+      "type": "punch",
+      "strength": 0.35
+    },
+    {
+      "t": 1.8166666666666667,
+      "type": "flash",
+      "strength": 0.9
+    },
+    {
+      "t": 1.8166666666666667,
+      "type": "punch",
+      "strength": 1
+    },
+    {
+      "t": 1.8166666666666667,
+      "type": "rgb",
+      "strength": 0.7
+    },
+    {
+      "t": 2.683333333333333,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 2.683333333333333,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 2.683333333333333,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 3.216666666666667,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 3.216666666666667,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 3.216666666666667,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 3.683333333333333,
+      "type": "punch",
+      "strength": 0.8
+    },
+    {
+      "t": 3.683333333333333,
+      "type": "flash",
+      "strength": 0.9
+    },
+    {
+      "t": 3.683333333333333,
+      "type": "punch",
+      "strength": 1
+    },
+    {
+      "t": 3.683333333333333,
+      "type": "rgb",
+      "strength": 0.7
+    },
+    {
+      "t": 4.616666666666666,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 4.616666666666666,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 4.616666666666666,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 5.066666666666666,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 5.066666666666666,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 5.066666666666666,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 5.533333333333333,
+      "type": "flash",
+      "strength": 0.9
+    },
+    {
+      "t": 5.533333333333333,
+      "type": "punch",
+      "strength": 1
+    },
+    {
+      "t": 5.533333333333333,
+      "type": "rgb",
+      "strength": 0.7
+    },
+    {
+      "t": 6.466666666666667,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 6.466666666666667,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 6.466666666666667,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 6.9,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 6.9,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 6.9,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 7.366666666666666,
+      "type": "punch",
+      "strength": 0.8
+    },
+    {
+      "t": 7.366666666666666,
+      "type": "flash",
+      "strength": 0.9
+    },
+    {
+      "t": 7.366666666666666,
+      "type": "punch",
+      "strength": 1
+    },
+    {
+      "t": 7.366666666666666,
+      "type": "rgb",
+      "strength": 0.7
+    },
+    {
+      "t": 8.3,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 8.3,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 8.3,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 8.65,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 8.65,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 8.65,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 9.216666666666667,
+      "type": "flash",
+      "strength": 0.9
+    },
+    {
+      "t": 9.216666666666667,
+      "type": "punch",
+      "strength": 1
+    },
+    {
+      "t": 9.216666666666667,
+      "type": "rgb",
+      "strength": 0.7
+    },
+    {
+      "t": 10.15,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 10.15,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 10.15,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 10.483333333333333,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 10.483333333333333,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 10.483333333333333,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 11.066666666666666,
+      "type": "punch",
+      "strength": 0.8
+    },
+    {
+      "t": 11.066666666666666,
+      "type": "flash",
+      "strength": 0.9
+    },
+    {
+      "t": 11.066666666666666,
+      "type": "punch",
+      "strength": 1
+    },
+    {
+      "t": 11.066666666666666,
+      "type": "rgb",
+      "strength": 0.7
+    },
+    {
+      "t": 11.983333333333333,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 11.983333333333333,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 11.983333333333333,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 12.45,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 12.45,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 12.45,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 12.916666666666666,
+      "type": "flash",
+      "strength": 0.9
+    },
+    {
+      "t": 12.916666666666666,
+      "type": "punch",
+      "strength": 1
+    },
+    {
+      "t": 12.916666666666666,
+      "type": "rgb",
+      "strength": 0.7
+    },
+    {
+      "t": 13.85,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 13.85,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 13.85,
+      "type": "rgb",
+      "strength": 0.4
+    },
+    {
+      "t": 14.183333333333334,
+      "type": "punch",
+      "strength": 0.6
+    },
+    {
+      "t": 14.183333333333334,
+      "type": "shake",
+      "strength": 0.5
+    },
+    {
+      "t": 14.183333333333334,
+      "type": "rgb",
+      "strength": 0.4
+    }
+  ]
+}
