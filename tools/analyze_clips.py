@@ -25,7 +25,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 CASCADE = os.path.join(HERE, "lbpcascade_animeface.xml")
 EXTS = (".mp4", ".mov", ".webm", ".mkv", ".m4v")
-META_VERSION = 4  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица
+META_VERSION = 5  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица; 5: доля дублей
 CURVE_RATE = 20
 
 
@@ -106,6 +106,8 @@ def analyze(path):
         if b - a < 3:
             continue
         seg = diff[a + 1 : b]
+        # доля повторяющихся кадров: у «растянутого» видео вместо твикстора их много — движение дёргается
+        dup = float((seg < 0.25).mean()) if len(seg) else 0.0
         # читаемость: средняя яркость и контраст — тёмные «каши» без деталей в эдит не годятся
         frames = np.stack(small[a:b:max(1, (b - a) // 8)])
         luma = float(frames.mean())
@@ -137,6 +139,7 @@ def analyze(path):
             "start": round(a / fps, 4), "end": round(b / fps, 4), "frames": b - a,
             "motion": round(motion, 3), "peak": round(peak, 4), "face": face, "curve": curve,
             "luma": round(luma, 1), "contrast": round(contrast, 1), "focus_x": round(float(focus_x), 4),
+            "dup": round(dup, 3),
         })
     return {
         "file": os.path.basename(path), "fps": round(fps, 3), "width": w, "height": h,

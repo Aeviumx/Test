@@ -3,6 +3,7 @@
 // со смешиванием кадров. Вспышки — только на сильные доли после дропа, на склейках сильных долей —
 // чередование «зум-прохода» и «вжуха».
 import { buildRhythm, audioBlock } from '../rhythm.mjs';
+import { planSfx } from '../sfx.mjs';
 
 export const STYLE_ID = 'velocity';
 
@@ -15,7 +16,10 @@ const EDGE_FRAMES = 2; // не берём кадры у самой склейк�
 
 export const rampNorm = (r) => r.smin + (r.smax - r.smin) / (r.p + 1);
 
-export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080, height = 1920, fps = 60, signature = '', leadFrames = 2 }) {
+/** Источник клипа: нарезки одного видео (name_01.mp4, name_02.mp4…) — один источник. */
+const sourceOf = (clip) => clip.source || clip.id.replace(/[_-]\d+$/, '');
+
+export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080, height = 1920, fps = 60, signature = '', leadFrames = 2, sfxLibrary = null }) {
   const r = buildRhythm({ audioFile, introBars: 1, targetDuration, fps, leadFrames });
 
   // отрезки между ударами: в интро — склейка каждые 2 доли, после дропа — на каждом акценте рисунка
@@ -38,6 +42,8 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
     c.scenes.forEach((sc, idx) => {
       // совсем тёмные «каши» не берём вообще (если клип не размечен по яркости — берём)
       if (sc.luma !== undefined && (sc.luma < 30 || sc.contrast < 18)) return;
+      // «растянутое» видео с кучей повторяющихся кадров дёргается при замедлении — не берём
+      if (sc.dup !== undefined && sc.dup > 0.2) return;
       const s0 = sc.start + EDGE_FRAMES / c.fps;
       const s1 = sc.end - EDGE_FRAMES / c.fps;
       if (s1 - s0 < 0.35) return;
@@ -62,11 +68,13 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
   // соседние отрезки — из разных клипов, куски сцен не повторяются
   const used = new Map(); // ключ сцены → занятые интервалы исходника
   const clipUses = new Map();
+  const groupUses = new Map();
   const assign = new Array(segs.length).fill(null);
   const overlaps = (key, a, b) => (used.get(key) || []).some(([x, y]) => a < y - 0.02 && b > x + 0.02);
   const pick = (i, allowOverlap) => {
     const seg = segs[i];
-    const near = [assign[i - 1], assign[i + 1], assign[i - 2]].filter(Boolean).map((x) => x.clip.id);
+    // соседние отрезки — из разных источников: нарезки одного боя (name_01, name_02…) считаются одним
+    const near = [assign[i - 1], assign[i + 1], assign[i - 2]].filter(Boolean).map((x) => sourceOf(x.clip));
     let best = null;
     for (const m of moments) {
       const k = Math.min(1, (m.s1 - m.t) / seg.need);
@@ -76,8 +84,9 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
       let sc = Math.min(1.5, m.value / ref) * (m.scene.face ? 1.15 : 1) * (0.6 + 0.4 * k);
       // тёмные или бесконтрастные сцены зритель не разберёт, как бы они ни двигались
       if (m.scene.luma !== undefined && (m.scene.luma < 40 || m.scene.contrast < 20)) sc *= 0.2;
-      if (near.includes(m.clip.id)) sc *= 0.25;
+      if (near.includes(sourceOf(m.clip))) sc *= 0.15;
       sc *= 0.85 ** (clipUses.get(m.clip.id) || 0);
+      sc *= 0.92 ** (groupUses.get(sourceOf(m.clip)) || 0);
       if (!best || sc > best.sc) best = { m, k, sc, key };
     }
     return best;
@@ -93,6 +102,7 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
     const len = seg.need * got.k;
     used.set(got.key, [...(used.get(got.key) || []), [got.m.t, got.m.t + len]]);
     clipUses.set(got.m.clip.id, (clipUses.get(got.m.clip.id) || 0) + 1);
+    groupUses.set(sourceOf(got.m.clip), (groupUses.get(sourceOf(got.m.clip)) || 0) + 1);
     assign[i] = { clip: got.m.clip, idx: got.m.idx, scene: got.m.scene, srcA: got.m.t, srcB: got.m.t + len, k: got.k };
   }
 
@@ -161,6 +171,7 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
     transitions,
     accents: r.accents,
     events,
+    sfx: sfxLibrary ? planSfx(sfxLibrary, { duration: r.duration, dropAt: r.dropAt, accents: r.accents, transitions }) : [],
   };
 }
 

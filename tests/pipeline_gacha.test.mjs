@@ -94,3 +94,37 @@ describe('план Velocity (твикстор)', async () => {
     expect(sourceAt(s, r.a + 0.01).speed).toBeLessThan(sourceAt(s, r.b - 0.01).speed);
   });
 });
+
+describe('звуковые эффекты', async () => {
+  const { planSfx } = await import('../pipeline/sfx.mjs');
+  const lib = {
+    impact: [
+      { type: 'impact', file: 'thunder.wav', duration: 4.9, attack: 0.211, peak: 0.274, peakAbs: 1 },
+      { type: 'impact', file: 'heartbeat.wav', duration: 2.9, attack: 0.004, peak: 1.284, peakAbs: 1 },
+    ],
+    subdrop: [{ type: 'subdrop', file: 'sub.wav', duration: 1.0, attack: 0.001, peak: 0.02, peakAbs: 1 }],
+    whoosh: [{ type: 'whoosh', file: 'whoosh.wav', duration: 2.2, attack: 0.6, peak: 0.63, peakAbs: 1 }],
+    riser: [{ type: 'riser', file: 'riser.wav', duration: 1.89, attack: 1.29, peak: 1.85, peakAbs: 0.5 }],
+  };
+  const accents = [
+    { t: 1.95, audioT: 1.988, flash: true },
+    { t: 2.7, audioT: 2.73, flash: false },
+    { t: 3.93, audioT: 3.965, flash: true },
+  ];
+  const out = planSfx(lib, { duration: 15, dropAt: 1.97, accents, transitions: [{ t: 3.93, type: 'whip', duration: 0.1 }] });
+
+  it('атака удара — на ударе дропа, пик нарастания — на дропе, пик «вжуха» — на склейке', () => {
+    const imp = out.find((x) => x.type === 'impact');
+    expect(imp.file).toBe('thunder.wav');
+    expect(Math.abs(imp.at + 0.211 - 1.988)).toBeLessThan(0.002);
+    const riser = out.find((x) => x.type === 'riser');
+    expect(Math.abs(riser.at + 1.85 - 1.988)).toBeLessThan(0.002);
+    expect(riser.at + riser.dur).toBeLessThanOrEqual(1.988 + 0.031);
+    const wh = out.find((x) => x.type === 'whoosh');
+    expect(Math.abs(wh.at + 0.63 - 3.965)).toBeLessThan(0.002);
+  });
+
+  it('«сердцебиение» с пиком через секунду в удары не попадает', () => {
+    expect(out.some((x) => x.file === 'heartbeat.wav')).toBe(false);
+  });
+});
