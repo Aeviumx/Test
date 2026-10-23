@@ -30,6 +30,23 @@ function envelope(events, type, t) {
   return v;
 }
 
+/** Событие с длительностью (stutter, bw, echo), активное в момент t. */
+function activeWindow(events, type, t) {
+  let hit = null;
+  for (const e of events) if (e.type === type && e.t <= t + 1e-9 && t < e.t + (e.dur || 0)) hit = e;
+  return hit;
+}
+
+/** Наклон камеры: резкий поворот на ударе с затуханием, знак — направление. */
+function tiltAt(events, t) {
+  let v = 0;
+  for (const e of events) {
+    if (e.type !== 'tilt' || e.t > t + 1e-9 || t - e.t > 1) continue;
+    v += (e.dir || 1) * e.strength * Math.exp(-(t - e.t) * 9);
+  }
+  return v;
+}
+
 function lastEventAge(events, types, t) {
   let age = Infinity;
   for (const e of events) if (types.includes(e.type) && e.t <= t + 1e-9) age = Math.min(age, t - e.t);
@@ -216,6 +233,9 @@ class Renderer {
     ], { maxBuffer: 2 ** 31 });
     if (r.status !== 0) throw new Error(`ffmpeg не смог декодировать ${clip.path}: ${r.stderr}`);
     const n = Math.floor(r.stdout.length / (w * h * 4));
+    if (n === 0 || r.stdout.length % (w * h * 4) !== 0) {
+      throw new Error(`Размер кадров ${clip.path} не совпал с окном ${w}×${h}: проверь, что окно в пределах кадра и по чётным пикселям`);
+    }
     const d = { key, first, n, w, h, fps: clip.fps, buf: r.stdout };
     this.decoded.unshift(d);
     if (this.decoded.length > 2) this.decoded.pop();
@@ -270,20 +290,37 @@ class Renderer {
   }
 
   /**
-   * Переход у ближайшей склейки: { type, k, phase } или null.
+   * Переход у ближайшей склейки: { type, k, phase, duration } или null.
    * phase 'out' — кадр перед склейкой (k: 0 → 1), 'in' — после склейки (только whip, k: 0 → 1).
    */
   transitionAt(t) {
     for (const tr of this.plan.transitions || []) {
-      if (t < tr.t && tr.t - t <= tr.duration) return { type: tr.type, k: 1 - (tr.t - t) / tr.duration, phase: 'out' };
-      if (tr.type === 'whip' && t >= tr.t && t - tr.t < tr.duration) return { type: tr.type, k: (t - tr.t) / tr.duration, phase: 'in' };
+      if (t < tr.t && tr.t - t <= tr.duration) return { type: tr.type, k: 1 - (tr.t - t) / tr.duration, phase: 'out', duration: tr.duration };
+      if (tr.type === 'whip' && t >= tr.t && t - tr.t < tr.duration) return { type: tr.type, k: (t - tr.t) / tr.duration, phase: 'in', duration: tr.duration };
     }
     return null;
   }
 
-  drawVideoShot(ctx, t, shot, extraZoom = 1, offX = 0) {
+  /** Левая граница окна 9:16 в исходнике в момент src: ведётся за персонажем по траектории. */
+  cropXAt(shot, src) {
+    const tr = shot.track;
+    if (!tr || !tr.length) return shot.crop.x;
+    if (src <= tr[0][0]) return tr[0][1];
+    for (let i = 1; i < tr.length; i++) {
+      if (src <= tr[i][0]) {
+        const k = (src - tr[i - 1][0]) / (tr[i][0] - tr[i - 1][0]);
+        const e = k * k * (3 - 2 * k); // плавно, без рывков на замерах
+        return tr[i - 1][1] + (tr[i][1] - tr[i - 1][1]) * e;
+      }
+    }
+    return tr[tr.length - 1][1];
+  }
+
+  drawVideoShot(ctx, t, shot, extraZoom = 1, offX = 0, videoT = t) {
     const { W, H, plan } = this;
-    const img = this.videoImage(shot, t);
+    const img = this.videoImage(shot, videoT);
+    const viewW = Math.min(shot.viewW || img.width, img.width);
+    const sxSrc = Math.max(0, Math.min(img.width - viewW, this.cropXAt(shot, sourceAt(shot, videoT).src) - shot.crop.x));
     const p = clamp01((t - shot.start) / Math.max(1e-6, shot.end - shot.start));
     const punch = envelope(plan.events, 'punch', t);
     const shake = envelope(plan.events, 'shake', t);
@@ -291,7 +328,7 @@ class Renderer {
     // тряска из нескольких частот (как S_Shake): сдвиг, поворот и «дрожание» масштаба
     const sx = 26 * shake * (0.6 * Math.sin(t * 83 + 1.3) + 0.4 * Math.sin(t * 131 + 0.7));
     const sy = 20 * shake * (0.6 * Math.cos(t * 71 + 0.4) + 0.4 * Math.sin(t * 109 + 2.1));
-    const rot = 0.03 * shake * Math.sin(t * 57);
+    const rot = 0.03 * shake * Math.sin(t * 57) + 0.085 * tiltAt(plan.events, t);
     const jitter = 1 + 0.015 * shake * Math.sin(t * 97);
     const ax = W / 2;
     const ay = shot.anchorY * H;
@@ -302,11 +339,22 @@ class Renderer {
     ctx.scale(zoom * jitter, zoom * jitter);
     ctx.translate(-ax, -ay);
     ctx.filter = 'contrast(1.12) saturate(1.25)';
-    const x0 = W / 2 - (img.width * s) / 2;
-    ctx.drawImage(img, x0, 0, img.width * s, H);
+    // окно 9:16 сначала вырезаем в отдельный холст: рисование подобласти со сдвигом за край кадра
+    // в Skia даёт обрезки картинки на «вжухах»
+    if (!this.view || this.view.width !== Math.round(viewW) || this.view.height !== img.height) {
+      this.view = createCanvas(Math.round(viewW), img.height);
+    }
+    const vg = this.view.getContext('2d');
+    vg.globalAlpha = 1;
+    vg.globalCompositeOperation = 'copy';
+    vg.drawImage(img, -Math.round(sxSrc), 0);
+    vg.globalCompositeOperation = 'source-over';
+    const dw = this.view.width * s;
+    const x0 = W / 2 - dw / 2;
+    ctx.drawImage(this.view, x0, 0, dw, H);
     // при «вжухе» кадр уезжает вбок — освободившееся место заполняем им же, чтобы не было пустоты
-    if (offX < 0) ctx.drawImage(img, x0 + W / zoom, 0, img.width * s, H);
-    if (offX > 0) ctx.drawImage(img, x0 - W / zoom, 0, img.width * s, H);
+    if (offX < 0) ctx.drawImage(this.view, x0 + W / zoom, 0, dw, H);
+    if (offX > 0) ctx.drawImage(this.view, x0 - W / zoom, 0, dw, H);
     ctx.filter = 'none';
     ctx.restore();
   }
@@ -435,7 +483,10 @@ class Renderer {
         const tt = Math.max(0, Math.min(1, tr.k + (t - mainT) / tr.duration));
         offX = tr.phase === 'out' ? -this.W * 0.55 * tt * tt : this.W * 0.55 * (1 - tt) * (1 - tt);
       }
-      this.drawVideoShot(ctx, Math.max(t, shot.start), shot, zoom, offX);
+      // «заикание»: картинка держится по 3 кадра — рваный стоп-моушн на ударе
+      const st = activeWindow(this.plan.events, 'stutter', mainT);
+      const tv = st ? st.t + (Math.floor(((t - st.t) * this.plan.fps) / 3) * 3) / this.plan.fps : t;
+      this.drawVideoShot(ctx, Math.max(t, shot.start), shot, zoom, offX, Math.max(tv, shot.start));
       return info;
     }
     this.drawShot(ctx, t);
@@ -481,6 +532,24 @@ class Renderer {
 
     this.bloom(acc, plan.style === 'velocity' ? 0.22 : 0.16);
 
+    // шлейф: прошлый кадр просвечивает «светлее» — след за движением
+    if (activeWindow(plan.events, 'echo', t) && this.prev) {
+      acc.globalCompositeOperation = 'lighten';
+      acc.globalAlpha = 0.55;
+      acc.drawImage(this.prev, 0, 0);
+      acc.globalAlpha = 1;
+      acc.globalCompositeOperation = 'source-over';
+    }
+    // чёрно-белая вставка на ударе
+    if (activeWindow(plan.events, 'bw', t)) this.applyFilter(acc, 'grayscale(1) contrast(1.35)');
+    // кадр-удар как в аниме: 1-й кадр — инверсия, 2-й — жёсткий ч/б
+    for (const e of plan.events) {
+      if (e.type !== 'impactframe' || e.t > t + 1e-9) continue;
+      const n = Math.round((t - e.t) * fps);
+      if (n === 0) this.applyFilter(acc, 'grayscale(1) contrast(4) invert(1)');
+      else if (n === 1) this.applyFilter(acc, 'grayscale(1) contrast(4)');
+    }
+
     acc.globalCompositeOperation = 'source-over';
     acc.drawImage(this.vignette, 0, 0);
     acc.globalCompositeOperation = 'overlay';
@@ -503,12 +572,28 @@ class Renderer {
       acc.fillRect(0, 0, W, H);
     }
     acc.globalCompositeOperation = 'source-over';
+    if (activeWindow(plan.events, 'echo', t + 1 / fps) || activeWindow(plan.events, 'echo', t)) {
+      if (!this.prev) this.prev = createCanvas(W, H);
+      this.prev.getContext('2d').drawImage(this.acc, 0, 0);
+    }
     if (plan.signature) {
       acc.font = '600 30px sans-serif';
       acc.fillStyle = 'rgba(255,255,255,0.75)';
       acc.fillText(plan.signature, 64, H - 360);
     }
     return this.acc;
+  }
+
+  /** Пропускает кадр через CSS-фильтр (через промежуточный холст). */
+  applyFilter(ctx, filter) {
+    const g = this.tmp.getContext('2d');
+    g.globalAlpha = 1;
+    g.globalCompositeOperation = 'source-over';
+    g.filter = filter;
+    g.drawImage(this.acc, 0, 0);
+    g.filter = 'none';
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(this.tmp, 0, 0);
   }
 
   /** Мягкое свечение светлых участков: уменьшенная копия с контрастом и размытием, наложение «экраном». */

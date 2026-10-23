@@ -88,6 +88,20 @@ describe('план Velocity (твикстор)', async () => {
     }
   });
 
+  it('окно 9:16 по чётным пикселям, внутри кадра, траектория персонажа не выводит его за окно', () => {
+    for (const s of plan.shots) {
+      const clip = plan.clips[s.clip];
+      expect(s.crop.x % 2).toBe(0);
+      expect(s.crop.w % 2).toBe(0);
+      expect(s.crop.x + s.crop.w).toBeLessThanOrEqual(clip.width);
+      expect(s.viewW).toBeLessThanOrEqual(s.crop.w);
+      for (const [, x] of s.track || []) {
+        expect(x).toBeGreaterThanOrEqual(s.crop.x);
+        expect(x + s.viewW).toBeLessThanOrEqual(s.crop.x + s.crop.w);
+      }
+    }
+  });
+
   it('на ударе замедление, перед следующим ударом разгон', () => {
     const s = plan.shots[plan.shots.length - 1];
     const r = s.ramps[0];
