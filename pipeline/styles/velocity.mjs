@@ -27,22 +27,37 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
   }
   if (!pool.length) throw new Error('В клипах нет сцен длиннее 0.6 с — нечего монтировать.');
 
-  // самые динамичные сцены — на дроп и на финальный такт, остальные — в порядке исходника
-  const byMotion = [...pool].sort((a, b) => b.scene.motion - a.scene.motion);
+  // отбор сцен: важнее движение, лицо в кадре и запас длины; из одного клипа — не больше своей доли,
+  // чтобы эдит не превращался в пересказ одного клипа
+  const maxMotion = Math.max(...pool.map((p) => p.scene.motion)) || 1;
+  const score = (p) => (p.scene.motion / maxMotion) * (p.scene.face ? 1.25 : 1) * Math.min(1, p.len / 1.8);
+  const ranked = [...pool].sort((a, b) => score(b) - score(a));
+  const perClipCap = Math.max(1, Math.ceil(totalBars / clips.length));
+  const picked = [];
+  const perClip = new Map();
+  for (const p of ranked) {
+    if (picked.length >= totalBars) break;
+    const n = perClip.get(p.clip.id) || 0;
+    if (n >= perClipCap) continue;
+    perClip.set(p.clip.id, n + 1);
+    picked.push(p);
+  }
+  for (let i = 0; picked.length < totalBars; i++) picked.push(ranked[i % ranked.length]); // мало сцен — повторяем
+
+  // самая сильная сцена — на дроп, вторая (по возможности из другого клипа) — на финальный такт,
+  // остальные по убыванию силы, соседние такты — из разных клипов
   const order = new Array(totalBars).fill(null);
   const dropSlot = r.introBars;
-  const used = new Set();
-  const take = (slot, cand) => {
-    order[slot] = cand;
-    used.add(cand);
-  };
-  if (byMotion[0]) take(dropSlot, byMotion[0]);
-  if (byMotion[1] && totalBars - 1 !== dropSlot) take(totalBars - 1, byMotion[1]);
-  const rest = pool.filter((p) => !used.has(p));
-  let k = 0;
+  const left = [...picked];
+  const takeOut = (cand) => left.splice(left.indexOf(cand), 1)[0];
+  order[dropSlot] = takeOut(left[0]);
+  if (totalBars - 1 !== dropSlot && left.length) {
+    order[totalBars - 1] = takeOut(left.find((p) => p.clip.id !== order[dropSlot].clip.id) || left[0]);
+  }
   for (let i = 0; i < totalBars; i++) {
     if (order[i]) continue;
-    order[i] = rest.length ? rest[k++ % rest.length] : pool[i % pool.length];
+    const near = [order[i - 1], order[i + 1]].filter(Boolean).map((p) => p.clip.id);
+    order[i] = takeOut(left.find((p) => !near.includes(p.clip.id)) || left[0]);
   }
 
   // точки ударов на каждом такте: интро — каждая доля, после дропа — акценты по рисунку
