@@ -52,3 +52,16 @@ Processing applied:
 - Total Scenes Detected: **57**
 - Scenes ≥ 1.2s: **30** (surpasses the required threshold of 20)
 - Metadata & Face Coordinates: [`kori_clip_meta.json`](kori_clip_meta.json)
+
+---
+
+## Проверка материалов (ревью)
+
+Убраны из набора:
+- `twixtor_eminence_strike_rush.mp4`, `twixtor_eminence_supersonic_duel.mp4` — это не аниме, а чужой готовый эдит карточек Genshin
+- `twixtor_telegram_climax_clash.mp4`, `twixtor_telegram_impact_cuts.mp4` — чужой готовый эдит (референс), в кадре вотермарка автора
+- `twixtor_alpha_spin_block.mp4` — только ноги и юбка, без лица
+
+Музыка: ссылки ведут на CDN ElevenLabs (сгенерированные треки), «Pixabay ID» в таблице не подтверждён.
+Перед публикацией с монетизацией проверь условия использования ElevenLabs.
+`08_midnight_drift.mp3` — это `track_02_midnight_phonk.mp3` из проекта; его происхождение и лицензия не известны.
