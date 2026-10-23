@@ -1,0 +1,1326 @@
+{
+  "anime_action_impact_01.mp4": {
+    "file": "anime_action_impact_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.4833,
+    "size": 1885605,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.4833,
+        "frames": 89,
+        "motion": 2.245,
+        "peak": 0.0167,
+        "face": null
+      }
+    ]
+  },
+  "anime_action_impact_02.mp4": {
+    "file": "anime_action_impact_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 0.6833,
+    "size": 688108,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.6833,
+        "frames": 41,
+        "motion": 1.624,
+        "peak": 0.0333,
+        "face": null
+      }
+    ]
+  },
+  "naruto_sasuke_clash_01.mp4": {
+    "file": "naruto_sasuke_clash_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.9667,
+    "size": 2586108,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.9667,
+        "frames": 117,
+        "motion": 4.796,
+        "peak": 0.0333,
+        "face": {
+          "x": 0.4443,
+          "y": 0.7212,
+          "size": 0.0799
+        }
+      }
+    ]
+  },
+  "naruto_sasuke_clash_02.mp4": {
+    "file": "naruto_sasuke_clash_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.3833,
+    "size": 1569541,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.1,
+        "frames": 6,
+        "motion": 3.204,
+        "peak": 0.0167,
+        "face": null
+      },
+      {
+        "start": 0.1,
+        "end": 1.3833,
+        "frames": 77,
+        "motion": 2.763,
+        "peak": 0.5,
+        "face": {
+          "x": 0.4887,
+          "y": 0.2326,
+          "size": 0.0875
+        }
+      }
+    ]
+  },
+  "naruto_sasuke_clash_03.mp4": {
+    "file": "naruto_sasuke_clash_03.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.3167,
+    "size": 2502027,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.1667,
+        "frames": 10,
+        "motion": 3.549,
+        "peak": 0.0167,
+        "face": null
+      },
+      {
+        "start": 0.1667,
+        "end": 2.3167,
+        "frames": 129,
+        "motion": 2.721,
+        "peak": 0.1833,
+        "face": {
+          "x": 0.4578,
+          "y": 0.7653,
+          "size": 0.0861
+        }
+      }
+    ]
+  },
+  "naruto_sasuke_clash_04.mp4": {
+    "file": "naruto_sasuke_clash_04.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.2333,
+    "size": 1184834,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 2.2167,
+        "frames": 132,
+        "motion": 0.601,
+        "peak": 0.0333,
+        "face": null
+      }
+    ]
+  },
+  "naruto_sasuke_clash_05.mp4": {
+    "file": "naruto_sasuke_clash_05.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.6833,
+    "size": 1302925,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.6833,
+        "frames": 100,
+        "motion": 2.379,
+        "peak": 0.15,
+        "face": null
+      }
+    ]
+  },
+  "naruto_sasuke_clash_06.mp4": {
+    "file": "naruto_sasuke_clash_06.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.7,
+    "size": 1314367,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.6833,
+        "frames": 100,
+        "motion": 2.767,
+        "peak": 0.0333,
+        "face": null
+      }
+    ]
+  },
+  "naruto_sasuke_clash_07.mp4": {
+    "file": "naruto_sasuke_clash_07.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.5833,
+    "size": 1385800,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.5833,
+        "frames": 94,
+        "motion": 2.709,
+        "peak": 0.0333,
+        "face": null
+      }
+    ]
+  },
+  "naruto_sasuke_clash_08.mp4": {
+    "file": "naruto_sasuke_clash_08.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.6167,
+    "size": 1360934,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.6167,
+        "frames": 96,
+        "motion": 1.334,
+        "peak": 0.1333,
+        "face": {
+          "x": 0.1293,
+          "y": 0.1035,
+          "size": 0.1125
+        }
+      }
+    ]
+  },
+  "naruto_sasuke_clash_09.mp4": {
+    "file": "naruto_sasuke_clash_09.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.9,
+    "size": 1780548,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.9,
+        "frames": 114,
+        "motion": 1.876,
+        "peak": 1.5667,
+        "face": null
+      }
+    ]
+  },
+  "naruto_sasuke_clash_10.mp4": {
+    "file": "naruto_sasuke_clash_10.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.3,
+    "size": 2657470,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.1,
+        "frames": 6,
+        "motion": 9.485,
+        "peak": 0.0833,
+        "face": null
+      },
+      {
+        "start": 0.1,
+        "end": 2.3,
+        "frames": 132,
+        "motion": 3.896,
+        "peak": 0.15,
+        "face": null
+      }
+    ]
+  },
+  "rengoku_flame_tiger_01.mp4": {
+    "file": "rengoku_flame_tiger_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.25,
+    "size": 1385974,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.25,
+        "frames": 74,
+        "motion": 3.694,
+        "peak": 0.0667,
+        "face": null
+      }
+    ]
+  },
+  "rengoku_flame_tiger_02.mp4": {
+    "file": "rengoku_flame_tiger_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 0.95,
+    "size": 1190645,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 0.95,
+        "frames": 56,
+        "motion": 4.641,
+        "peak": 0.15,
+        "face": null
+      }
+    ]
+  },
+  "rengoku_flame_tiger_03.mp4": {
+    "file": "rengoku_flame_tiger_03.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 0.7167,
+    "size": 949398,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.05,
+        "frames": 3,
+        "motion": 8.598,
+        "peak": 0.0167,
+        "face": {
+          "x": 0.6371,
+          "y": 0.3104,
+          "size": 0.1181
+        }
+      },
+      {
+        "start": 0.05,
+        "end": 0.7167,
+        "frames": 40,
+        "motion": 3.828,
+        "peak": 0.0667,
+        "face": {
+          "x": 0.7793,
+          "y": 0.3833,
+          "size": 0.1361
+        }
+      }
+    ]
+  },
+  "rengoku_flame_tiger_04.mp4": {
+    "file": "rengoku_flame_tiger_04.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.05,
+    "size": 992974,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.05,
+        "frames": 63,
+        "motion": 1.813,
+        "peak": 0.0167,
+        "face": null
+      }
+    ]
+  },
+  "rengoku_flame_tiger_05.mp4": {
+    "file": "rengoku_flame_tiger_05.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.05,
+    "size": 1619000,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.05,
+        "frames": 123,
+        "motion": 1.659,
+        "peak": 0.0167,
+        "face": null
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_01.mp4": {
+    "file": "sanemi_wind_cyclone_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.9167,
+    "size": 3962169,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.9167,
+        "frames": 115,
+        "motion": 2.58,
+        "peak": 0.1833,
+        "face": null
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_02.mp4": {
+    "file": "sanemi_wind_cyclone_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.5833,
+    "size": 2991285,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.5833,
+        "frames": 95,
+        "motion": 2.419,
+        "peak": 0.05,
+        "face": null
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_03.mp4": {
+    "file": "sanemi_wind_cyclone_03.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.8833,
+    "size": 2102901,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.8833,
+        "frames": 113,
+        "motion": 2.802,
+        "peak": 0.0167,
+        "face": null
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_04.mp4": {
+    "file": "sanemi_wind_cyclone_04.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.7833,
+    "size": 3545480,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.7833,
+        "frames": 107,
+        "motion": 1.811,
+        "peak": 0.0167,
+        "face": {
+          "x": 0.5262,
+          "y": 0.4715,
+          "size": 0.0861
+        }
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_05.mp4": {
+    "file": "sanemi_wind_cyclone_05.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.7167,
+    "size": 2965814,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 1.7167,
+        "frames": 102,
+        "motion": 1.913,
+        "peak": 0.0333,
+        "face": {
+          "x": 0.8187,
+          "y": 0.1569,
+          "size": 0.1278
+        }
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_06.mp4": {
+    "file": "sanemi_wind_cyclone_06.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.3167,
+    "size": 3769867,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.3167,
+        "frames": 139,
+        "motion": 2.012,
+        "peak": 2.0833,
+        "face": null
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_07.mp4": {
+    "file": "sanemi_wind_cyclone_07.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.2167,
+    "size": 1793098,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.2167,
+        "frames": 133,
+        "motion": 0.778,
+        "peak": 0.0167,
+        "face": null
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_08.mp4": {
+    "file": "sanemi_wind_cyclone_08.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.7167,
+    "size": 2325303,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.15,
+        "frames": 9,
+        "motion": 1.257,
+        "peak": 0.0667,
+        "face": null
+      },
+      {
+        "start": 0.15,
+        "end": 1.7167,
+        "frames": 94,
+        "motion": 1.319,
+        "peak": 0.1667,
+        "face": null
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_09.mp4": {
+    "file": "sanemi_wind_cyclone_09.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.35,
+    "size": 1354413,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.35,
+        "frames": 81,
+        "motion": 0.825,
+        "peak": 0.35,
+        "face": {
+          "x": 0.4832,
+          "y": 0.3187,
+          "size": 0.2681
+        }
+      }
+    ]
+  },
+  "sanemi_wind_cyclone_10.mp4": {
+    "file": "sanemi_wind_cyclone_10.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.6833,
+    "size": 2054983,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.6833,
+        "frames": 101,
+        "motion": 1.189,
+        "peak": 0.25,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_01.mp4": {
+    "file": "sukuna_cursed_energy_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.9833,
+    "size": 2742076,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.9667,
+        "frames": 178,
+        "motion": 1.087,
+        "peak": 1.8833,
+        "face": {
+          "x": 0.5348,
+          "y": 0.3563,
+          "size": 0.4931
+        }
+      }
+    ]
+  },
+  "sukuna_cursed_energy_02.mp4": {
+    "file": "sukuna_cursed_energy_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.7833,
+    "size": 4145046,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.7833,
+        "frames": 167,
+        "motion": 2.409,
+        "peak": 0.0833,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_03.mp4": {
+    "file": "sukuna_cursed_energy_03.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.3,
+    "size": 2476376,
+    "scenes": [
+      {
+        "start": 0.0333,
+        "end": 2.2833,
+        "frames": 135,
+        "motion": 2.052,
+        "peak": 0.3333,
+        "face": {
+          "x": 0.3721,
+          "y": 0.2115,
+          "size": 0.0785
+        }
+      }
+    ]
+  },
+  "sukuna_cursed_energy_04.mp4": {
+    "file": "sukuna_cursed_energy_04.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.9833,
+    "size": 2609693,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.9833,
+        "frames": 179,
+        "motion": 1.183,
+        "peak": 0.35,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_05.mp4": {
+    "file": "sukuna_cursed_energy_05.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.7833,
+    "size": 2488521,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.7833,
+        "frames": 167,
+        "motion": 1.034,
+        "peak": 1.5333,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_06.mp4": {
+    "file": "sukuna_cursed_energy_06.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.5833,
+    "size": 1543737,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.0833,
+        "frames": 5,
+        "motion": 0.651,
+        "peak": 0.0333,
+        "face": null
+      },
+      {
+        "start": 0.0833,
+        "end": 1.5667,
+        "frames": 89,
+        "motion": 1.185,
+        "peak": 0.1667,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_07.mp4": {
+    "file": "sukuna_cursed_energy_07.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.7833,
+    "size": 2516187,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.7833,
+        "frames": 167,
+        "motion": 1.207,
+        "peak": 0.6833,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_08.mp4": {
+    "file": "sukuna_cursed_energy_08.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 1484172,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.326,
+        "peak": 1.4167,
+        "face": {
+          "x": 0.4861,
+          "y": 0.426,
+          "size": 0.5535
+        }
+      }
+    ]
+  },
+  "sukuna_cursed_energy_09.mp4": {
+    "file": "sukuna_cursed_energy_09.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 4.0833,
+    "size": 3054681,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 4.0833,
+        "frames": 245,
+        "motion": 1.44,
+        "peak": 0.2167,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_10.mp4": {
+    "file": "sukuna_cursed_energy_10.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.7833,
+    "size": 2256406,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.7833,
+        "frames": 167,
+        "motion": 1.363,
+        "peak": 2.7667,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_11.mp4": {
+    "file": "sukuna_cursed_energy_11.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 1727442,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.268,
+        "peak": 0.6667,
+        "face": {
+          "x": 0.5875,
+          "y": 0.3597,
+          "size": 0.5556
+        }
+      }
+    ]
+  },
+  "sukuna_cursed_energy_12.mp4": {
+    "file": "sukuna_cursed_energy_12.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 3.4667,
+    "size": 4538784,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 3.45,
+        "frames": 207,
+        "motion": 1.379,
+        "peak": 1.25,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_cursed_energy_13.mp4": {
+    "file": "sukuna_cursed_energy_13.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.25,
+    "size": 1432566,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.25,
+        "frames": 135,
+        "motion": 0.254,
+        "peak": 2.2333,
+        "face": {
+          "x": 0.5805,
+          "y": 0.4111,
+          "size": 0.575
+        }
+      }
+    ]
+  },
+  "sukuna_cursed_energy_14.mp4": {
+    "file": "sukuna_cursed_energy_14.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.6333,
+    "size": 969242,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.6167,
+        "frames": 97,
+        "motion": 0.346,
+        "peak": 1.4833,
+        "face": {
+          "x": 0.4656,
+          "y": 0.4222,
+          "size": 0.5444
+        }
+      }
+    ]
+  },
+  "sukuna_flame_cleave_01.mp4": {
+    "file": "sukuna_flame_cleave_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.6833,
+    "size": 4001231,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.6833,
+        "frames": 161,
+        "motion": 3.188,
+        "peak": 0.0333,
+        "face": null
+      }
+    ]
+  },
+  "sukuna_flame_cleave_02.mp4": {
+    "file": "sukuna_flame_cleave_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 0.85,
+    "size": 673585,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.8167,
+        "frames": 49,
+        "motion": 0.665,
+        "peak": 0.4667,
+        "face": {
+          "x": 0.5082,
+          "y": 0.4521,
+          "size": 0.7292
+        }
+      }
+    ]
+  },
+  "sukuna_flame_cleave_03.mp4": {
+    "file": "sukuna_flame_cleave_03.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 3.8833,
+    "size": 4001966,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 3.8833,
+        "frames": 233,
+        "motion": 1.937,
+        "peak": 3.85,
+        "face": null
+      }
+    ]
+  },
+  "yuta_katana_slashes_01.mp4": {
+    "file": "yuta_katana_slashes_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 4011777,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 2.693,
+        "peak": 2.6333,
+        "face": null
+      }
+    ]
+  },
+  "yuta_katana_slashes_02.mp4": {
+    "file": "yuta_katana_slashes_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 2731743,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.723,
+        "peak": 1.75,
+        "face": {
+          "x": 0.1898,
+          "y": 0.7653,
+          "size": 0.1694
+        }
+      }
+    ]
+  },
+  "yuta_katana_slashes_03.mp4": {
+    "file": "yuta_katana_slashes_03.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 2371347,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.61,
+        "peak": 0.0167,
+        "face": {
+          "x": 0.3148,
+          "y": 0.5347,
+          "size": 0.1931
+        }
+      }
+    ]
+  },
+  "yuta_katana_slashes_04.mp4": {
+    "file": "yuta_katana_slashes_04.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 2414159,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.524,
+        "peak": 0.4667,
+        "face": {
+          "x": 0.5152,
+          "y": 0.2667,
+          "size": 0.2264
+        }
+      }
+    ]
+  },
+  "yuta_katana_slashes_05.mp4": {
+    "file": "yuta_katana_slashes_05.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.1,
+    "size": 1643456,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.1,
+        "frames": 126,
+        "motion": 0.466,
+        "peak": 0.6,
+        "face": {
+          "x": 0.498,
+          "y": 0.3896,
+          "size": 0.2556
+        }
+      }
+    ]
+  },
+  "yuta_katana_slashes_06.mp4": {
+    "file": "yuta_katana_slashes_06.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 2197260,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.397,
+        "peak": 2.5667,
+        "face": {
+          "x": 0.55,
+          "y": 0.3431,
+          "size": 0.25
+        }
+      }
+    ]
+  },
+  "yuta_katana_slashes_07.mp4": {
+    "file": "yuta_katana_slashes_07.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 2371045,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.452,
+        "peak": 1.7167,
+        "face": {
+          "x": 0.5445,
+          "y": 0.2757,
+          "size": 0.2556
+        }
+      }
+    ]
+  },
+  "yuta_katana_slashes_08.mp4": {
+    "file": "yuta_katana_slashes_08.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 3.4667,
+    "size": 2531343,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 3.4667,
+        "frames": 208,
+        "motion": 0.699,
+        "peak": 3.2,
+        "face": null
+      }
+    ]
+  },
+  "yuta_katana_slashes_09.mp4": {
+    "file": "yuta_katana_slashes_09.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 2025150,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.862,
+        "peak": 0.45,
+        "face": null
+      }
+    ]
+  },
+  "yuta_katana_slashes_10.mp4": {
+    "file": "yuta_katana_slashes_10.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 1932557,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.857,
+        "peak": 2.4333,
+        "face": null
+      }
+    ]
+  },
+  "yuta_katana_slashes_11.mp4": {
+    "file": "yuta_katana_slashes_11.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.85,
+    "size": 1224960,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.85,
+        "frames": 111,
+        "motion": 0.778,
+        "peak": 0.0667,
+        "face": null
+      }
+    ]
+  },
+  "yuta_katana_slashes_12.mp4": {
+    "file": "yuta_katana_slashes_12.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8,
+    "size": 2273361,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.8,
+        "frames": 168,
+        "motion": 0.67,
+        "peak": 1.6167,
+        "face": {
+          "x": 0.1063,
+          "y": 0.7674,
+          "size": 0.1639
+        }
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_01.mp4": {
+    "file": "zenitsu_thunder_dash_01.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.6167,
+    "size": 3400385,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 2.6167,
+        "frames": 156,
+        "motion": 2.411,
+        "peak": 0.0333,
+        "face": {
+          "x": 0.507,
+          "y": 0.4861,
+          "size": 0.4153
+        }
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_02.mp4": {
+    "file": "zenitsu_thunder_dash_02.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.65,
+    "size": 4578612,
+    "scenes": [
+      {
+        "start": 0.0167,
+        "end": 2.6167,
+        "frames": 156,
+        "motion": 3.311,
+        "peak": 0.0333,
+        "face": null
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_03.mp4": {
+    "file": "zenitsu_thunder_dash_03.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.5833,
+    "size": 3322825,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.55,
+        "frames": 153,
+        "motion": 2.172,
+        "peak": 2.4833,
+        "face": null
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_04.mp4": {
+    "file": "zenitsu_thunder_dash_04.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.8833,
+    "size": 5002761,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.05,
+        "frames": 3,
+        "motion": 17.446,
+        "peak": 0.0167,
+        "face": null
+      },
+      {
+        "start": 0.05,
+        "end": 2.8833,
+        "frames": 170,
+        "motion": 3.346,
+        "peak": 0.0667,
+        "face": {
+          "x": 0.4551,
+          "y": 0.6285,
+          "size": 0.1597
+        }
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_05.mp4": {
+    "file": "zenitsu_thunder_dash_05.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.4833,
+    "size": 3226173,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.4833,
+        "frames": 149,
+        "motion": 2.012,
+        "peak": 0.0333,
+        "face": {
+          "x": 0.4492,
+          "y": 0.725,
+          "size": 0.0722
+        }
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_06.mp4": {
+    "file": "zenitsu_thunder_dash_06.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.2167,
+    "size": 2710824,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 0.1167,
+        "frames": 7,
+        "motion": 10.806,
+        "peak": 0.0833,
+        "face": {
+          "x": 0.4813,
+          "y": 0.7069,
+          "size": 0.1528
+        }
+      },
+      {
+        "start": 0.1167,
+        "end": 2.2167,
+        "frames": 126,
+        "motion": 1.825,
+        "peak": 0.15,
+        "face": null
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_07.mp4": {
+    "file": "zenitsu_thunder_dash_07.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 1.9167,
+    "size": 1820859,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 1.9167,
+        "frames": 115,
+        "motion": 1.282,
+        "peak": 0.0167,
+        "face": null
+      }
+    ]
+  },
+  "zenitsu_thunder_dash_08.mp4": {
+    "file": "zenitsu_thunder_dash_08.mp4",
+    "fps": 60.0,
+    "width": 1920,
+    "height": 1080,
+    "duration": 2.25,
+    "size": 3350897,
+    "scenes": [
+      {
+        "start": 0.0,
+        "end": 2.2167,
+        "frames": 133,
+        "motion": 0.896,
+        "peak": 2.1833,
+        "face": null
+      }
+    ]
+  }
+}

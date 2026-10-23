@@ -44,5 +44,6 @@ fetch_assets.mjs
 models/
 test-assets/results/audit/
 test-assets/results/audit_v4/
+test-assets/materials/action_raw/
 
 __pycache__/
