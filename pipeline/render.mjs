@@ -586,7 +586,9 @@ export async function renderPlan(plan, outFile, { onProgress } = {}) {
   af += loud
     ? `loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${loud.input_i}:measured_TP=${loud.input_tp}:measured_LRA=${loud.input_lra}:measured_thresh=${loud.input_thresh}:offset=${loud.target_offset}:linear=true`
     : 'loudnorm=I=-14:TP=-1.5:LRA=11';
-  af += ',alimiter=limit=0.84:attack=1:release=50,aresample=48000';
+  // level=disabled: иначе alimiter после ограничения сам поднимает громкость обратно почти до 0 дБ;
+  // предел −2 дБ оставляет запас под пики, которые добавляет сжатие AAC
+  af += ',alimiter=limit=0.79:attack=1:release=50:level=disabled,aresample=48000';
   fs.mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
   const args = [
     '-y', '-hide_banner', '-loglevel', 'error',

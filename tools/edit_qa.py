@@ -225,7 +225,11 @@ def main():
     # 2. Звук
     if info["has_audio"]:
         x, sr = read_audio(args.ffmpeg, path)
-        clipped = int((np.abs(x) >= 0.999).sum())
+        # клиппинг считаем по каждому каналу отдельно: при сведении стерео в моно ffmpeg складывает
+        # каналы с коэффициентом −3 дБ, и на похожих каналах пики «вырастают» на ~3 дБ — ложный клиппинг
+        r_ch = run([args.ffmpeg, "-v", "error", "-i", path, "-f", "f32le", "-"])
+        x_ch = np.frombuffer(r_ch.stdout, dtype=np.float32)
+        clipped = int((np.abs(x_ch) >= 0.999).sum())
         add("clipping", clipped <= T["clipped_samples_max"], clipped, "0 отсчётов")
         lufs, tp = loudness(args.ffmpeg, path)
         if lufs is not None:
