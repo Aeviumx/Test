@@ -25,6 +25,8 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 CASCADE = os.path.join(HERE, "lbpcascade_animeface.xml")
 EXTS = (".mp4", ".mov", ".webm", ".mkv", ".m4v")
+META_VERSION = 4  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица
+CURVE_RATE = 20
 
 
 FFMPEG = os.environ.get("KORI_FFMPEG") or shutil.which("ffmpeg") or "ffmpeg"
@@ -104,8 +106,17 @@ def analyze(path):
         if b - a < 3:
             continue
         seg = diff[a + 1 : b]
+        # читаемость: средняя яркость и контраст — тёмные «каши» без деталей в эдит не годятся
+        frames = np.stack(small[a:b:max(1, (b - a) // 8)])
+        luma = float(frames.mean())
+        contrast = float(frames.std(axis=(1, 2)).mean())
         motion = float(seg.mean()) if len(seg) else 0.0
         peak = (a + 1 + int(np.argmax(seg))) / fps if len(seg) else a / fps
+        # кривая движения внутри сцены, 20 значений в секунду от начала сцены: по ней стиль ставит
+        # замедление на момент удара/взмаха, а не на случайный кадр
+        step = max(1, int(round(fps / CURVE_RATE)))
+        sm = np.convolve(diff[a:b], np.ones(3) / 3, "same") if b - a >= 3 else diff[a:b]
+        curve = [round(float(sm[i : i + step].mean()), 2) for i in range(0, b - a, step)]
         found = [detect_face(path, (a + (b - a) * q) / fps, cas) for q in (0.25, 0.5, 0.75)]
         found = [f for f in found if f]
         face = None
@@ -115,13 +126,22 @@ def analyze(path):
                 "y": round(float(np.median([f[1] for f in found])), 4),
                 "size": round(float(np.median([f[2] for f in found])), 4),
             }
+        # запасной центр кадрирования без лица: окно 9:16 туда, где в верхних 60% кадра больше всего деталей
+        # (линии волос, глаз, лица); у широкого кадра это обычно персонаж, а не фон
+        crop_frac = min(1.0, (9 / 16) * h / max(1, w))
+        gx = np.abs(np.diff(frames[:, : int(72 * 0.6), :], axis=2)).mean(axis=(0, 1))
+        win = max(1, int(round(crop_frac * len(gx))))
+        dens = np.convolve(gx, np.ones(win), "valid")
+        focus_x = (int(np.argmax(dens)) + win / 2) / len(gx) if len(dens) else 0.5
         scenes.append({
             "start": round(a / fps, 4), "end": round(b / fps, 4), "frames": b - a,
-            "motion": round(motion, 3), "peak": round(peak, 4), "face": face,
+            "motion": round(motion, 3), "peak": round(peak, 4), "face": face, "curve": curve,
+            "luma": round(luma, 1), "contrast": round(contrast, 1), "focus_x": round(float(focus_x), 4),
         })
     return {
         "file": os.path.basename(path), "fps": round(fps, 3), "width": w, "height": h,
         "duration": round(n / fps, 4), "size": os.path.getsize(path), "scenes": scenes,
+        "version": META_VERSION, "curve_rate": CURVE_RATE,
     }
 
 
@@ -139,7 +159,7 @@ def main():
             continue
         path = os.path.join(args.folder, name)
         old = meta.get(name)
-        if old and old.get("size") == os.path.getsize(path) and not old.get("stale"):
+        if old and old.get("size") == os.path.getsize(path) and old.get("version") == META_VERSION:
             continue
         info = analyze(path)
         meta[name] = info

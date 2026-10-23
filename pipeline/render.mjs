@@ -269,34 +269,44 @@ class Renderer {
     return this.vblend;
   }
 
-  /** Доля «зум-прохода» перед ближайшей склейкой (0 — нет, 1 — момент склейки). */
+  /**
+   * Переход у ближайшей склейки: { type, k, phase } или null.
+   * phase 'out' — кадр перед склейкой (k: 0 → 1), 'in' — после склейки (только whip, k: 0 → 1).
+   */
   transitionAt(t) {
     for (const tr of this.plan.transitions || []) {
-      if (t < tr.t && tr.t - t <= tr.duration) return 1 - (tr.t - t) / tr.duration;
+      if (t < tr.t && tr.t - t <= tr.duration) return { type: tr.type, k: 1 - (tr.t - t) / tr.duration, phase: 'out' };
+      if (tr.type === 'whip' && t >= tr.t && t - tr.t < tr.duration) return { type: tr.type, k: (t - tr.t) / tr.duration, phase: 'in' };
     }
-    return 0;
+    return null;
   }
 
-  drawVideoShot(ctx, t, shot, extraZoom = 1) {
+  drawVideoShot(ctx, t, shot, extraZoom = 1, offX = 0) {
     const { W, H, plan } = this;
     const img = this.videoImage(shot, t);
     const p = clamp01((t - shot.start) / Math.max(1e-6, shot.end - shot.start));
     const punch = envelope(plan.events, 'punch', t);
     const shake = envelope(plan.events, 'shake', t);
     const zoom = 1.04 * (1 + 0.05 * p) * (1 + 0.09 * punch) * extraZoom;
-    const sx = 18 * shake * Math.sin(t * 83 + 1.3);
-    const sy = 13 * shake * Math.cos(t * 71 + 0.4);
-    const rot = 0.02 * shake * Math.sin(t * 57);
+    // тряска из нескольких частот (как S_Shake): сдвиг, поворот и «дрожание» масштаба
+    const sx = 26 * shake * (0.6 * Math.sin(t * 83 + 1.3) + 0.4 * Math.sin(t * 131 + 0.7));
+    const sy = 20 * shake * (0.6 * Math.cos(t * 71 + 0.4) + 0.4 * Math.sin(t * 109 + 2.1));
+    const rot = 0.03 * shake * Math.sin(t * 57);
+    const jitter = 1 + 0.015 * shake * Math.sin(t * 97);
     const ax = W / 2;
     const ay = shot.anchorY * H;
     const s = H / img.height;
     ctx.save();
-    ctx.translate(ax + sx, ay + sy);
+    ctx.translate(ax + sx + offX, ay + sy);
     ctx.rotate(rot);
-    ctx.scale(zoom, zoom);
+    ctx.scale(zoom * jitter, zoom * jitter);
     ctx.translate(-ax, -ay);
-    ctx.filter = 'contrast(1.07) saturate(1.15)';
-    ctx.drawImage(img, W / 2 - (img.width * s) / 2, 0, img.width * s, H);
+    ctx.filter = 'contrast(1.12) saturate(1.25)';
+    const x0 = W / 2 - (img.width * s) / 2;
+    ctx.drawImage(img, x0, 0, img.width * s, H);
+    // при «вжухе» кадр уезжает вбок — освободившееся место заполняем им же, чтобы не было пустоты
+    if (offX < 0) ctx.drawImage(img, x0 + W / zoom, 0, img.width * s, H);
+    if (offX > 0) ctx.drawImage(img, x0 - W / zoom, 0, img.width * s, H);
     ctx.filter = 'none';
     ctx.restore();
   }
@@ -413,9 +423,20 @@ class Renderer {
     if (this.plan.cards && t < this.plan.cards.end) return this.drawCards(ctx, t);
     const shot = this.shotAt(mainT);
     if (shot.type === 'video') {
-      const k = this.transitionAt(mainT);
-      this.drawVideoShot(ctx, Math.max(t, shot.start), shot, 1 + 0.35 * k * k);
-      return k > 0 ? { z: k, anchor: [this.W / 2, shot.anchorY * this.H] } : null;
+      const tr = this.transitionAt(mainT);
+      let zoom = 1;
+      let offX = 0;
+      let info = null;
+      if (tr && tr.type === 'zoomthrough') {
+        zoom = 1 + 0.35 * tr.k * tr.k;
+        info = { z: tr.k, anchor: [this.W / 2, shot.anchorY * this.H] };
+      } else if (tr && tr.type === 'whip') {
+        // старая сцена резко уезжает влево, новая влетает справа и тормозит
+        const tt = Math.max(0, Math.min(1, tr.k + (t - mainT) / tr.duration));
+        offX = tr.phase === 'out' ? -this.W * 0.55 * tt * tt : this.W * 0.55 * (1 - tt) * (1 - tt);
+      }
+      this.drawVideoShot(ctx, Math.max(t, shot.start), shot, zoom, offX);
+      return info;
     }
     this.drawShot(ctx, t);
     return null;
@@ -427,7 +448,7 @@ class Renderer {
       const { items, z } = this.cardState(t);
       return items.some((i) => i.k > 0 && i.k < 1) || z > 0.02;
     }
-    return lastEventAge(plan.events, ['punch', 'shake'], t) < 0.14 || this.transitionAt(t) > 0;
+    return lastEventAge(plan.events, ['punch', 'shake'], t) < 0.14 || this.transitionAt(t) !== null;
   }
 
   renderFrame(t) {
