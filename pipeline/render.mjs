@@ -8,7 +8,7 @@ import { ffmpegPath, measureLoudness } from './ffmpeg.mjs';
 import { frameFor, cardFrame, faceCenter } from './framing.mjs';
 import { sourceAt } from './styles/velocity.mjs';
 
-const DECAY = { punch: 13, shake: 9, rgb: 16, flash: 45, colorflash: 12 };
+const DECAY = { punch: 13, shake: 9, rgb: 16, flash: 45, colorflash: 12, blur: 11 };
 const CARD_W = 760;
 const CARD_H = 1360;
 const CARD_ENTER = 0.26;
@@ -487,6 +487,17 @@ class Renderer {
       const st = activeWindow(this.plan.events, 'stutter', mainT);
       const tv = st ? st.t + (Math.floor(((t - st.t) * this.plan.fps) / 3) * 3) / this.plan.fps : t;
       this.drawVideoShot(ctx, Math.max(t, shot.start), shot, zoom, offX, Math.max(tv, shot.start));
+      // «наложение»: следующий кадр проступает поверх текущего и плавно увеличивается к склейке
+      if (tr && tr.type === 'ghost') {
+        const next = this.shotAt(tr.t + 1e-4);
+        if (next !== shot && next.type === 'video') {
+          ctx.globalAlpha = 0.6 * tr.k ** 1.4;
+          ctx.globalCompositeOperation = 'screen';
+          this.drawVideoShot(ctx, next.start, next, 1.18 - 0.14 * tr.k, 0, next.start);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
       return info;
     }
     this.drawShot(ctx, t);
@@ -499,7 +510,8 @@ class Renderer {
       const { items, z } = this.cardState(t);
       return items.some((i) => i.k > 0 && i.k < 1) || z > 0.02;
     }
-    return lastEventAge(plan.events, ['punch', 'shake'], t) < 0.14 || this.transitionAt(t) !== null;
+    const tr = this.transitionAt(t);
+    return lastEventAge(plan.events, ['punch', 'shake'], t) < 0.14 || (tr !== null && tr.type !== 'ghost');
   }
 
   renderFrame(t) {
@@ -540,6 +552,15 @@ class Renderer {
       acc.globalAlpha = 1;
       acc.globalCompositeOperation = 'source-over';
     }
+    // размытие на ударе с быстрой наводкой резкости
+    const bl = envelope(plan.events, 'blur', t);
+    if (bl > 0.06) this.applyFilter(acc, `blur(${Math.min(22, 20 * bl).toFixed(1)}px) brightness(${(1 + 0.12 * bl).toFixed(3)})`);
+    // цветная засветка: цвет берётся из самого кадра (самый насыщенный), чтобы не спорить с палитрой сцены
+    const tint = activeWindow(plan.events, 'tint', t);
+    if (tint) this.tintOverlay(acc, tint, t);
+    // «карточка»: кадр сжимается в белую рамку поверх своей же размытой копии
+    const card = activeWindow(plan.events, 'card', t);
+    if (card) this.cardOverlay(acc, card, t);
     // чёрно-белая вставка на ударе
     if (activeWindow(plan.events, 'bw', t)) this.applyFilter(acc, 'grayscale(1) contrast(1.35)');
     // кадр-удар как в аниме: 1-й кадр — инверсия, 2-й — жёсткий ч/б
@@ -594,6 +615,85 @@ class Renderer {
     g.filter = 'none';
     ctx.globalCompositeOperation = 'source-over';
     ctx.drawImage(this.tmp, 0, 0);
+  }
+
+  /** Самый насыщенный цвет кадра (оттенок) — для засветки; запоминается на всё событие. */
+  frameHue(e) {
+    if (e._hue !== undefined) return e._hue;
+    if (!this.probe) this.probe = createCanvas(16, 16);
+    const g = this.probe.getContext('2d');
+    g.drawImage(this.acc, 0, 0, 16, 16);
+    const d = g.getImageData(0, 0, 16, 16).data;
+    let best = -1;
+    let hue = 350;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i] / 255, gg = d[i + 1] / 255, b = d[i + 2] / 255;
+      const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+      const score = (mx - mn) * mx;
+      if (score <= best || mx === mn) continue;
+      best = score;
+      const h = mx === r ? ((gg - b) / (mx - mn)) % 6 : mx === gg ? (b - r) / (mx - mn) + 2 : (r - gg) / (mx - mn) + 4;
+      hue = (h * 60 + 360) % 360;
+    }
+    e._hue = Math.round(hue);
+    return e._hue;
+  }
+
+  tintOverlay(ctx, e, t) {
+    const { W, H } = this;
+    const k = (t - e.t) / e.dur;
+    const a = (k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3) * e.strength;
+    const hue = this.frameHue(e);
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.fillStyle = `hsla(${hue},100%,50%,${(0.6 * a).toFixed(3)})`;
+    ctx.fillRect(0, 0, W, H);
+    // свечение от центра — как световой «блик» поверх кадра
+    const gr = ctx.createRadialGradient(W / 2, H * 0.42, 0, W / 2, H * 0.42, H * 0.6);
+    gr.addColorStop(0, `hsla(${hue},100%,65%,${(0.35 * a).toFixed(3)})`);
+    gr.addColorStop(1, `hsla(${hue},100%,40%,0)`);
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = gr;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  cardOverlay(ctx, e, t) {
+    const { W, H } = this;
+    const k = (t - e.t) / e.dur;
+    // быстро сжимается, держится, в конце возвращается во весь экран
+    const inK = easeOutCubic(clamp01(k / 0.18));
+    const outK = easeInCubic(clamp01((k - 0.8) / 0.2));
+    const s = 1 - 0.2 * inK * (1 - outK);
+    if (s > 0.995) return;
+    const snap = this.tmp.getContext('2d');
+    snap.globalAlpha = 1;
+    snap.globalCompositeOperation = 'source-over';
+    snap.filter = 'none';
+    snap.drawImage(this.acc, 0, 0);
+    // фон — тот же кадр, размытый и высветленный
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.filter = 'blur(28px) brightness(1.25) saturate(1.2)';
+    ctx.drawImage(this.tmp, -W * 0.1, -H * 0.1, W * 1.2, H * 1.2);
+    ctx.filter = 'none';
+    ctx.fillStyle = `rgba(255,255,255,${(0.35 * inK * (1 - outK)).toFixed(3)})`;
+    ctx.fillRect(0, 0, W, H);
+    const cw = W * s;
+    const ch = H * s;
+    const border = 16 * inK * (1 - outK);
+    ctx.save();
+    ctx.translate(W / 2, H / 2);
+    ctx.rotate(deg(-2.5 * inK * (1 - outK)));
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = 40;
+    ctx.shadowOffsetY = 16;
+    ctx.fillStyle = '#ffffff';
+    roundRect(ctx, -cw / 2 - border, -ch / 2 - border, cw + 2 * border, ch + 2 * border, 26);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    roundRect(ctx, -cw / 2, -ch / 2, cw, ch, 18);
+    ctx.clip();
+    ctx.drawImage(this.tmp, -cw / 2, -ch / 2, cw, ch);
+    ctx.restore();
   }
 
   /** Мягкое свечение светлых участков: уменьшенная копия с контрастом и размытием, наложение «экраном». */

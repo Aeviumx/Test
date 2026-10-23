@@ -14,8 +14,16 @@ export function collectClips(inputs) {
   return out;
 }
 
+/** Метки крупности сцен (kori_scene_tags.json рядом с клипами): «клип#сцена» → close | medium | wide | skip. */
+function loadSceneTags(dir) {
+  const p = path.join(dir, 'kori_scene_tags.json');
+  if (!fs.existsSync(p)) return {};
+  return JSON.parse(fs.readFileSync(p, 'utf-8'));
+}
+
 export function loadClipMeta(files) {
   const cache = new Map();
+  const tagCache = new Map();
   return files.map((file) => {
     const dir = path.dirname(file);
     if (!cache.has(dir)) {
@@ -26,6 +34,10 @@ export function loadClipMeta(files) {
     const meta = cache.get(dir)[path.basename(file)];
     if (!meta) throw new Error(`Клип ${file} не размечен. Запусти: npm run kori -- clips "${dir}"`);
     if (meta.size !== fs.statSync(file).size) console.warn(`[kori] Внимание: ${path.basename(file)} изменён после разметки — перезапусти clips`);
-    return { id: path.basename(file, path.extname(file)), path: path.resolve(file), ...meta };
+    if (!tagCache.has(dir)) tagCache.set(dir, loadSceneTags(dir));
+    const id = path.basename(file, path.extname(file));
+    const tags = tagCache.get(dir);
+    const scenes = meta.scenes.map((sc, i) => (tags[`${id}#${i}`] ? { ...sc, scale: tags[`${id}#${i}`] } : sc));
+    return { id, path: path.resolve(file), ...meta, scenes };
   });
 }

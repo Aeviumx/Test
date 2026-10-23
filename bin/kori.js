@@ -144,6 +144,7 @@ function summary(plan) {
   console.log(`[kori] Темп ${a.bpm} BPM, фрагмент ${a.start.toFixed(2)}–${(a.start + a.duration).toFixed(2)} с трека`);
   console.log(`[kori] Дроп на ${a.dropAt.toFixed(2)} с эдита (+${a.dropRise} дБ), ритмический рисунок (шестнадцатые 0–15): ${a.pattern.join(', ')}`);
   console.log(`[kori] Кадров: ${plan.shots.length}, акцентов: ${plan.accents.length}, вспышек: ${plan.events.filter((e) => e.type === 'flash').length}`);
+  if (plan.matchCuts) console.log(`[kori] Склеек по движению: ${plan.matchCuts.length}${plan.matchCuts.length ? ` (${plan.matchCuts.map((m) => m.t.toFixed(2)).join(', ')} с)` : ''}`);
   if (plan.sfx && plan.sfx.length) {
     const byType = {};
     for (const x of plan.sfx) byType[x.type] = (byType[x.type] || 0) + 1;

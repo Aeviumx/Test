@@ -102,6 +102,25 @@ describe('план Velocity (твикстор)', async () => {
     }
   });
 
+  it('общий план (метка wide) в эдит не попадает', () => {
+    const tagged = clips.map((c) => ({ ...c, scenes: c.scenes.map((s, i) => (i === plan.shots[0].scene ? { ...s, scale: 'wide' } : s)) }));
+    const p2 = buildVelocity({ audioFile: TRACK, clips: tagged });
+    expect(p2.shots.some((s) => s.scene === plan.shots[0].scene)).toBe(false);
+  });
+
+  it('склейка по движению: направление в конце кадра совпадает с началом следующего', async () => {
+    // две «сцены» с движением вправо и одна — влево: после правого рывка выбирается правый
+    const flow = (dx) => Array.from({ length: 60 }, () => [dx, 0]);
+    const curve = Array.from({ length: 60 }, (_, i) => (i % 10 === 5 ? 9 : 2));
+    const mk = (id, dx) => ({
+      id, path: `/x/${id}.mp4`, fps: 60, width: 1920, height: 1080, curve_rate: 20,
+      scenes: [{ start: 0, end: 3, motion: 3, peak: 0.25, face: null, curve, flow: flow(dx), luma: 90, contrast: 40, dup: 0 }],
+    });
+    const p3 = buildVelocity({ audioFile: TRACK, clips: [mk('a_right', 0.8), mk('b_right', 0.8), mk('c_left', -0.8), mk('d_right', 0.8)] });
+    expect(p3.matchCuts.length).toBeGreaterThan(0);
+    for (const m of p3.matchCuts) expect(m.cos).toBeGreaterThan(0.6);
+  });
+
   it('на ударе замедление, перед следующим ударом разгон', () => {
     const s = plan.shots[plan.shots.length - 1];
     const r = s.ramps[0];

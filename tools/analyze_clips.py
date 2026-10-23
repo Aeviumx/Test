@@ -10,6 +10,12 @@
 Склейки ищутся по резкому скачку разницы кадров (порог адаптивный), вспышки длиной 1–2 кадра
 склейкой не считаются. Лица — каскад lbpcascade_animeface (как в detect_faces.py).
 
+Ещё пишет:
+  kori_scenes.jpg (kori_scenes_2.jpg…) — лист сцен с подписями «клип#сцена», чтобы глазами оценить крупность плана
+  kori_scene_tags.json — метки сцен: "close" | "medium" | "wide" | "skip" (null — не размечено).
+      Заполняет тот, кто видит лист сцен (агент или человек); уже поставленные метки не перезаписываются.
+      "wide" — общий план с маленькими фигурками: в вертикальном кадре не читается, эдит его не берёт.
+
 Использование: python tools/analyze_clips.py public/assets
 """
 import argparse
@@ -25,7 +31,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 CASCADE = os.path.join(HERE, "lbpcascade_animeface.xml")
 EXTS = (".mp4", ".mov", ".webm", ".mkv", ".m4v")
-META_VERSION = 6  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица; 5: доля дублей; 6: траектория персонажа
+META_VERSION = 7  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица; 5: доля дублей; 6: траектория персонажа; 7: направление движения
 CURVE_RATE = 20
 TRACK_RATE = 4
 
@@ -79,6 +85,20 @@ def find_cuts(small, fps):
             continue
         cuts.append(i)
     return cuts, diff
+
+
+def frame_flow(small):
+    """Направление движения на каждом кадре: средний оптический поток, взвешенный по его силе,
+    в ширинах кадра за кадр (x вправо, y вниз). Нужен для склеек «по движению»."""
+    out = [(0.0, 0.0)]
+    for i in range(1, len(small)):
+        a = small[i - 1].astype(np.uint8)
+        b = small[i].astype(np.uint8)
+        f = cv2.calcOpticalFlowFarneback(a, b, None, 0.5, 2, 9, 2, 5, 1.1, 0)
+        mag = np.hypot(f[..., 0], f[..., 1])
+        wsum = float(mag.sum()) + 1e-6
+        out.append((float((f[..., 0] * mag).sum() / wsum) / 128, float((f[..., 1] * mag).sum() / wsum) / 128))
+    return out
 
 
 def detect_face(path, t, cas):
@@ -151,6 +171,7 @@ def analyze(path):
     cuts, diff = find_cuts(small, fps)
     bounds = [0] + cuts + [n]
     track = subject_track(path, w, h)
+    flow = frame_flow(small)
     cas = cv2.CascadeClassifier(CASCADE)
     scenes = []
     for a, b in zip(bounds[:-1], bounds[1:]):
@@ -170,6 +191,10 @@ def analyze(path):
         step = max(1, int(round(fps / CURVE_RATE)))
         sm = np.convolve(diff[a:b], np.ones(3) / 3, "same") if b - a >= 3 else diff[a:b]
         curve = [round(float(sm[i : i + step].mean()), 2) for i in range(0, b - a, step)]
+        # направление движения с той же частотой, в ширинах кадра в секунду
+        fl = flow[a:b]
+        flow_c = [[round(float(np.mean([f[0] for f in fl[i : i + step]])) * fps, 3),
+                   round(float(np.mean([f[1] for f in fl[i : i + step]])) * fps, 3)] for i in range(0, b - a, step)]
         found = [detect_face(path, (a + (b - a) * q) / fps, cas) for q in (0.25, 0.5, 0.75)]
         found = [f for f in found if f]
         face = None
@@ -190,7 +215,7 @@ def analyze(path):
             "start": round(a / fps, 4), "end": round(b / fps, 4), "frames": b - a,
             "motion": round(motion, 3), "peak": round(peak, 4), "face": face, "curve": curve,
             "luma": round(luma, 1), "contrast": round(contrast, 1), "focus_x": round(float(focus_x), 4),
-            "dup": round(dup, 3),
+            "dup": round(dup, 3), "flow": flow_c,
             # траектория персонажа внутри сцены: [время от начала сцены, x 0..1, лицо 0/1, размер 0..1]
             "track": [[round(t - a / fps, 3), x, f, sz] for t, x, f, sz in track if a / fps - 1e-6 <= t < b / fps],
         })
@@ -199,6 +224,52 @@ def analyze(path):
         "duration": round(n / fps, 4), "size": os.path.getsize(path), "scenes": scenes,
         "version": META_VERSION, "curve_rate": CURVE_RATE,
     }
+
+
+def write_sheet(folder, meta, cols=6, rows=8):
+    """Лист сцен: кадр в момент пика движения каждой сцены, подпись «клип#сцена»."""
+    for old in os.listdir(folder):
+        if old.startswith("kori_scenes") and old.endswith(".jpg"):
+            os.remove(os.path.join(folder, old))
+    tiles = []
+    for name in sorted(meta):
+        for i, sc in enumerate(meta[name]["scenes"]):
+            if sc["end"] - sc["start"] < 0.35:
+                continue
+            fr = grab_frame(os.path.join(folder, name), min(sc["peak"], sc["end"] - 0.05))
+            tile = np.zeros((180, 320, 3), np.uint8) if fr is None else cv2.resize(fr, (320, 180))
+            cv2.rectangle(tile, (0, 0), (320, 18), (0, 0, 0), -1)
+            cv2.putText(tile, f"{name.rsplit('.', 1)[0]}#{i}", (4, 13), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 255, 255), 1)
+            tiles.append(tile)
+    per = cols * rows
+    files = []
+    for p in range(0, len(tiles), per):
+        page = tiles[p : p + per]
+        while len(page) % cols:
+            page.append(np.zeros_like(page[0]))
+        img = np.vstack([np.hstack(page[r : r + cols]) for r in range(0, len(page), cols)])
+        f = os.path.join(folder, "kori_scenes.jpg" if p == 0 else f"kori_scenes_{p // per + 1}.jpg")
+        cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 85])[1].tofile(f)
+        files.append(f)
+    return files
+
+
+def update_tags(folder, meta):
+    """Шаблон меток: новые сцены добавляются с null, уже поставленные метки остаются."""
+    path = os.path.join(folder, "kori_scene_tags.json")
+    tags = {}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            tags = json.load(f)
+    tags["_help"] = ('Крупность каждой сцены по листу kori_scenes.jpg: "close" (лицо/по пояс), "medium" (фигура целиком), '
+                     '"wide" (общий план, маленькие фигурки — эдит не берёт), "skip" (не брать). null — не размечено.')
+    for name in sorted(meta):
+        for i, sc in enumerate(meta[name]["scenes"]):
+            if sc["end"] - sc["start"] >= 0.35:
+                tags.setdefault(f"{name.rsplit('.', 1)[0]}#{i}", None)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(tags, f, ensure_ascii=False, indent=2)
+    return path, sum(1 for k, v in tags.items() if k != "_help" and v is None)
 
 
 def main():
@@ -224,6 +295,11 @@ def main():
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
     print(f"Разметка клипов сохранена: {meta_path}")
+    for f in write_sheet(args.folder, meta):
+        print(f"Лист сцен: {f}")
+    tags_path, empty = update_tags(args.folder, meta)
+    if empty:
+        print(f"Метки крупности: {tags_path} — не размечено сцен: {empty}. Посмотри лист сцен и поставь close/medium/wide/skip")
 
 
 if __name__ == "__main__":
