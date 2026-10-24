@@ -1,67 +1,290 @@
 {
-  "_help": "Крупность каждой сцены по листу kori_scenes.jpg: \"close\" (лицо/по пояс), \"medium\" (фигура целиком), \"wide\" (общий план, маленькие фигурки — эдит не берёт), \"skip\" (не брать). null — не размечено.",
-  "anime_action_impact_01#0": "close",
-  "anime_action_impact_02#0": "medium",
+  "_help": "Метка сцены по листу kori_scenes.jpg — строка с крупностью или объект. Крупность \"scale\": \"close\" (лицо/по пояс), \"medium\" (фигура целиком), \"wide\" (общий план, маленькие фигурки — эдит не берёт), \"skip\" (не брать). Объект: {\"scale\": \"close\", \"action\": \"attack|hit|charge|move|react|pose\", \"who\": \"имя персонажа\", \"focus\": 0.2}. action — что происходит: attack — наносит удар/выпускает технику, hit — получает удар, взрыв на цели; charge — замах, концентрация; move — рывок, полёт; react — эмоция, крик; pose — стоит, смотрит. Эдит ставит после attack кадр hit другого персонажа, после charge — attack того же. focus — где персонаж по горизонтали (0 — левый край, 1 — правый), если окно кадра уезжает с него. null — не размечено.",
+  "anime_action_impact_01#0": {
+    "scale": "close",
+    "action": "react",
+    "who": "anime01"
+  },
+  "anime_action_impact_02#0": {
+    "scale": "medium",
+    "action": "hit",
+    "who": "anime02"
+  },
   "naruto_sasuke_clash_01#0": "skip",
   "naruto_sasuke_clash_02#1": "wide",
   "naruto_sasuke_clash_03#1": "wide",
-  "naruto_sasuke_clash_04#0": "close",
-  "naruto_sasuke_clash_05#0": "close",
+  "naruto_sasuke_clash_04#0": {
+    "scale": "close",
+    "action": "pose",
+    "who": "sasuke"
+  },
+  "naruto_sasuke_clash_05#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "sasuke"
+  },
   "naruto_sasuke_clash_06#0": "skip",
   "naruto_sasuke_clash_07#0": "wide",
-  "naruto_sasuke_clash_08#0": "medium",
-  "naruto_sasuke_clash_09#0": "medium",
-  "naruto_sasuke_clash_10#1": "close",
-  "rengoku_flame_tiger_01#0": "close",
-  "rengoku_flame_tiger_02#0": "close",
-  "rengoku_flame_tiger_03#1": "medium",
-  "rengoku_flame_tiger_04#0": "close",
-  "rengoku_flame_tiger_05#0": "medium",
-  "sanemi_wind_cyclone_01#0": "close",
-  "sanemi_wind_cyclone_02#0": "medium",
-  "sanemi_wind_cyclone_03#0": "medium",
-  "sanemi_wind_cyclone_04#0": "medium",
+  "naruto_sasuke_clash_08#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "naruto"
+  },
+  "naruto_sasuke_clash_09#0": {
+    "scale": "medium",
+    "action": "hit",
+    "who": "sasuke"
+  },
+  "naruto_sasuke_clash_10#1": {
+    "scale": "close",
+    "action": "hit",
+    "who": "naruto"
+  },
+  "rengoku_flame_tiger_01#0": {
+    "scale": "close",
+    "action": "attack",
+    "who": "rengoku"
+  },
+  "rengoku_flame_tiger_02#0": {
+    "scale": "close",
+    "action": "attack",
+    "who": "rengoku"
+  },
+  "rengoku_flame_tiger_03#1": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "rengoku"
+  },
+  "rengoku_flame_tiger_04#0": {
+    "scale": "close",
+    "action": "react",
+    "who": "rengoku"
+  },
+  "rengoku_flame_tiger_05#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "rengoku"
+  },
+  "sanemi_wind_cyclone_01#0": {
+    "scale": "close",
+    "action": "attack",
+    "who": "sanemi"
+  },
+  "sanemi_wind_cyclone_02#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sanemi"
+  },
+  "sanemi_wind_cyclone_03#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sanemi"
+  },
+  "sanemi_wind_cyclone_04#0": {
+    "scale": "close",
+    "action": "attack",
+    "who": "sanemi"
+  },
   "sanemi_wind_cyclone_05#0": "wide",
-  "sanemi_wind_cyclone_06#0": "medium",
-  "sanemi_wind_cyclone_07#0": "close",
-  "sanemi_wind_cyclone_08#1": "close",
-  "sanemi_wind_cyclone_09#0": "medium",
-  "sanemi_wind_cyclone_10#0": "medium",
-  "sukuna_cursed_energy_01#0": "medium",
-  "sukuna_cursed_energy_02#0": "medium",
-  "sukuna_cursed_energy_03#0": "close",
-  "sukuna_cursed_energy_04#0": "medium",
-  "sukuna_cursed_energy_05#0": "medium",
-  "sukuna_cursed_energy_06#1": "close",
-  "sukuna_cursed_energy_07#0": "medium",
-  "sukuna_cursed_energy_08#0": "close",
-  "sukuna_cursed_energy_09#0": "close",
-  "sukuna_cursed_energy_10#0": "close",
-  "sukuna_cursed_energy_11#0": "medium",
-  "sukuna_cursed_energy_12#0": "medium",
-  "sukuna_cursed_energy_13#0": "medium",
-  "sukuna_cursed_energy_14#0": "close",
+  "sanemi_wind_cyclone_06#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sanemi"
+  },
+  "sanemi_wind_cyclone_07#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "sanemi"
+  },
+  "sanemi_wind_cyclone_08#1": {
+    "scale": "close",
+    "action": "charge",
+    "who": "sanemi"
+  },
+  "sanemi_wind_cyclone_09#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sanemi"
+  },
+  "sanemi_wind_cyclone_10#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sanemi"
+  },
+  "sukuna_cursed_energy_01#0": {
+    "scale": "medium",
+    "action": "pose",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_02#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sukuna",
+    "focus": 0.14
+  },
+  "sukuna_cursed_energy_03#0": {
+    "scale": "close",
+    "action": "pose",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_04#0": {
+    "scale": "medium",
+    "action": "charge",
+    "who": "sukuna",
+    "focus": 0.24
+  },
+  "sukuna_cursed_energy_05#0": {
+    "scale": "medium",
+    "action": "react",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_06#1": {
+    "scale": "close",
+    "action": "react",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_07#0": {
+    "scale": "medium",
+    "action": "charge",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_08#0": {
+    "scale": "close",
+    "action": "pose",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_09#0": {
+    "scale": "close",
+    "action": "react",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_10#0": {
+    "scale": "close",
+    "action": "react",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_11#0": {
+    "scale": "medium",
+    "action": "pose",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_12#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sukuna",
+    "focus": 0.14
+  },
+  "sukuna_cursed_energy_13#0": {
+    "scale": "medium",
+    "action": "pose",
+    "who": "sukuna"
+  },
+  "sukuna_cursed_energy_14#0": {
+    "scale": "close",
+    "action": "pose",
+    "who": "sukuna"
+  },
   "sukuna_flame_cleave_01#0": "skip",
-  "sukuna_flame_cleave_02#0": "close",
-  "sukuna_flame_cleave_03#0": "medium",
-  "yuta_katana_slashes_01#0": "medium",
-  "yuta_katana_slashes_02#0": "medium",
-  "yuta_katana_slashes_03#0": "medium",
-  "yuta_katana_slashes_04#0": "medium",
-  "yuta_katana_slashes_05#0": "medium",
-  "yuta_katana_slashes_06#0": "medium",
-  "yuta_katana_slashes_07#0": "medium",
-  "yuta_katana_slashes_08#0": "close",
-  "yuta_katana_slashes_09#0": "close",
-  "yuta_katana_slashes_10#0": "close",
-  "yuta_katana_slashes_11#0": "close",
-  "yuta_katana_slashes_12#0": "medium",
-  "zenitsu_thunder_dash_01#0": "close",
-  "zenitsu_thunder_dash_02#0": "medium",
-  "zenitsu_thunder_dash_03#0": "close",
+  "sukuna_flame_cleave_02#0": {
+    "scale": "close",
+    "action": "pose",
+    "who": "sukuna"
+  },
+  "sukuna_flame_cleave_03#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "sukuna"
+  },
+  "yuta_katana_slashes_01#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_02#0": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_03#0": {
+    "scale": "medium",
+    "action": "charge",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_04#0": {
+    "scale": "medium",
+    "action": "charge",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_05#0": {
+    "scale": "medium",
+    "action": "pose",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_06#0": {
+    "scale": "medium",
+    "action": "pose",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_07#0": {
+    "scale": "medium",
+    "action": "charge",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_08#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_09#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_10#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_11#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "yuta"
+  },
+  "yuta_katana_slashes_12#0": {
+    "scale": "medium",
+    "action": "move",
+    "who": "yuta"
+  },
+  "zenitsu_thunder_dash_01#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "zenitsu"
+  },
+  "zenitsu_thunder_dash_02#0": {
+    "scale": "medium",
+    "action": "charge",
+    "who": "zenitsu"
+  },
+  "zenitsu_thunder_dash_03#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "zenitsu"
+  },
   "zenitsu_thunder_dash_04#1": "skip",
-  "zenitsu_thunder_dash_05#0": "close",
-  "zenitsu_thunder_dash_06#1": "medium",
-  "zenitsu_thunder_dash_07#0": "medium",
+  "zenitsu_thunder_dash_05#0": {
+    "scale": "close",
+    "action": "charge",
+    "who": "zenitsu"
+  },
+  "zenitsu_thunder_dash_06#1": {
+    "scale": "medium",
+    "action": "attack",
+    "who": "zenitsu"
+  },
+  "zenitsu_thunder_dash_07#0": {
+    "scale": "medium",
+    "action": "move",
+    "who": "zenitsu"
+  },
   "zenitsu_thunder_dash_08#0": "wide"
 }
