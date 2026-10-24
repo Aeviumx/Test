@@ -121,6 +121,25 @@ describe('план Velocity (твикстор)', async () => {
     for (const m of p3.matchCuts) expect(m.cos).toBeGreaterThan(0.6);
   });
 
+  it('смысл: удар одного персонажа → попадание по другому из того же боя; между разными аниме — нет', async () => {
+    const { actionLink } = await import('../pipeline/styles/velocity.mjs');
+    const curve = Array.from({ length: 60 }, (_, i) => (i % 10 === 5 ? 9 : 2));
+    const mk = (id, tag) => ({
+      id, path: `/x/${id}.mp4`, fps: 60, width: 1920, height: 1080, curve_rate: 20,
+      scenes: [{ start: 0, end: 3, motion: 3, peak: 0.25, face: null, curve, luma: 90, contrast: 40, dup: 0, ...tag }],
+    });
+    const p = buildVelocity({
+      audioFile: TRACK,
+      clips: [
+        mk('fight_01', { action: 'attack', who: 'naruto' }), mk('fight_02', { action: 'hit', who: 'sasuke' }),
+        mk('other_01', { action: 'pose', who: 'a' }), mk('more_01', { action: 'pose', who: 'b' }), mk('extra_01', { action: 'react', who: 'c' }),
+      ],
+    });
+    expect(p.semanticCuts.some((c) => c.from === 'naruto:attack' && c.to === 'sasuke:hit')).toBe(true);
+    expect(actionLink({ action: 'attack', who: 'rengoku' }, { action: 'hit', who: 'sasuke' }, false)).toBe(0);
+    expect(actionLink({ action: 'attack', who: 'naruto' }, { action: 'hit', who: 'naruto' })).toBe(0);
+  });
+
   it('на ударе замедление, перед следующим ударом разгон', () => {
     const s = plan.shots[plan.shots.length - 1];
     const r = s.ramps[0];

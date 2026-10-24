@@ -31,7 +31,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 CASCADE = os.path.join(HERE, "lbpcascade_animeface.xml")
 EXTS = (".mp4", ".mov", ".webm", ".mkv", ".m4v")
-META_VERSION = 7  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица; 5: доля дублей; 6: траектория персонажа; 7: направление движения
+META_VERSION = 8  # 2: кривая движения; 3: яркость и контраст; 4: центр кадрирования без лица; 5: доля дублей; 6: траектория персонажа; 7: направление движения; 8: траектория держится за персонажа, а не за эффекты
 CURVE_RATE = 20
 TRACK_RATE = 4
 
@@ -141,7 +141,8 @@ def subject_track(path, w, h):
         grad = np.abs(np.diff(top, axis=1)).mean(axis=0)
         mot = np.abs(top - prev).mean(axis=0)[:-1] if prev is not None else np.zeros_like(grad)
         prev = top
-        energy = grad + 2.0 * mot
+        # движение весит мало: дым, огонь и вспышки двигаются сильнее персонажа и уводили окно с него
+        energy = grad + 0.3 * mot
         dens = np.convolve(energy, np.ones(win), "valid")
         c = int(np.argmax(dens)) if len(dens) else 0
         x = (c + win / 2) / len(energy) if len(dens) else 0.5
@@ -155,6 +156,11 @@ def subject_track(path, w, h):
             face = 1
             size = max(size, fh / sh * 2.5)
         out.append([round(i / TRACK_RATE, 3), round(float(x), 4), face, round(min(1.0, size), 3)])
+    # окно не может уехать быстрее чем на 6% кадра за замер (0.25 с): резкий скачок — это чаще эффект, а не персонаж
+    for k in range(1, len(out)):
+        d = out[k][1] - out[k - 1][1]
+        if abs(d) > 0.06 and not out[k][2]:
+            out[k][1] = round(out[k - 1][1] + 0.06 * np.sign(d), 4)
     # сглаживание: медиана по 3 замерам, затем скользящее среднее — камера не должна дёргаться
     xs = np.array([o[1] for o in out])
     if len(xs) >= 3:
@@ -261,8 +267,14 @@ def update_tags(folder, meta):
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
             tags = json.load(f)
-    tags["_help"] = ('Крупность каждой сцены по листу kori_scenes.jpg: "close" (лицо/по пояс), "medium" (фигура целиком), '
-                     '"wide" (общий план, маленькие фигурки — эдит не берёт), "skip" (не брать). null — не размечено.')
+    tags["_help"] = ('Метка сцены по листу kori_scenes.jpg — строка с крупностью или объект. Крупность "scale": "close" (лицо/по пояс), '
+                     '"medium" (фигура целиком), "wide" (общий план, маленькие фигурки — эдит не берёт), "skip" (не брать). '
+                     'Объект: {"scale": "close", "action": "attack|hit|charge|move|react|pose", "who": "имя персонажа", '
+                     '"focus": 0.2}. action — что происходит: attack — наносит удар/выпускает технику, hit — получает удар, '
+                     'взрыв на цели; charge — замах, концентрация; move — рывок, полёт; react — эмоция, крик; pose — стоит, смотрит. '
+                     'Эдит ставит после attack кадр hit другого персонажа, после charge — attack того же. '
+                     'focus — где персонаж по горизонтали (0 — левый край, 1 — правый), если окно кадра уезжает с него. '
+                     'null — не размечено.')
     for name in sorted(meta):
         for i, sc in enumerate(meta[name]["scenes"]):
             if sc["end"] - sc["start"] >= 0.35:
