@@ -27,6 +27,8 @@ Kōri (氷) CLI
            [--duration 15] [--signature "edit by ..."]
            [--lead-frames 2]  на сколько кадров раньше удара ставить склейки/вспышки (0 — точно в удар)
            [--sfx <папка>]    звуковые эффекты: подпапки impact/ subdrop/ whoosh/ riser/ (только velocity)
+           [--seed N]         другой вариант эдита из тех же клипов (velocity)
+           [--no-history]     не учитывать kori_usage.json (по умолчанию сцены из прошлых эдитов уступают новым)
   lint     --plan plan.json                 Проверить план (лица в кадре, вспышки, синхрон)
   stills   --plan plan.json --times 1,4.5,8 --out <папка>   Отдельные кадры в PNG
   export   --plan plan.json --out edit.mp4 [--force]        Рендер MP4 (+ проверка edit_qa.py)
@@ -84,11 +86,13 @@ async function makePlan() {
   const styleId = getArg('--style', 'gacha-hype');
   const style = await loadStyle(styleId);
   let sources;
+  let usage = {};
   if (styleId === 'velocity') {
     const clipArgs = getList('--clips');
     if (!audio || !clipArgs.length) throw new Error('Нужны --audio <трек> и --clips <папка или файлы>');
     const { collectClips, loadClipMeta } = await import('../pipeline/clips.mjs');
     sources = { clips: loadClipMeta(collectClips(clipArgs)) };
+    if (!args.includes('--no-history')) usage = (await import('../pipeline/clips.mjs')).loadUsage(sources.clips);
   } else {
     const art = getList('--art');
     if (!audio || !art.length) throw new Error('Нужны --audio <трек> и --art <папка или файлы>');
@@ -102,6 +106,8 @@ async function makePlan() {
     fps: parseInt(getArg('--fps', '60'), 10),
     signature: getArg('--signature', ''),
     leadFrames: parseFloat(getArg('--lead-frames', '2')),
+    usage,
+    seed: parseInt(getArg('--seed', '0'), 10),
     sfxLibrary: getArg('--sfx') ? (await import('../pipeline/sfx.mjs')).loadSfxLibrary(getArg('--sfx')) : null,
   });
 }
@@ -134,6 +140,8 @@ async function exportPlan(plan, out) {
     },
   });
   console.log(`[kori] Готово: ${out}`);
+  // сцены готового эдита — в историю, чтобы следующий эдит из той же папки взял другие
+  if (plan.usedScenes) (await import('../pipeline/clips.mjs')).recordUsage(plan);
   const code = await runPython('edit_qa.py', [out]);
   if (code !== 0) console.log('[kori] edit_qa.py: проверка НЕ пройдена (см. отчёт выше)');
   return code;
@@ -144,6 +152,7 @@ function summary(plan) {
   console.log(`[kori] Темп ${a.bpm} BPM, фрагмент ${a.start.toFixed(2)}–${(a.start + a.duration).toFixed(2)} с трека`);
   console.log(`[kori] Дроп на ${a.dropAt.toFixed(2)} с эдита (+${a.dropRise} дБ), ритмический рисунок (шестнадцатые 0–15): ${a.pattern.join(', ')}`);
   console.log(`[kori] Кадров: ${plan.shots.length}, акцентов: ${plan.accents.length}, вспышек: ${plan.events.filter((e) => e.type === 'flash').length}`);
+  if (plan.semanticCuts && plan.semanticCuts.length) console.log(`[kori] Смысловые склейки: ${plan.semanticCuts.map((m) => `${m.t.toFixed(2)} с ${m.from} → ${m.to}`).join('; ')}`);
   if (plan.matchCuts) console.log(`[kori] Склеек по движению: ${plan.matchCuts.length}${plan.matchCuts.length ? ` (${plan.matchCuts.map((m) => m.t.toFixed(2)).join(', ')} с)` : ''}`);
   if (plan.sfx && plan.sfx.length) {
     const byType = {};

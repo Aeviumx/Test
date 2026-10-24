@@ -47,3 +47,4 @@ test-assets/results/audit_v4/
 test-assets/materials/action_raw/
 
 __pycache__/
+kori_usage.json

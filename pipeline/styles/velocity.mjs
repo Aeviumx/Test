@@ -42,10 +42,41 @@ function motionMatch(a, b) {
   return (a[0] * b[0] + a[1] * b[1]) / (na * nb);
 }
 
+/**
+ * Смысловая связь двух соседних кадров по меткам action/who (kori_scene_tags.json): насколько второй
+ * продолжает действие первого. Удар одного персонажа → попадание по другому — самая сильная связка.
+ */
+export function actionLink(a, b, sameFight = true) {
+  if (!a || !b || !a.action || !b.action) return 0;
+  const same = a.who && b.who ? a.who === b.who : null;
+  // удар «прилетает» другому персонажу только внутри одного боя: удар Ренгоку по Саске — бессмыслица
+  if (a.action === 'attack' && b.action === 'hit' && same !== true) return sameFight ? 1.2 : 0;
+  if (a.action === 'charge' && b.action === 'attack' && same !== false) return 0.7;
+  if (a.action === 'move' && b.action === 'attack' && same !== false) return 0.4;
+  if (a.action === 'hit' && b.action === 'react') return sameFight ? 0.4 : 0;
+  if (a.action === b.action && same === true) return -0.2; // один и тот же приём подряд — монотонно
+  return 0;
+}
+
+/** Детерминированный генератор случайных чисел: один и тот же --seed даёт тот же эдит. */
+function rng(seed) {
+  let x = (seed * 2654435761) >>> 0 || 1;
+  return () => {
+    x ^= x << 13; x >>>= 0;
+    x ^= x >>> 17;
+    x ^= x << 5; x >>>= 0;
+    return x / 4294967296;
+  };
+}
+
+/** Ключ сцены для меток и истории: «клип#сцена». */
+export const sceneKey = (clip, idx) => `${clip.id}#${idx}`;
+
 /** Источник клипа: нарезки одного видео (name_01.mp4, name_02.mp4…) — один источник. */
 const sourceOf = (clip) => clip.source || clip.id.replace(/[_-]\d+$/, '');
 
-export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080, height = 1920, fps = 60, signature = '', leadFrames = 2, sfxLibrary = null }) {
+export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080, height = 1920, fps = 60, signature = '', leadFrames = 2, sfxLibrary = null, usage = {}, seed = 0 }) {
+  const rand = seed ? rng(seed) : null;
   const r = buildRhythm({ audioFile, introBars: 1, targetDuration, fps, leadFrames });
 
   // отрезки между ударами: в интро — склейка каждые 2 доли, после дропа — на каждом акценте рисунка
@@ -106,6 +137,8 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
     const seg = segs[i];
     // соседние отрезки — из разных источников: нарезки одного боя (name_01, name_02…) считаются одним
     const near = [assign[i - 1], assign[i + 1], assign[i - 2]].filter(Boolean).map((x) => sourceOf(x.clip));
+    const prev = assign[i - 1];
+    const next = assign[i + 1];
     let best = null;
     for (const m of moments) {
       const k = Math.min(1, (m.s1 - m.t) / seg.need);
@@ -120,13 +153,20 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
       let sc = Math.min(1.5, m.value / ref) * (0.7 + 0.15 * Math.min(m.spike, 2)) * subject * (0.6 + 0.4 * k);
       // тёмные или бесконтрастные сцены зритель не разберёт, как бы они ни двигались
       if (m.scene.luma !== undefined && (m.scene.luma < 40 || m.scene.contrast < 20)) sc *= 0.2;
-      if (near.includes(sourceOf(m.clip))) sc *= 0.15;
+      // смысл: удар → попадание, замах → удар (по меткам action/who); такой паре можно быть из одного боя
+      const linkWith = (a, b) => actionLink(a.scene, b.scene, sourceOf(a.clip) === sourceOf(b.clip));
+      const mm = { clip: m.clip, scene: m.scene };
+      const link = Math.max(prev ? linkWith(prev, mm) : 0, next ? linkWith(mm, next) : 0)
+        + Math.min(0, prev ? linkWith(prev, mm) : 0, next ? linkWith(mm, next) : 0);
+      sc *= 1 + link;
+      if (near.includes(sourceOf(m.clip)) && link < 0.7) sc *= 0.15;
+      // разнообразие между эдитами: сцены из прошлых эдитов (kori_usage.json) уступают место новым
+      sc *= 0.35 ** (usage[sceneKey(m.clip, m.idx)] || 0);
+      if (rand) sc *= 0.85 + 0.3 * rand();
       sc *= 0.85 ** (clipUses.get(m.clip.id) || 0);
       sc *= 0.92 ** (groupUses.get(sourceOf(m.clip)) || 0);
       // склейка «по движению»: удар/рывок в конце прошлого отрезка продолжается в начале этого
       // (и этот — в следующем, если тот уже выбран); встречное движение через склейку режет глаз
-      const prev = assign[i - 1];
-      const next = assign[i + 1];
       const startDir = flowAt(m.scene, m.t + 0.05 - m.scene.start, m.rate);
       const endDir = flowAt(m.scene, m.t + seg.need * k - 0.05 - m.scene.start, m.rate);
       for (const c of [prev && motionMatch(prev.endDir, startDir), next && motionMatch(endDir, next.startDir)]) {
@@ -171,7 +211,8 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
       .map((p) => [scene.start + p[0], toCropX(p[1])])
       .filter(([t]) => t >= srcA - 0.3 && t <= srcB + 0.3);
     const fx = scene.face ? scene.face.x : scene.focus_x ?? 0.5;
-    const track = pts.length ? pts : [[srcA, toCropX(fx)]];
+    // focus из меток — где персонаж на самом деле; окно стоит там и не ездит за эффектами
+    const track = scene.focus !== undefined ? [[srcA, toCropX(scene.focus)]] : pts.length ? pts : [[srcA, toCropX(fx)]];
     const minX = Math.min(...track.map((p) => p[1]));
     const maxX = Math.max(...track.map((p) => p[1]));
     const cropX = minX;
@@ -195,6 +236,13 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
   for (let i = 1; i < segs.length; i++) {
     const c = motionMatch(assign[i - 1].endDir, assign[i].startDir);
     if (c > 0.6) matchCuts.push({ t: Number(segs[i].a.toFixed(4)), cos: Number(c.toFixed(2)) });
+  }
+
+  // смысловые склейки: удар → попадание, замах → удар
+  const semanticCuts = [];
+  for (let i = 1; i < segs.length; i++) {
+    const l = actionLink(assign[i - 1].scene, assign[i].scene, sourceOf(assign[i - 1].clip) === sourceOf(assign[i].clip));
+    if (l >= 0.4) semanticCuts.push({ t: Number(segs[i].a.toFixed(4)), from: `${assign[i - 1].scene.who || '?'}:${assign[i - 1].scene.action}`, to: `${assign[i].scene.who || '?'}:${assign[i].scene.action}` });
   }
 
   const events = [];
@@ -269,6 +317,8 @@ export function buildPlan({ audioFile, clips, targetDuration = 15, width = 1080,
     shots,
     transitions,
     matchCuts,
+    semanticCuts,
+    usedScenes: assign.map((a) => sceneKey(a.clip, a.idx)),
     accents: r.accents,
     events,
     sfx: sfxLibrary ? planSfx(sfxLibrary, { duration: r.duration, dropAt: r.dropAt, accents: r.accents, transitions: transitions.filter((x) => x.type !== 'ghost') }) : [],
